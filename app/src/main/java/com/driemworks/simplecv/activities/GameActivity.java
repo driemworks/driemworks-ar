@@ -41,9 +41,8 @@ import java.lang.reflect.Field;
 /**
  * Created by Tony on 5/6/2017.
  */
-
 public class GameActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2,
-        SensorEventListener, View.OnTouchListener, LocationListener {
+        SensorEventListener, View.OnTouchListener {
 
     private static final String TAG = "GameActivity: ";
 
@@ -54,7 +53,6 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     private SurfaceDataDTO surfaceData;
 
     private Mat mRgba;
-    private Mat mGray;
 
     /** /////////////     JPCT    /////////////////////// */
     // Used to handle pause and resume...
@@ -84,24 +82,7 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     /**
      *
      */
-    private BaseLoaderCallback baseLoaderCallback;/* = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
-                    Log.i(TAG, "OpenCV loaded successfully");
-                    customSurfaceView.enableView();
-                    customSurfaceView.setMaxFrameSize(800, 480);
-//                    customSurfaceView.setOnTouchListener(GameActivity.this);
-                }
-                break;
-                default: {
-                    super.onManagerConnected(status);
-                }
-                break;
-            }
-        }
-    };*/
+    private BaseLoaderCallback baseLoaderCallback;
 
     /**
      *
@@ -215,7 +196,6 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
         // get the images from the input frame
         mRgba = inputFrame.rgba();
         renderer.setmRgba(mRgba);
-        mGray = inputFrame.gray();
         surfaceData = surfaceDetector.detect(mRgba, configurationDTO.getThreshold(), doDraw);
         Log.d(TAG, "is bound rect null? = " + (null == surfaceData.getBoundRect()));
        if (surfaceData != null) {
@@ -232,10 +212,8 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     public void onCameraViewStarted(int width, int height) {
         Log.d(TAG, "camera view started");
         mRgba = new Mat();
-
         Intent intent = getIntent();
         configurationDTO = (ConfigurationDTO) intent.getSerializableExtra(IntentIdentifer.CONFIG_DTO.getValue());
-
         surfaceDetector = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
                 new Scalar(222, 040, 255), new Mat(), new Size(200, 64), configurationDTO);
     }
@@ -256,10 +234,6 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     public void setDoDraw(boolean doDraw) {
         this.doDraw = doDraw;
     }
-
-//     public GraphicsRenderer getRenderer() {
-//         return renderer;
-//     }
 
     /**
      *
@@ -299,25 +273,5 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
         }
 
         return false;
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
     }
 }

@@ -64,6 +64,9 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
     private float y = 0;
     private float z = 100;
 
+    private int touchedX;
+    private int touchedY;
+
     private Rect surface;
 
     private int width = Resolution.RES_STANDARD.getWidth();
@@ -102,17 +105,11 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
 
         fb = new FrameBuffer(g1, w, h);
         if (master == null) {
-            try {
-                initWorld();
-            } catch (FileNotFoundException e) {
-                Log.e("#E", e.getMessage());
-
-                e.printStackTrace();
-            }
+            initWorld();
         }
     }
 
-    private void initWorld() throws FileNotFoundException {
+    private void initWorld() {
         world = new World();
         world.setAmbientLight(20, -30, 40);
 
@@ -278,4 +275,19 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
         return addNewCube;
     }
 
+    public int getTouchedX() {
+        return touchedX;
+    }
+
+    public void setTouchedX(int touchedX) {
+        this.touchedX = touchedX;
+    }
+
+    public int getTouchedY() {
+        return touchedY;
+    }
+
+    public void setTouchedY(int touchedY) {
+        this.touchedY = touchedY;
+    }
 }
