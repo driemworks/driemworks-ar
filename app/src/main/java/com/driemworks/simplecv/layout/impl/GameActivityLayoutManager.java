@@ -16,7 +16,6 @@ import com.driemworks.simplecv.layout.LayoutManager;
 /**
  * Created by Tony on 5/13/2017.
  */
-
 public class GameActivityLayoutManager implements LayoutManager {
 
     public static Button reconfigureButton = null;
@@ -25,14 +24,8 @@ public class GameActivityLayoutManager implements LayoutManager {
     public static Button showRectButton = null;
     public static final String SHOW_RECT = "ShowRect";
 
-    public static SeekBar zValue = null;
-    public static final  String Z_VAL = "zValue";
-
     public static Button newObjectButton = null;
     public static final String NEW_OBJ_BTN = "newObjBtn";
-
-    public static Button clear = null;
-    public static final String CLEAR_BTN = "clear";
 
     private static GameActivity activity = null;
 
@@ -63,21 +56,6 @@ public class GameActivityLayoutManager implements LayoutManager {
         } else if (name.equals(NEW_OBJ_BTN)) {
             newObjectButton = (Button) layoutElement;
             setNewObjOnTouchListener();
-        } else if (name.equals(CLEAR_BTN)) {
-            clear = (Button) layoutElement;
-            setClearOnTouchListener();
-        }
-    }
-
-    private void setClearOnTouchListener() {
-        if (clear != null && graphicsRenderer != null) {
-            clear.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    graphicsRenderer.setRemoveAll(!graphicsRenderer.isRemoveAll());
-                    return false;
-                }
-            });
         }
     }
 

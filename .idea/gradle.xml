@@ -12,10 +12,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/common" />
             <option value="$PROJECT_DIR$/driemworks-ar" />
-            <option value="$PROJECT_DIR$/hand-detector-app" />
-            <option value="$PROJECT_DIR$/jPCTBlendAESample" />
             <option value="$PROJECT_DIR$/libraries" />
-            <option value="$PROJECT_DIR$/libraries/bones" />
             <option value="$PROJECT_DIR$/libraries/opencv" />
             <option value="$PROJECT_DIR$/openCVLibrary310" />
             <option value="$PROJECT_DIR$/sensor-admin" />

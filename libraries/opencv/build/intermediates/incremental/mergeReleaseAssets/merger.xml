@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merger version="3"><dataSet config="main"><source path="C:\work\the-dreadfort\libraries\opencv\src\main\assets"/><source path="C:\work\the-dreadfort\libraries\opencv\build\generated\assets\shaders\release"/></dataSet><dataSet config="release"><source path="C:\work\the-dreadfort\libraries\opencv\src\release\assets"/></dataSet></merger>
+<merger version="3"><dataSet config="main"><source path="C:\work\driemworks\libraries\opencv\src\main\assets"/><source path="C:\work\driemworks\libraries\opencv\build\generated\assets\shaders\release"/></dataSet><dataSet config="release"><source path="C:\work\driemworks\libraries\opencv\src\release\assets"/></dataSet></merger>

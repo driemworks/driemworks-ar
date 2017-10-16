@@ -165,7 +165,6 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
 
     public void onCameraViewStarted(int width, int height) {
         Log.d(TAG, "camera view started");
-//        mGray = new Mat();
         mRgba = new Mat();
         initFields(width, height);
     }

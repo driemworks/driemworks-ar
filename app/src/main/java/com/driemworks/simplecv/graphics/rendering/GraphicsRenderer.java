@@ -69,29 +69,15 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
     private int width = Resolution.RES_STANDARD.getWidth();
     private int height = Resolution.RES_STANDARD.getHeight();
 
-    private boolean isTouch = false;
-
-    public void setTouch(boolean touch) {
-        isTouch = touch;
-    }
-
     private static final float MULTIPLIER = 1f;
 
     private boolean addNewCube = false;
-    private boolean removeAll = false;
 
     public void setPreviousRotationVector(float[] previousRotationVector) {
         this.previousRotationVector = previousRotationVector;
     }
 
-    private static RGBColor color1 = new RGBColor(241, 36, 4);
-    private static RGBColor color2 = new RGBColor(100, 10, 241);
-    private static RGBColor yellow = new RGBColor(255, 251, 56);
-
     private Object3D cube;
-
-    private AssetManager assMan;
-    private InputStream is;
 
     /**
      * The default constructor
@@ -268,14 +254,18 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
 
     private int multiplier = 600;
 
+    /**
+     * push the cube into the screen
+     * @param pressure
+     */
     public void pushCube(float pressure) {
         cube.translate(0, 0, pressure * multiplier);
     }
 
-    public void moveCube(int x, int y) {
-
-    }
-
+    /**
+     * return cube to starting position after being pulled
+     * @param pressure
+     */
     public void pullCube(float pressure) {
         cube.translate(0, 0, -(pressure * multiplier));
     }
@@ -288,15 +278,4 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
         return addNewCube;
     }
 
-    public boolean isRemoveAll() {
-        return removeAll;
-    }
-
-    public void setRemoveAll(boolean removeAll) {
-        this.removeAll = removeAll;
-    }
-
-    public void setZ(float z) {
-        this.z = z;
-    }
 }
