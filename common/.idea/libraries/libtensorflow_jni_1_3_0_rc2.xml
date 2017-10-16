@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="libtensorflow_jni-1.3.0-rc2">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.tensorflow/libtensorflow_jni/1.3.0-rc2/54997910a4905854fe59b502dcb2c8e40a393677/libtensorflow_jni-1.3.0-rc2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,4 @@
+from kaffe.tensorflow import Network
+
+class (Network):
+    def setup(self):

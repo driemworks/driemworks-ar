@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Simplecv</string>
+    <string name="title_activity_network_config">NetworkConfigActivity</string>
+</resources>
