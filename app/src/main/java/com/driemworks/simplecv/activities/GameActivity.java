@@ -116,7 +116,7 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         orientationService = new OrientationService(sensorManager);
 
-        renderer = new GraphicsRenderer();
+        renderer = new GraphicsRenderer(this);
 
         mGLView = (GLSurfaceView) findViewById(R.id.gl_surface_view0);
         mGLView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);

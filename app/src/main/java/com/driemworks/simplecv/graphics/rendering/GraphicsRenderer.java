@@ -1,14 +1,21 @@
 package com.driemworks.simplecv.graphics.rendering;
 
+import android.app.Activity;
+import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
+import android.renderscript.ScriptGroup;
 import android.util.Log;
 
+import com.driemworks.sensor.utils.OrientationUtils;
 import com.driemworks.simplecv.activities.GameActivity;
 import com.driemworks.simplecv.enums.Resolution;
 import com.driemworks.simplecv.enums.Tags;
+import com.google.android.gms.wearable.Asset;
 import com.threed.jpct.Camera;
 import com.threed.jpct.FrameBuffer;
 import com.threed.jpct.Light;
+import com.threed.jpct.Loader;
+import com.threed.jpct.Matrix;
 import com.threed.jpct.Object3D;
 import com.threed.jpct.Primitives;
 import com.threed.jpct.RGBColor;
@@ -18,6 +25,10 @@ import com.threed.jpct.util.MemoryHelper;
 
 import org.opencv.core.Rect;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -71,6 +82,8 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
 
     private static final float MULTIPLIER = 1f;
 
+    private Activity activity;
+
     private boolean addNewCube = false;
 
     public void setPreviousRotationVector(float[] previousRotationVector) {
@@ -82,7 +95,8 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
     /**
      * The default constructor
      */
-    public GraphicsRenderer() {
+    public GraphicsRenderer(Activity activity) {
+        this.activity = activity;
         spheres = new ArrayList<>();
     }
 
@@ -152,16 +166,15 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
             fb.clear();
             world.renderScene(fb);
             updateOriginSurface();
+            updateVectors();
 
-//            if (super.getRotationVector() != null) {
-//                OrientationUtils.calcDeltaRotation(MULTIPLIER, super.getRotationVector(), previousRotationVector, deltaRotation);
-//            }
-//
-//            if (deltaRotation != null) {
-//                updateRotation();
-//            }
-//        }
-//        updateVectors();
+            if (super.getRotationVector() != null) {
+                OrientationUtils.calcDeltaRotation(MULTIPLIER, super.getRotationVector(), previousRotationVector, deltaRotation);
+            }
+
+            if (deltaRotation != null) {
+                updateRotation();
+            }
 
             world.draw(fb);
             fb.display();
@@ -251,6 +264,29 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
             }
         }
     }
+//
+//    private AssetManager assetManager;
+//    private InputStream is;
+//
+//
+//    private Object3D loadModel(String filename, float scale) throws UnsupportedEncodingException {
+//
+//        InputStream stream = new ByteArrayInputStream(filename.getBytes("UTF-8"));
+//        Object3D[] model = Loader.load3DS(stream, scale);
+//        Object3D o3d = new Object3D(0);
+//        Object3D temp;
+//        for (int i = 0; i < model.length; i++) {
+//            temp = model[i];
+//            temp.setCenter(SimpleVector.ORIGIN);
+//            temp.rotateX((float)( -.5*Math.PI));
+//            temp.rotateMesh();
+//            temp.setRotationMatrix(new Matrix());
+//            o3d = Object3D.mergeObjects(o3d, temp);
+//            o3d.build();
+//        }
+//        return o3d;
+//    }
+
 
     private int multiplier = 600;
 
