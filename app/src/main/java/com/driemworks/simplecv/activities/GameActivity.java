@@ -28,6 +28,7 @@ import com.driemworks.simplecv.graphics.rendering.AbstractRenderer;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.layout.impl.GameActivityLayoutManager;
 import com.driemworks.common.views.CustomSurfaceView;
+import com.driemworks.simplecv.utils.DisplayDimensionsUtils;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -263,11 +264,15 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
         Log.d(TAG, "screen touched.");
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             pressure = event.getPressure();
+            renderer.setTouchedX(DisplayDimensionsUtils.getScreenWidth(this));
+            renderer.setTouchedY(DisplayDimensionsUtils.getScreenHeight(this));
             renderer.pushCube(pressure);
             return true;
         }
 
         if (event.getAction() == MotionEvent.ACTION_UP) {
+            renderer.setTouchedX(0);
+            renderer.setTouchedY(0);
             renderer.pullCube(pressure);
             return false;
         }

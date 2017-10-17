@@ -1,6 +1,5 @@
 package com.driemworks.simplecv.graphics.rendering;
 
-import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
@@ -19,8 +18,6 @@ import com.threed.jpct.util.MemoryHelper;
 
 import org.opencv.core.Rect;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -202,6 +199,9 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
         }
     }
 
+    /** The rate at which spheres are generated */
+    private static final int objectCreationRate = 67;
+
     /**
      *
      */
@@ -218,18 +218,21 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
                     y = (float) surface.tl().y + 90;
                     z = 350; // TODO
 
-                    if (frameCounter.get() % 51 == 0) {
-                        Object3D randSphere = Primitives.getSphere((float)(Math.random() * 50 + 1));
+                    if (frameCounter.get() % objectCreationRate == 0) {
                         Object3D sphere;
                         Iterator<Object3D> objIterator = spheres.iterator();
                         while(objIterator.hasNext()) {
                             sphere = objIterator.next();
-                            if (sphere.getOrigin().z <= 300) {
+                            // if user touches close enough to sphere, then "pop" the sphere
+                            if (sphere.getOrigin().x - touchedX <= 10
+                                    && sphere.getOrigin().y - touchedY <= 10) {
+                                Log.d(TAG, "Removing sphere " + spheres.indexOf(sphere));
+                                objIterator.remove();
                                 world.removeObject(sphere);
-                                spheres.remove(sphere);
                             }
                         }
 
+                        Object3D randSphere = Primitives.getSphere((float)(Math.random() * 30 + 1));
                         int randX  = 1 + 50 * (int)(Math.random());
                         int randY = 1 + 50 * (int)(Math.random());
                         randSphere.setOrigin(new SimpleVector(x + randX, y + randY, z));
@@ -239,7 +242,7 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
                     }
 
                     for (Object3D sphere : spheres) {
-                        sphere.translate(0, 0, -10 / sphere.getScale());
+                        sphere.translate(0, 0, -1 / sphere.getScale());
                     }
 
                     cube.setOrigin(new SimpleVector(x, y, z));
