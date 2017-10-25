@@ -170,21 +170,22 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
 
             if (super.getRotationVector() != null) {
                 OrientationUtils.calcDeltaRotation(MULTIPLIER, super.getRotationVector(), previousRotationVector, deltaRotation);
+                Log.i(TAG, "Calculated rotation delta rotation: " + deltaRotation);
+                if (deltaRotation != null) {
+                    updateRotation(deltaRotation);
+                }
             }
 
-            if (deltaRotation != null) {
-                updateRotation();
-            }
 
             world.draw(fb);
             fb.display();
         }
     }
 
-    private void updateRotation() {
-        cam.rotateCameraY(-deltaRotation[0]);
-        cam.rotateCameraX(deltaRotation[1]);
-        cam.rotateCameraZ(deltaRotation[2]);
+    private void updateRotation(float[] rotation) {
+        cam.rotateCameraY(-rotation[0]);
+        cam.rotateCameraX(rotation[1]);
+        cam.rotateCameraZ(rotation[2]);
     }
 
     private float calcEuclideanDistanceX(SimpleVector vec1, SimpleVector vec2) {

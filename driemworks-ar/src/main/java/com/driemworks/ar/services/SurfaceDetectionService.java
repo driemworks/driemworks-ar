@@ -1,5 +1,6 @@
 package com.driemworks.ar.services;
 
+import android.icu.text.DateFormat;
 import android.util.Log;
 
 import com.driemworks.ar.enums.FingerEnum;
@@ -11,6 +12,7 @@ import com.driemworks.ar.utils.ImageProcessingUtils;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
 
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfInt4;
@@ -23,6 +25,9 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -101,6 +106,8 @@ public class SurfaceDetectionService {
         return surfaceData;
     }
 
+    private List<RotatedRect> rotatedRects; // TODO instantiate!
+
     /**
      * @param mRgba
      * @param threshold
@@ -114,6 +121,7 @@ public class SurfaceDetectionService {
 
         // get contours and process the image
         colorBlobDetector.process(mRgba);
+        // this list is sorted already (sorting done in ColorBlobDetector) -> TODO I don't like that
         List<MatOfPoint> contours = colorBlobDetector.getContours();
 
         Log.d(TAG, "Contours count: " + contours.size());
@@ -142,7 +150,7 @@ public class SurfaceDetectionService {
         Log.d(TAG, " A [" + a + "] br y - tl y = [" + (boundRect.br().y - boundRect.tl().y) + "]");
 
         if (doDraw) {
-            // Imgproc.rectangle(mRgba, boundRect.tl(), new Point(boundRect.br().x, a), contourColor, 2, 8, 0);
+             Imgproc.rectangle(mRgba, boundRect.tl(), new Point(boundRect.br().x, a), contourColor, 2, 8, 0);
         }
 
         MatOfPoint2f pointMat = new MatOfPoint2f();

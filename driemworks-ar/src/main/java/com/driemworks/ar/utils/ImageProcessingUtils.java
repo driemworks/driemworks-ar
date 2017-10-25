@@ -56,14 +56,14 @@ public class ImageProcessingUtils {
     }
 
     /**
-     *
+     * Calculate the vertices of the convex polygon represented by the hull
      * @param contours
      * @param hull
      * @param positiveBound
      * @return
      */
     public static List<Point> getListOfPoints(List<MatOfPoint> contours, MatOfInt hull, int positiveBound) {
-        List<Point> listPo = new LinkedList<Point>();
+        List<Point> listPo = new LinkedList<>();
         for (int j = 0; j < hull.toList().size(); j++) {
             listPo.add(contours.get(positiveBound).toList().get(hull.toList().get(j)));
         }
