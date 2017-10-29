@@ -73,7 +73,7 @@ public class ConfigurationLayoutManager implements LayoutManager {
     }
 
     /**
-     * The onTouchListener for the setConfiguration button
+     * The onTouchListener for the backButton button
      */
     private void setConfigurationOnTouchListener() {
         if (setConfiguration != null) {

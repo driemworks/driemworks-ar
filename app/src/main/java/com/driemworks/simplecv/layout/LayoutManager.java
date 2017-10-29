@@ -9,6 +9,12 @@ import java.util.Map;
  */
 public interface LayoutManager {
 
+    /**
+     *
+     * @param name
+     * @param layoutElement
+     * @param <T>
+     */
     <T extends View> void setup(String name, T layoutElement);
 
 }

@@ -6,7 +6,6 @@ import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
-import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -24,15 +23,12 @@ public class ColorBlobDetector {
     private Scalar mUpperBound = new Scalar(0);
 
     // Minimum contour area in percent for contours filtering
-    private static double mMinContourArea = 0.99;
+    private static double mMinContourArea = 0.98;
 
     // Color radius for range checking in HSV color space
-    private Scalar mColorRadius = new Scalar(25,50,50,0);
+    private Scalar mColorRadius = new Scalar(35,50,50,15);
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<>();
-
-    private static final double mMinimumArea = 1500;
-    private static final double mMaximumArea = 4000;
 
     // Cache
     Mat mPyrDownMat = new Mat();
@@ -101,7 +97,7 @@ public class ColorBlobDetector {
 
         // Filter contours by area and resize to fit the original image size
         mContours.clear();
-        filterContours(contours, 1200/mMinContourArea);
+        filterContours(contours, maxArea);
     }
 
     /**

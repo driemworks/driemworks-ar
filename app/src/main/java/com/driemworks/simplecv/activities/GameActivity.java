@@ -7,8 +7,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.location.Location;
-import android.location.LocationListener;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,11 +22,10 @@ import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.enums.IntentIdentifer;
 import com.driemworks.simplecv.enums.Resolution;
-import com.driemworks.simplecv.graphics.rendering.AbstractRenderer;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.layout.impl.GameActivityLayoutManager;
 import com.driemworks.common.views.CustomSurfaceView;
-import com.driemworks.simplecv.utils.DisplayDimensionsUtils;
+import com.driemworks.simplecv.utils.DisplayUtils;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -264,8 +261,8 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
         Log.d(TAG, "screen touched.");
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             pressure = event.getPressure();
-            renderer.setTouchedX(DisplayDimensionsUtils.getScreenWidth(this));
-            renderer.setTouchedY(DisplayDimensionsUtils.getScreenHeight(this));
+            renderer.setTouchedX(DisplayUtils.getScreenWidth(this));
+            renderer.setTouchedY(DisplayUtils.getScreenHeight(this));
             renderer.pushCube(pressure);
             return true;
         }

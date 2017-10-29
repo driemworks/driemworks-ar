@@ -32,18 +32,6 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:gravity="bottom"
-                android:orientation="vertical"
-                android:paddingBottom="10dp"
-                android:paddingLeft="10dp"
-                android:id="@+id/linearLayout">
-
-            </LinearLayout>
-
             <Button
                 android:id="@+id/mode_btn"
                 android:layout_width="wrap_content"
@@ -51,7 +39,5 @@
                 android:text="Set" />
 
         </RelativeLayout>
-
     </RelativeLayout>
-
 </LinearLayout>

@@ -146,7 +146,7 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
 
     private void initCubes() {
         cube = createCube(RGBColor.WHITE, 30, 0, 0, 0);
-        cube.setVisibility(false);
+        cube.setVisibility(true);
         world.addObject(cube);
     }
 
@@ -230,33 +230,21 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
                 if (surface.area() > 5) {
                     x = (float) surface.tl().x + 90;
                     y = (float) surface.tl().y + 90;
-                    z = 350; // TODO
+                    // greater area => closer (decrease Z)
+                    // less area => farther away (increase Z)
+                    // subtract, since Z axis is coming at us
+                    z = 350;
+                    Log.d("*****", "calculated z: "+ z);
 
-                    if (frameCounter.get() % objectCreationRate == 0) {
-                        Object3D sphere;
-                        Iterator<Object3D> objIterator = spheres.iterator();
-                        while(objIterator.hasNext()) {
-                            sphere = objIterator.next();
-                            // if user touches close enough to sphere, then "pop" the sphere
-                            if (sphere.getOrigin().x - touchedX <= 10
-                                    && sphere.getOrigin().y - touchedY <= 10) {
-                                Log.d(TAG, "Removing sphere " + spheres.indexOf(sphere));
-                                objIterator.remove();
-                                world.removeObject(sphere);
-                            }
+
+                    if (false) {
+                        if (frameCounter.get() % objectCreationRate == 0) {
+                            addRandomSphere();
                         }
 
-                        Object3D randSphere = Primitives.getSphere((float)(Math.random() * 30 + 1));
-                        int randX  = 1 + 50 * (int)(Math.random());
-                        int randY = 1 + 50 * (int)(Math.random());
-                        randSphere.setOrigin(new SimpleVector(x + randX, y + randY, z));
-                        randSphere.setAdditionalColor(RGBColor.GREEN);
-                        spheres.add(randSphere);
-                        world.addObject(randSphere);
-                    }
-
-                    for (Object3D sphere : spheres) {
-                        sphere.translate(0, 0, -1 / sphere.getScale());
+                        for (Object3D sphere : spheres) {
+                            sphere.translate(0, 0, -1 / sphere.getScale());
+                        }
                     }
 
                     cube.setOrigin(new SimpleVector(x, y, z));
@@ -287,6 +275,29 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
 //        }
 //        return o3d;
 //    }
+
+    private void addRandomSphere() {
+        Object3D sphere;
+        Iterator<Object3D> objIterator = spheres.iterator();
+        while(objIterator.hasNext()) {
+            sphere = objIterator.next();
+            // if user touches close enough to sphere, then "pop" the sphere
+            if (sphere.getOrigin().x - touchedX <= 10
+                    && sphere.getOrigin().y - touchedY <= 10) {
+                Log.d(TAG, "Removing sphere " + spheres.indexOf(sphere));
+                objIterator.remove();
+                world.removeObject(sphere);
+            }
+        }
+
+        Object3D randSphere = Primitives.getSphere((float)(Math.random() * 30 + 1));
+        int randX  = 1 + 50 * (int)(Math.random());
+        int randY = 1 + 50 * (int)(Math.random());
+        randSphere.setOrigin(new SimpleVector(x + randX, y + randY, z));
+        randSphere.setAdditionalColor(RGBColor.GREEN);
+        spheres.add(randSphere);
+        world.addObject(randSphere);
+    }
 
 
     private int multiplier = 600;

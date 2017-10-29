@@ -2,6 +2,7 @@ package com.driemworks.ar.services;
 
 import android.icu.text.DateFormat;
 import android.util.Log;
+import android.view.Surface;
 
 import com.driemworks.ar.enums.FingerEnum;
 import com.driemworks.ar.enums.HandEnum;
@@ -32,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Tony on 5/6/2017.
+ *
  */
 public class SurfaceDetectionService {
 
@@ -75,9 +76,8 @@ public class SurfaceDetectionService {
      * @param spectrumSize
      * @param configurationDTO
      */
-    public SurfaceDetectionService(Scalar contourColorWhite,
-                                   Scalar contourColor, Mat mSpectrum, Size spectrumSize,
-                                   ConfigurationDTO configurationDTO) {
+    public SurfaceDetectionService(Scalar contourColorWhite, Scalar contourColor, Mat mSpectrum,
+                                   Size spectrumSize, ConfigurationDTO configurationDTO) {
         this.contourColorWhite = contourColorWhite;
         this.contourColor = contourColor;
         this.mSpectrum = mSpectrum;
@@ -97,37 +97,27 @@ public class SurfaceDetectionService {
      */
     public SurfaceDataDTO detect(Mat mRgba, double threshold, boolean doDraw) {
         SurfaceDataDTO surfaceData = new SurfaceDataDTO();
-        // subtract the background from mRgba, use that to process image
-        //subtracted = subtractor.applyForegroundMask(mRgba);
-        //mRgba = subtracted;
         surfaceData.setmRgba(mRgba);
-        Mat detectedSurface = detectSurface(mRgba, threshold, colorBlobDetector, surfaceData, doDraw);
-        surfaceData.setmRgba(detectedSurface);
+        detectSurface(mRgba, threshold, colorBlobDetector, surfaceData, doDraw);
         return surfaceData;
     }
-
-    private List<RotatedRect> rotatedRects; // TODO instantiate!
 
     /**
      * @param mRgba
      * @param threshold
      * @param colorBlobDetector
-     * @param surfaceData
      * @param doDraw
      * @return
      */
-    private Mat detectSurface(Mat mRgba, double threshold, ColorBlobDetector colorBlobDetector,
-                              SurfaceDataDTO surfaceData, boolean doDraw) {
-
+    private boolean detectSurface(Mat mRgba, double threshold, ColorBlobDetector colorBlobDetector, SurfaceDataDTO surfaceData, boolean doDraw) {
         // get contours and process the image
         colorBlobDetector.process(mRgba);
-        // this list is sorted already (sorting done in ColorBlobDetector) -> TODO I don't like that
         List<MatOfPoint> contours = colorBlobDetector.getContours();
 
         Log.d(TAG, "Contours count: " + contours.size());
 
         if (contours.isEmpty()) {
-            return mRgba;
+            return false;
         }
 
         RotatedRect rect = Imgproc.minAreaRect(new MatOfPoint2f(contours.get(0).toArray()));
@@ -163,7 +153,7 @@ public class SurfaceDetectionService {
 
         // ensure that there are at least three points, since we must have a convex polygon
         if (hull.toArray().length <= 3) {
-            return mRgba;
+            return false;
         }
 
         Imgproc.convexityDefects(new MatOfPoint(contours.get(boundPos).toArray()), hull, convexDefect);
@@ -199,7 +189,9 @@ public class SurfaceDetectionService {
                 Imgproc.circle(mRgba, p, 6, new Scalar(255, 200, 255));
             }
         }
-        return mRgba;
+
+        surfaceData.setmRgba(mRgba);
+        return true;
     }
 
     public ColorBlobDetector getColorBlobDetector() {
