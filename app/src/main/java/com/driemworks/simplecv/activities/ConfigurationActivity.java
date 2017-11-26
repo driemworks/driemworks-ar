@@ -6,21 +6,28 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
+import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 
+import com.driemworks.ar.MonocularVisualOdometry.MonocularVisualOdometryService;
+import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.imageProcessing.ColorBlobDetector;
 import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.common.dto.SurfaceDataDTO;
@@ -28,7 +35,6 @@ import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.enums.Resolution;
 import com.driemworks.simplecv.enums.Tags;
-import com.driemworks.simplecv.graphics.rendering.AbstractRenderer;
 import com.driemworks.simplecv.layout.impl.ConfigurationLayoutManager;
 import com.driemworks.simplecv.services.permission.impl.LocationPermissionServiceImpl;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
@@ -36,6 +42,10 @@ import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.simplecv.utils.DisplayUtils;
 
 import org.opencv.core.Size;
+import org.opencv.video.Video;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -65,9 +75,6 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     /** The customSurfaceView surface view */
     private CustomSurfaceView customSurfaceView;
 
-    /** The threshold when detecting defects */
-    double iThreshold = 0;
-
     /** The color of the detected blob in HSV format */
     private Scalar mBlobColorHsv;
 
@@ -94,6 +101,8 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
 
     /** The base loader callback */
     private BaseLoaderCallback mLoaderCallback;
+
+    private MonocularVisualOdometryService voService;
 
     /** The default constructor */
     public ConfigurationActivity() {
@@ -137,6 +146,7 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
         layoutManager.setup(ConfigurationLayoutManager.CONFIG_BUTTON, findViewById(R.id.mode_btn));
 
         mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView);
+        voService = new MonocularVisualOdometryService();
     }
 
 
@@ -244,6 +254,9 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
         return false;
     }
 
+    private Mat previousFrame = null;
+    private FeatureWrapper previousWrapper = null;
+
     /**
      *
      * @param inputFrame
@@ -252,15 +265,55 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         // get the images from the input frame
         mRgba = inputFrame.rgba();
-        // do nothing if no color has been selected
-        if (!mIsColorSelected) {
-            Log.d(TAG, "No color selected, return input image");
-            return mRgba;
+        if (false) {
+            // do nothing if no color has been selected
+            if (!mIsColorSelected) {
+                Log.d(TAG, "No color selected, return input image");
+                return mRgba;
+            }
+
+            SurfaceDataDTO surfaceData = surfaceDetector.detect(mRgba, 0, true);
+            return surfaceData.getmRgba();
         }
-        SurfaceDataDTO surfaceData = surfaceDetector.detect(mRgba, iThreshold, true);
-        return surfaceData.getmRgba();
+
+        Mat rgb = new Mat();
+        Mat output = new Mat();
+
+        Imgproc.cvtColor(mRgba, rgb, Imgproc.COLOR_RGBA2RGB);
+        FeatureWrapper wrapper = voService.featureDetection(mRgba);
+        Features2d.drawKeypoints(rgb, wrapper.getKeyPoints(), rgb);
+        Imgproc.cvtColor(rgb, output, Imgproc.COLOR_RGB2RGBA);
+
+        MatOfByte status = new MatOfByte();
+        MatOfFloat err = new MatOfFloat();
+
+        // using rgba
+        if (previousFrame != null && previousWrapper != null && previousWrapper.getKeyPoints() != null) {
+            Log.d("####", "previous frame and previous wrapper are both non-null");
+            // prev image, next image, prev kp, next kp, status, err
+            Video.calcOpticalFlowPyrLK(previousFrame, mRgba, convertMatOfKeyPointsTo2f(previousWrapper.getKeyPoints()),
+                    convertMatOfKeyPointsTo2f(wrapper.getKeyPoints()), status, err);
+        }
+
+        previousFrame = mRgba;
+        previousWrapper = wrapper;
+        return output;
     }
 
+    /**
+     * Converts a MatOfKeyPoint object to a MatOfPoint2f object
+     * @param mKeyPoint the input MatOfKeyPoint
+     * @return the converted MatOfPoint2f
+     */
+    private MatOfPoint2f convertMatOfKeyPointsTo2f(MatOfKeyPoint mKeyPoint) {
+        List<Point> points = new ArrayList<>();
+        for (KeyPoint kp : mKeyPoint.toArray()) {
+            points.add(kp.pt);
+        }
+        MatOfPoint2f pointMat = new MatOfPoint2f();
+        pointMat.fromList(points);
+        return pointMat;
+    }
 
     /**
      * Handle the results of a permissions request
@@ -276,10 +329,6 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
         } else if (requestCode == LocationPermissionServiceImpl.REQUEST_CODE) {
             locationPermissionService.handleResponse(requestCode, permissions, grantResults);
         }
-    }
-
-    public double getiThreshold() {
-        return iThreshold;
     }
 
     public Scalar getmBlobColorHsv()  {
