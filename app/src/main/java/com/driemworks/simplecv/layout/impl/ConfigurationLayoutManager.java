@@ -83,7 +83,7 @@ public class ConfigurationLayoutManager implements LayoutManager {
                     if (null != configurationActivity) {
                         if (null != configurationActivity.getmBlobColorHsv()) {
                             ConfigurationDTO configurationDTO = new ConfigurationDTO(
-                                    configurationActivity.getiThreshold(), configurationActivity.getmBlobColorHsv()
+                                    0, configurationActivity.getmBlobColorHsv()
                             );
                             Log.d(TAG, "created config dto -> beginning tracking");
                             Log.d(TAG, "creating intent to start game activity");

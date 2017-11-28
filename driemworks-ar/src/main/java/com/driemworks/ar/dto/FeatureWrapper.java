@@ -1,6 +1,7 @@
 package com.driemworks.ar.dto;
 
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 
 /**
@@ -9,11 +10,38 @@ import org.opencv.core.MatOfKeyPoint;
  * It has the original image, the extracted key points, and the extracted features
  *
  */
-public class FeatureWrapper extends FeatureWrapperMetaData {
+public class FeatureWrapper {
 
+    private FeatureWrapperMetaData featureWrapperMetaData;
     private Mat frame;
     private Mat descriptors;
     private MatOfKeyPoint keyPoints;
+    private MatOfDMatch matches;
+    /**
+     *
+     * @param wrapper
+     * @return
+     */
+    public static FeatureWrapper clone(FeatureWrapper wrapper) {
+        return new FeatureWrapper(wrapper.getFeatureWrapperMetaData(),
+                wrapper.getFrame(), wrapper.getDescriptors(), wrapper.getKeyPoints(), wrapper.getMatches());
+    }
+
+    /**
+     *
+     * @param metaData
+     * @param frame
+     * @param descriptors
+     * @param keyPoints
+     */
+    public FeatureWrapper(FeatureWrapperMetaData metaData,
+                          Mat frame, Mat descriptors, MatOfKeyPoint keyPoints, MatOfDMatch matches) {
+        this.featureWrapperMetaData = metaData;
+        this.frame = frame.clone();
+        this.descriptors = descriptors.clone();
+        this.keyPoints = keyPoints;
+        this.matches = matches;
+    }
 
     /**
      *
@@ -24,11 +52,12 @@ public class FeatureWrapper extends FeatureWrapperMetaData {
      * @param keyPoints
      */
     public FeatureWrapper(String featureDetector, String featureExtractor,
-                          Mat frame, Mat descriptors, MatOfKeyPoint keyPoints) {
-        super(featureDetector, featureExtractor);
-        this.frame = frame;
-        this.descriptors = descriptors;
+                          Mat frame, Mat descriptors, MatOfKeyPoint keyPoints, MatOfDMatch matches) {
+        this.featureWrapperMetaData = new FeatureWrapperMetaData(featureDetector, featureExtractor);
+        this.frame = frame.clone();
+        this.descriptors = descriptors.clone();
         this.keyPoints = keyPoints;
+        this.matches = matches;
     }
 
     public Mat getFrame() {
@@ -53,5 +82,21 @@ public class FeatureWrapper extends FeatureWrapperMetaData {
 
     public void setKeyPoints(MatOfKeyPoint keyPoints) {
         this.keyPoints = keyPoints;
+    }
+
+    public FeatureWrapperMetaData getFeatureWrapperMetaData() {
+        return featureWrapperMetaData;
+    }
+
+    public void setFeatureWrapperMetaData(FeatureWrapperMetaData featureWrapperMetaData) {
+        this.featureWrapperMetaData = featureWrapperMetaData;
+    }
+
+    public MatOfDMatch getMatches() {
+        return matches;
+    }
+
+    public void setMatches(MatOfDMatch matches) {
+        this.matches = matches;
     }
 }

@@ -49,11 +49,12 @@ import org.opencv.video.Video;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
  */
-public class ConfigurationActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
+public class VOActivity extends Activity implements CvCameraViewListener2 {
 
     /** load the opencv lib */
     static {
@@ -63,39 +64,14 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     /** The service to request permission to use camera at runtime */
     private CameraPermissionServiceImpl cameraPermissionService;
 
-    /** The service to request permission to get location data at runtime */
-    private LocationPermissionServiceImpl locationPermissionService;
-
-    /** The layout manager for this activity */
-    private ConfigurationLayoutManager layoutManager;
-
     /** The tag used for logging */
-    private static final String TAG = Tags.ConfigurationActivity.getTag();
+    private static final String TAG = "VOActivity: ";
 
     /** The input camera frame in RGBA format */
     private Mat mRgba;
 
     /** The customSurfaceView surface view */
     private CustomSurfaceView customSurfaceView;
-
-    /** The color of the detected blob in HSV format */
-    private Scalar mBlobColorHsv;
-
-    /** The color blob detector */
-    private ColorBlobDetector mDetector;
-
-    /** The color spectrum */
-    private Mat mSpectrum;
-
-    /** Boolean flag to tell if the color is or isn't selected in the detector */
-    private boolean mIsColorSelected = false;
-
-    /** The size of the spectrum */
-    private Size SPECTRUM_SIZE;
-
-    /** The surface Detection service */
-    private SurfaceDetectionService surfaceDetector;
-
     /** The width of the device screen */
     private int screenWidth;
 
@@ -105,11 +81,13 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     /** The base loader callback */
     private BaseLoaderCallback mLoaderCallback;
 
+    /** The feature service */
+    private FeatureService featureService;
+
     /** The default constructor */
-    public ConfigurationActivity() {
+    public VOActivity() {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
-
 
     /**
      * Called when the activity is first created.
@@ -134,23 +112,15 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
 
         cameraPermissionService = new CameraPermissionServiceImpl(this);
 
-        locationPermissionService = new LocationPermissionServiceImpl(this);
-
         setContentView(R.layout.main_surface_view);
 
         customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
         customSurfaceView.setCvCameraViewListener(this);
-        customSurfaceView.setOnTouchListener(ConfigurationActivity.this);
         customSurfaceView.setMaxFrameSize(800, 480);
 
-        layoutManager = ConfigurationLayoutManager.getInstance();
-        layoutManager.setActivity(this);
-        layoutManager.setup(ConfigurationLayoutManager.CONFIG_BUTTON, findViewById(R.id.mode_btn));
-
         mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView);
+        featureService = new FeatureService();
     }
-
-
 
     @Override
     public void onPause() {
@@ -175,22 +145,7 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
 
     public void onCameraViewStarted(int width, int height) {
         Log.d(TAG, "camera view started");
-        mRgba = new Mat();
-        initFields(width, height);
-    }
-
-    /**
-     * @param width
-     * @param height
-     */
-    private void initFields(int width, int height) {
-        surfaceDetector = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
-                new Scalar(222, 040, 255), new Mat(), new Size(200, 64), null);
         mRgba = new Mat(height, width, CvType.CV_8UC4);
-        mDetector = new ColorBlobDetector();
-        mSpectrum = new Mat();
-        mBlobColorHsv = new Scalar(255);
-        SPECTRUM_SIZE = new Size(200, 64);
     }
 
     public void onCameraViewStopped() {
@@ -198,51 +153,11 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
         mRgba.release();
     }
 
-    /**
-     * The onTouch method -> samples the color of the touch region
-     * @param v
-     * @param event
-     * @return
-     */
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        // the value used to bound the size of the area to be sampled
-        int sizeThreshold = 10;
+    private Mat previousFrame = null;
+    private FeatureWrapper previousWrapper = null;
 
-        Point correctedCoordinate = DisplayUtils.correctCoordinate(event, screenWidth, screenHeight);
-        Rect touchedRect = new Rect((int)correctedCoordinate.x, (int)correctedCoordinate.y, sizeThreshold, sizeThreshold);
-        if (null == touchedRect) {
-            return false;
-        }
-
-        // get the rectangle around the point that was touched
-        Mat touchedRegionRgba = mRgba.submat(touchedRect);
-
-        // format to hsv
-        Mat touchedRegionHsv = new Mat();
-        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
-
-        // Calculate average color of touched region
-        mBlobColorHsv = Core.sumElems(touchedRegionHsv);
-        int pointCount = touchedRect.width * touchedRect.height;
-
-        for (int i = 0; i < mBlobColorHsv.val.length; i++) {
-            mBlobColorHsv.val[i] /= pointCount;
-        }
-
-        mDetector = surfaceDetector.getColorBlobDetector();
-        mDetector.setHsvColor(mBlobColorHsv);
-        surfaceDetector.setColorBlobDetector(mDetector);
-        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
-
-        mIsColorSelected = true;
-        Log.d(TAG, "color has been set");
-
-        touchedRegionRgba.release();
-        touchedRegionHsv.release();
-
-        return false;
-    }
+    private float focal = 718.8560f;
+    private Point pp = new Point(607.1928, 185.2157);
 
     /**
      *
@@ -252,15 +167,83 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         // get the images from the input frame
         mRgba = inputFrame.rgba();
-            // do nothing if no color has been selected
-            if (!mIsColorSelected) {
-                Log.d(TAG, "No color selected, return input image");
-                return mRgba;
-            }
+        Mat rgb = new Mat();
+        Mat output = mRgba.clone();
 
-            SurfaceDataDTO surfaceData = surfaceDetector.detect(mRgba, 0, true);
-            return surfaceData.getmRgba();
+        // if it is the first frame, no second frame will exist
+        // so after extracting the features, we need to break
 
+        // 1) features detection
+        Imgproc.cvtColor(mRgba, rgb, Imgproc.COLOR_RGBA2RGB);
+        FeatureWrapper wrapper = featureService.featureDetection(mRgba);
+        // draw detected keypoints features
+        Features2d.drawKeypoints(rgb, wrapper.getKeyPoints(), rgb);
+
+        // first time through (frame 0)
+        // just set the previous wrapper to the wrapper
+        if (previousWrapper == null) {
+            previousWrapper = FeatureWrapper.clone(wrapper);
+            return output;
+        }
+
+        MatOfByte status = new MatOfByte();
+        MatOfFloat err = new MatOfFloat();
+        Map<String, List<Point>> trackedFeatures = featureService.featureTracking(previousWrapper, wrapper, status, err);
+        for (Map.Entry<String, List<Point>> e : trackedFeatures.entrySet()) {
+            Log.d(TAG, "tracked feature: " + e.toString());
+        }
+//        output = trackFeatures(mRgba, true);
+//        Imgproc.cvtColor(rgb, output, Imgproc.COLOR_RGB2RGBA);
+
+
+
+//
+//        if (wrapper != null && previousFrame != null && previousWrapper != null && previousWrapper.getKeyPoints() != null) {
+//            Mat mask = new Mat();
+//            Mat R = new Mat();
+//            Mat t = new Mat();
+//            Log.d(TAG, "previous wrapper key points: " + previousWrapper.getKeyPoints().toString());
+//            Log.d(TAG, "previous wrapper check vector on keypoints " + previousWrapper.getKeyPoints().checkVector(2));
+//            Log.d(TAG, "previous wrapper check vector on descriptors " + previousWrapper.getDescriptors().checkVector(2));
+//            // should be a vector of length 2?
+//            if (previousWrapper.getKeyPoints().checkVector(2) > 0) {
+//                Mat E = Calib3d.findEssentialMat(ImageConversionUtils.convertMatOfKeyPointsTo2f(wrapper.getKeyPoints()),
+//                        ImageConversionUtils.convertMatOfKeyPointsTo2f(previousWrapper.getKeyPoints()),
+//                        focal, pp, Calib3d.RANSAC, 0.999, 1.0, mask);
+//                Calib3d.recoverPose(E, previousWrapper.getKeyPoints(), wrapper.getKeyPoints(), R, t, focal, pp);
+//                // use R and t to track camera position
+//                Log.d("Recovered Pose: ", "Calculated R and t: R: " + R.toString() + "\n" + "\t\t t: " + t.toString());
+//            }
+//        }
+
+        previousFrame = mRgba.clone();
+        previousWrapper = FeatureWrapper.clone(wrapper);
+        return output;
+    }
+
+    /**
+     *
+     * @param frame
+     * @param drawMatches
+     * @return
+     */
+    private Mat trackFeatures(Mat frame, boolean drawMatches) {
+        FeatureWrapper currentWrapper = featureService.featureDetection(frame);
+        MatOfDMatch goodMatches = featureService.featureMatching(previousWrapper, currentWrapper);
+        Mat outputImage =  new Mat();
+        MatOfByte drawnMatches = new MatOfByte();
+        if (frame.empty() || frame.size() == new Size(0, 0)) {
+            return frame;
+        }
+
+        if (drawMatches) {
+            Features2d.drawMatches(previousWrapper.getFrame(), previousWrapper.getKeyPoints(),
+                    currentWrapper.getFrame(), currentWrapper.getKeyPoints(),
+                    goodMatches, outputImage);
+        }
+
+        previousWrapper = FeatureWrapper.clone(currentWrapper);
+        return outputImage;
     }
 
     /**
@@ -274,13 +257,6 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == CameraPermissionServiceImpl.REQUEST_CODE) {
             cameraPermissionService.handleResponse(requestCode, permissions, grantResults);
-        } else if (requestCode == LocationPermissionServiceImpl.REQUEST_CODE) {
-            locationPermissionService.handleResponse(requestCode, permissions, grantResults);
         }
     }
-
-    public Scalar getmBlobColorHsv()  {
-        return mBlobColorHsv;
-    }
-
 }
