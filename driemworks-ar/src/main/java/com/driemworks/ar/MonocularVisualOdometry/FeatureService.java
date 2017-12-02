@@ -1,13 +1,9 @@
 package com.driemworks.ar.MonocularVisualOdometry;
 
-import android.media.Image;
-import android.provider.Settings;
 import android.util.Log;
-import android.util.Pair;
 
 import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
-import com.driemworks.ar.utils.NativeUtils;
 import com.driemworks.common.utils.ImageConversionUtils;
 
 import org.opencv.core.CvType;
@@ -22,10 +18,8 @@ import org.opencv.core.TermCriteria;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.video.Video;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -132,128 +126,6 @@ public class FeatureService {
 
         Log.d(this.getClass().getCanonicalName(), "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
         return new SequentialFrameFeatures(previousKeyPointsList, currentKeyPointsList);
-    }
-
-    /**
-     * @return Pair of new, FILTERED, last and current POINTS, or null if it hasn't managed to track anything.
-     */
-    public Pair<Point[], Point[]> track(final Mat lastImg, final Mat currentImg, Point[] lastPoints){
-        final int size = lastPoints.length;
-        final MatOfPoint2f currentPointsMat = new MatOfPoint2f();
-        final MatOfPoint2f pointsFBMat = new MatOfPoint2f();
-        final MatOfByte statusMat = new MatOfByte();
-        final MatOfFloat errSimilarityMat = new MatOfFloat();
-        final MatOfByte statusFBMat = new MatOfByte();
-        final MatOfFloat errSimilarityFBMat = new MatOfFloat();
-//        MatOfPoint2f test = new MatOfPoint2f();
-//        Imgproc.cvtColor(new MatOfPoint(lastPoints), test, CvType.CV_32F);
-//        Log.d(FeatureService.class.getCanonicalName(), "check vector of test: " + test.checkVector(2, CvType.CV_32F, true));
-        Log.d(FeatureService.class.getCanonicalName(), "check vector of new MatOfPoint2f from last points: " + new MatOfPoint2f(lastPoints).checkVector(2, CvType.CV_32F, true));
-        Log.d(FeatureService.class.getCanonicalName(), "check vector of new MatOfPoint2f from currentPointsMat: " + currentPointsMat.checkVector(2, CvType.CV_32F, true));
-
-        MatOfPoint2f prevPointsTest = new MatOfPoint2f();
-        MatOfPoint2f prevPoints = new MatOfPoint2f(lastPoints);
-        prevPoints.convertTo(prevPointsTest, CvType.CV_32F);
-        Log.d(FeatureService.class.getCanonicalName(), "check vector of new MatOfPoint2f from prevPointsTest: " + prevPointsTest.checkVector(2, CvType.CV_32F, true));
-
-        //Forward-Backward tracking
-        Video.calcOpticalFlowPyrLK(lastImg, currentImg, new MatOfPoint2f(lastPoints), currentPointsMat,
-                statusMat, errSimilarityMat, WINDOW_SIZE, MAX_LEVEL, termCriteria, 0, LAMBDA);
-        Video.calcOpticalFlowPyrLK(currentImg, lastImg, currentPointsMat, pointsFBMat,
-                statusFBMat, errSimilarityFBMat, WINDOW_SIZE, MAX_LEVEL, termCriteria, 0, LAMBDA);
-
-        final byte[] status = statusMat.toArray();
-        float[] errSimilarity = new float[lastPoints.length];
-        //final byte[] statusFB = statusFBMat.toArray();
-        final float[] errSimilarityFB = errSimilarityFBMat.toArray();
-
-        // compute the real FB error (relative to LAST points not the current ones...
-        final Point[] pointsFB = pointsFBMat.toArray();
-        for(int i = 0; i < size; i++){
-            errSimilarityFB[i] = NativeUtils.norm(pointsFB[i], lastPoints[i]);
-        }
-
-        final Point[] currPoints = currentPointsMat.toArray();
-        // compute real similarity error
-        errSimilarity = normCrossCorrelation(lastImg, currentImg, lastPoints, currPoints, status);
-
-
-        //TODO  errSimilarityFB has problem != from C++
-        // filter out points with fwd-back error > the median AND points with similarity error > median
-        return filterPts(lastPoints, currPoints, errSimilarity, errSimilarityFB, status);
-    }
-
-    private static final int MAX_COUNT = 20;
-    private static final double EPSILON = 0.03;
-    private static final Size WINDOW_SIZE = new Size(4, 4);
-    private static final int MAX_LEVEL = 5;
-    private static final float LAMBDA = 0f; // minEigenThreshold
-    private static final Size CROSS_CORR_PATCH_SIZE = new Size(10, 10);
-
-    /**
-     * @return real similarities errors
-     */
-    private float[] normCrossCorrelation(final Mat lastImg, final Mat currentImg, final Point[] lastPoints, final Point[] currentPoints, final byte[] status){
-        final float[] similarity = new float[lastPoints.length];
-
-        final Mat lastPatch = new Mat(CROSS_CORR_PATCH_SIZE, CvType.CV_8U);
-        final Mat currentPatch = new Mat(CROSS_CORR_PATCH_SIZE, CvType.CV_8U);
-        final Mat res = new Mat(new Size(1, 1), CvType.CV_32F);
-
-        for(int i = 0; i < lastPoints.length; i++){
-            if(status[i] == 1){
-                Imgproc.getRectSubPix(lastImg, CROSS_CORR_PATCH_SIZE, lastPoints[i], lastPatch);
-                Imgproc.getRectSubPix(currentImg, CROSS_CORR_PATCH_SIZE, currentPoints[i], currentPatch);
-                Imgproc.matchTemplate(lastPatch, currentPatch, res, Imgproc.TM_CCOEFF_NORMED);
-
-                similarity[i] = NativeUtils.getFloat(0, 0, res);
-            }else{
-                similarity[i] = 0f;
-            }
-        }
-
-        return similarity;
-    }
-
-    float errFBMed;
-
-    /**
-     * @return Pair of new, FILTERED, last and current POINTS. Null if none were valid (with similarity > median and FB error <= median)
-     */
-    private Pair<Point[], Point[]> filterPts(final Point[] lastPoints, final Point[] currentPoints, final float[] similarity, final float[] errFB, final byte[] status){
-        final List<Point> filteredLastPoints = new ArrayList<>();
-        final List<Point> filteredCurrentPoints = new ArrayList<>();
-        final List<Float> filteredErrFB = new ArrayList<>();
-
-        final float similarityMed = NativeUtils.median(similarity);
-        Log.i(NativeUtils.TAG, "Filter points MED SIMILARITY: " + similarityMed);
-
-        for(int i = 0; i < currentPoints.length; i++){
-            if(status[i] == 1 && similarity[i] > similarityMed){
-                filteredLastPoints.add(lastPoints[i]);
-                filteredCurrentPoints.add(currentPoints[i]);
-                filteredErrFB.add(errFB[i]);
-            }
-        }
-
-        final List<Point> filteredLastPoints2 = new ArrayList<>();
-        final List<Point> filteredCurrentPoints2 = new ArrayList<>();
-        if(filteredErrFB.size() > 0){
-            errFBMed = NativeUtils.median(filteredErrFB);
-
-            for(int i = 0; i < filteredErrFB.size(); i++){
-                // status has already been checked
-                if(filteredErrFB.get(i) <= errFBMed){
-                    filteredLastPoints2.add(filteredLastPoints.get(i));
-                    filteredCurrentPoints2.add(filteredCurrentPoints.get(i));
-                }
-            }
-
-            Log.i(NativeUtils.TAG, "Filter points MED ErrFB: " + errFBMed + " K count=" + filteredLastPoints2.size());
-        }
-
-        final int size = filteredLastPoints2.size();
-        return size > 0 ? new Pair<Point[], Point[]>(filteredLastPoints2.toArray(new Point[size]), filteredCurrentPoints2.toArray(new Point[size])) : null;
     }
 
     public FeatureDetector getDetector() {
