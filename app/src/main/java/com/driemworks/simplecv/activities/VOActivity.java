@@ -6,11 +6,9 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
-import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.features2d.Features2d;
@@ -19,7 +17,6 @@ import org.opencv.imgproc.Imgproc;
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.Pair;
 import android.view.WindowManager;
 
 import com.driemworks.ar.MonocularVisualOdometry.FeatureService;
@@ -51,6 +48,9 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
     /** The input camera frame in RGBA format */
     private Mat mRgba;
+    private Mat gray;
+    private Mat intermediateMat;
+    private Mat output;
 
     /** The customSurfaceView surface view */
     private CustomSurfaceView customSurfaceView;
@@ -72,12 +72,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     /** The current feature wrapper */
     private FeatureWrapper wrapper = null;
 
-    /** The points detected in the "previous" image */
-    private MatOfPoint2f currentPoints;
-
-    /** The points detected in the "current" image */
-    private MatOfPoint2f previousPoints;
-
     // TODO calculate intrinsic params of camera (camera calibration)
     private float focal = 718.8560f;
     private Point pp = new Point(607.1928, 185.2157);
@@ -85,17 +79,21 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     /** The current sequential frame features */
     private SequentialFrameFeatures sequentialFrameFeatures;
 
-    private Mat gray;
-    private Mat intermediateMat;
-    private Mat output;
+    /** The currently detected points */
+    private MatOfPoint2f currentPoints;
+    /** The previously detected points */
+    private MatOfPoint2f previousPoints;
+    /** The essential matrix */
+    private Mat essentialMat;
+    /** The rotation matrix */
+    private Mat rotationMatrix;
+    /** The translation matrix */
+    private Mat translationMatrix;
 
     /** The default constructor */
     public VOActivity() {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
-
-    private Mat r;
-    private Mat t;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -119,18 +117,22 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
         setContentView(R.layout.main_surface_view);
 
-        r = new Mat();
-        t = new Mat();
+        // init matrix variables
+        rotationMatrix = new Mat();
+        translationMatrix = new Mat();
+        currentPoints = new MatOfPoint2f();
+        previousPoints = new MatOfPoint2f();
+        essentialMat = new Mat();
 
-        gray = new Mat();
-        intermediateMat = new Mat();
-        output = new Mat();
-
+        // setup the surface view
         customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
         customSurfaceView.setCvCameraViewListener(this);
         customSurfaceView.setMaxFrameSize(800, 480);
 
+        // init base loader callback
         mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView);
+
+        // init services
         featureService = new FeatureService();
     }
 
@@ -160,12 +162,18 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     public void onCameraViewStarted(int width, int height) {
         Log.d(TAG, "camera view started");
         mRgba = new Mat(height, width, CvType.CV_8UC4);
+        gray = new Mat();
+        intermediateMat = new Mat();
+        output = new Mat();
     }
 
     @Override
     public void onCameraViewStopped() {
         Log.d(TAG, "camera view stopped");
         mRgba.release();
+        gray.release();
+        intermediateMat.release();
+        output.release();
     }
 
     @Override
@@ -187,32 +195,42 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         }
 
         // track into next image
-        if (previousWrapper != null && previousWrapper.getFrame() != null) {
+        if (previousWrapper != null && previousWrapper.getFrame() != null && !previousWrapper.getKeyPoints().empty()) {
             MatOfByte status = new MatOfByte();
             MatOfFloat err = new MatOfFloat();
             Mat mask = new Mat();
             // previous image, current image, previous keypoints
             sequentialFrameFeatures = featureService.featureTracking(
-                    /* already grayscale */previousWrapper.getFrameAsGrayscale(), gray,
-                    previousWrapper.getKeyPoints(),
-                    status, err);
+                    previousWrapper.getFrameAsGrayscale(), gray,
+                    previousWrapper.getKeyPoints(), status, err);
 
             currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(sequentialFrameFeatures.getCurrentFrameFeaturePoints());
             previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(sequentialFrameFeatures.getPreviousFrameFeaturePoints());
 
             // calculate the essential matrix
-            Mat e = Calib3d.findEssentialMat(currentPoints, previousPoints,
+            essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
                     focal, pp, Calib3d.RANSAC, 0.99, 1.0, mask);
 
             // calculate rotation and translation matrices
-            Calib3d.recoverPose(e, currentPoints, previousPoints, r, t, focal, pp, mask);
-//            Log.d(TAG, "Calculated rotation matrix: " + R.toString());
-//            Log.d(TAG, "Calculated translation matrix " + t.get(0,0).length);
+            if (essentialMat.isContinuous()) {
+                Calib3d.recoverPose(essentialMat, currentPoints, previousPoints, rotationMatrix, translationMatrix, focal, pp, mask);
+                Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
+                if (translationMatrix != null) {
+                    Log.d(TAG, "Calculated trajectory: " + calculateTrajectory(translationMatrix));
+                }
+            }
         }
 
         previousWrapper = FeatureWrapper.clone(wrapper);
         Log.d(TAG, "END - onCameraFrame - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
         return output;
+    }
+
+    private Point calculateTrajectory(Mat translationMatrix) {
+        Point traj = new Point(translationMatrix.get(0, 0)[0],
+                translationMatrix.get(2, 0)[0]);
+        Log.d(TAG, "Trajectory: " + traj.toString());
+        return traj;
     }
 
     @Override
