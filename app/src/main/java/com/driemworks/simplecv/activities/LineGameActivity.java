@@ -111,12 +111,6 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
         screenWidth = size.x;
         screenHeight = size.y;
 
-//        if (!OpenCVLoader.initDebug()) {
-//            Log.e("OpvenCVLoader", "OvenCVLoader successful: false");
-//        } else {
-//            Log.d("OpenCVLoader", "OpenCVLoader successful");
-//        }
-
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         cameraPermissionService = new CameraPermissionServiceImpl(this);
@@ -285,7 +279,6 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
         }
 
         // how will we select which contours to use?
-
         RotatedRect rect = Imgproc.minAreaRect(new MatOfPoint2f(contours.get(0).toArray()));
 
         Map<Integer, Rect> rectMap = ImageProcessingUtils.getBoundedRect(rect, contours);

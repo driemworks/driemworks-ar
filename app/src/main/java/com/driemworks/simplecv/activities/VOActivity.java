@@ -5,54 +5,36 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.calib3d.Calib3d;
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
 import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.View.OnTouchListener;
+import android.util.Pair;
 import android.view.WindowManager;
 
 import com.driemworks.ar.MonocularVisualOdometry.FeatureService;
 import com.driemworks.ar.dto.FeatureWrapper;
-import com.driemworks.ar.imageProcessing.ColorBlobDetector;
-import com.driemworks.ar.services.SurfaceDetectionService;
-import com.driemworks.common.dto.SurfaceDataDTO;
+import com.driemworks.ar.dto.SequentialFrameFeatures;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.enums.Resolution;
-import com.driemworks.simplecv.enums.Tags;
-import com.driemworks.simplecv.layout.impl.ConfigurationLayoutManager;
-import com.driemworks.simplecv.services.permission.impl.LocationPermissionServiceImpl;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
 import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.simplecv.utils.DisplayUtils;
 
-import org.opencv.core.Size;
-import org.opencv.video.Video;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 /**
- *
+ * @author Tony
  */
 public class VOActivity extends Activity implements CvCameraViewListener2 {
 
@@ -84,14 +66,37 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     /** The feature service */
     private FeatureService featureService;
 
+    /** The previous feature wrapper */
+    private FeatureWrapper previousWrapper = null;
+
+    /** The current feature wrapper */
+    private FeatureWrapper wrapper = null;
+
+    /** The points detected in the "previous" image */
+    private MatOfPoint2f currentPoints;
+
+    /** The points detected in the "current" image */
+    private MatOfPoint2f previousPoints;
+
+    // TODO calculate intrinsic params of camera (camera calibration)
+    private float focal = 718.8560f;
+    private Point pp = new Point(607.1928, 185.2157);
+
+    /** The current sequential frame features */
+    private SequentialFrameFeatures sequentialFrameFeatures;
+
+    private Mat gray;
+    private Mat intermediateMat;
+    private Mat output;
+
     /** The default constructor */
     public VOActivity() {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
-    /**
-     * Called when the activity is first created.
-     */
+    private Mat r;
+    private Mat t;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
@@ -113,6 +118,13 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         cameraPermissionService = new CameraPermissionServiceImpl(this);
 
         setContentView(R.layout.main_surface_view);
+
+        r = new Mat();
+        t = new Mat();
+
+        gray = new Mat();
+        intermediateMat = new Mat();
+        output = new Mat();
 
         customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
         customSurfaceView.setCvCameraViewListener(this);
@@ -138,121 +150,71 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         customSurfaceView.setMaxFrameSize(Resolution.RES_STANDARD.getWidth(), Resolution.RES_STANDARD.getHeight());
     }
 
+    @Override
     public void onDestroy() {
         super.onDestroy();
         customSurfaceView.disableView();
     }
 
+    @Override
     public void onCameraViewStarted(int width, int height) {
         Log.d(TAG, "camera view started");
         mRgba = new Mat(height, width, CvType.CV_8UC4);
     }
 
+    @Override
     public void onCameraViewStopped() {
         Log.d(TAG, "camera view stopped");
         mRgba.release();
     }
 
-    private Mat previousFrame = null;
-    private FeatureWrapper previousWrapper = null;
-
-    private float focal = 718.8560f;
-    private Point pp = new Point(607.1928, 185.2157);
-
-    /**
-     *
-     * @param inputFrame
-     * @return
-     */
+    @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        // get the images from the input frame
+        Log.d(TAG, "START - onCameraFrame");
+        long startTime = System.currentTimeMillis();
+        // get the image from the input frame
         mRgba = inputFrame.rgba();
-        Mat rgb = new Mat();
-        Mat output = mRgba.clone();
+        gray = inputFrame.gray();
+        intermediateMat = new Mat();
+        Imgproc.cvtColor(mRgba, intermediateMat, Imgproc.COLOR_RGBA2RGB);
+        output = mRgba.clone();
 
-        // if it is the first frame, no second frame will exist
-        // so after extracting the features, we need to break
-
-        // 1) features detection
-        Imgproc.cvtColor(mRgba, rgb, Imgproc.COLOR_RGBA2RGB);
-        FeatureWrapper wrapper = featureService.featureDetection(mRgba);
-        // draw detected keypoints features
-        Features2d.drawKeypoints(rgb, wrapper.getKeyPoints(), rgb);
-
-        // first time through (frame 0)
-        // just set the previous wrapper to the wrapper
-        if (previousWrapper == null) {
-            previousWrapper = FeatureWrapper.clone(wrapper);
-            return output;
+        // detect and (optionally) draw key points
+        wrapper = featureService.featureDetection(mRgba);
+        if (false) {
+            Features2d.drawKeypoints(intermediateMat, wrapper.getKeyPoints(), intermediateMat);
+            Imgproc.cvtColor(intermediateMat, output, Imgproc.COLOR_RGB2RGBA);
         }
 
-        MatOfByte status = new MatOfByte();
-        MatOfFloat err = new MatOfFloat();
-        Map<String, List<Point>> trackedFeatures = featureService.featureTracking(previousWrapper, wrapper, status, err);
-        for (Map.Entry<String, List<Point>> e : trackedFeatures.entrySet()) {
-            Log.d(TAG, "tracked feature: " + e.toString());
+        // track into next image
+        if (previousWrapper != null && previousWrapper.getFrame() != null) {
+            MatOfByte status = new MatOfByte();
+            MatOfFloat err = new MatOfFloat();
+            Mat mask = new Mat();
+            // previous image, current image, previous keypoints
+            sequentialFrameFeatures = featureService.featureTracking(
+                    /* already grayscale */previousWrapper.getFrameAsGrayscale(), gray,
+                    previousWrapper.getKeyPoints(),
+                    status, err);
+
+            currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(sequentialFrameFeatures.getCurrentFrameFeaturePoints());
+            previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(sequentialFrameFeatures.getPreviousFrameFeaturePoints());
+
+            // calculate the essential matrix
+            Mat e = Calib3d.findEssentialMat(currentPoints, previousPoints,
+                    focal, pp, Calib3d.RANSAC, 0.99, 1.0, mask);
+
+            // calculate rotation and translation matrices
+            Calib3d.recoverPose(e, currentPoints, previousPoints, r, t, focal, pp, mask);
+//            Log.d(TAG, "Calculated rotation matrix: " + R.toString());
+//            Log.d(TAG, "Calculated translation matrix " + t.get(0,0).length);
         }
-//        output = trackFeatures(mRgba, true);
-//        Imgproc.cvtColor(rgb, output, Imgproc.COLOR_RGB2RGBA);
 
-
-
-//
-//        if (wrapper != null && previousFrame != null && previousWrapper != null && previousWrapper.getKeyPoints() != null) {
-//            Mat mask = new Mat();
-//            Mat R = new Mat();
-//            Mat t = new Mat();
-//            Log.d(TAG, "previous wrapper key points: " + previousWrapper.getKeyPoints().toString());
-//            Log.d(TAG, "previous wrapper check vector on keypoints " + previousWrapper.getKeyPoints().checkVector(2));
-//            Log.d(TAG, "previous wrapper check vector on descriptors " + previousWrapper.getDescriptors().checkVector(2));
-//            // should be a vector of length 2?
-//            if (previousWrapper.getKeyPoints().checkVector(2) > 0) {
-//                Mat E = Calib3d.findEssentialMat(ImageConversionUtils.convertMatOfKeyPointsTo2f(wrapper.getKeyPoints()),
-//                        ImageConversionUtils.convertMatOfKeyPointsTo2f(previousWrapper.getKeyPoints()),
-//                        focal, pp, Calib3d.RANSAC, 0.999, 1.0, mask);
-//                Calib3d.recoverPose(E, previousWrapper.getKeyPoints(), wrapper.getKeyPoints(), R, t, focal, pp);
-//                // use R and t to track camera position
-//                Log.d("Recovered Pose: ", "Calculated R and t: R: " + R.toString() + "\n" + "\t\t t: " + t.toString());
-//            }
-//        }
-
-        previousFrame = mRgba.clone();
         previousWrapper = FeatureWrapper.clone(wrapper);
+        Log.d(TAG, "END - onCameraFrame - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
         return output;
     }
 
-    /**
-     *
-     * @param frame
-     * @param drawMatches
-     * @return
-     */
-    private Mat trackFeatures(Mat frame, boolean drawMatches) {
-        FeatureWrapper currentWrapper = featureService.featureDetection(frame);
-        MatOfDMatch goodMatches = featureService.featureMatching(previousWrapper, currentWrapper);
-        Mat outputImage =  new Mat();
-        MatOfByte drawnMatches = new MatOfByte();
-        if (frame.empty() || frame.size() == new Size(0, 0)) {
-            return frame;
-        }
-
-        if (drawMatches) {
-            Features2d.drawMatches(previousWrapper.getFrame(), previousWrapper.getKeyPoints(),
-                    currentWrapper.getFrame(), currentWrapper.getKeyPoints(),
-                    goodMatches, outputImage);
-        }
-
-        previousWrapper = FeatureWrapper.clone(currentWrapper);
-        return outputImage;
-    }
-
-    /**
-     * Handle the results of a permissions request
-     *
-     * @param requestCode
-     * @param permissions
-     * @param grantResults
-     */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == CameraPermissionServiceImpl.REQUEST_CODE) {

@@ -4,8 +4,11 @@ import org.opencv.core.CvType;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.MatOfPoint3f;
 import org.opencv.core.Point;
+import org.opencv.core.Point3;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
@@ -13,12 +16,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by Tony on 4/22/2017.
+ * @author Tony
  */
-
 public class ImageConversionUtils {
 
+    /**
+     *
+     */
     private ImageConversionUtils() {}
+
+    /**
+     * Convert rgba mat to rgb
+     * @param rgba
+     * @return
+     */
+    public static Mat convertRgbaToGrayscale(Mat rgba) {
+        Mat gray = new Mat();
+        Imgproc.cvtColor(rgba, gray, Imgproc.COLOR_RGBA2GRAY);
+        return gray;
+    }
 
     /**
      * Convert a scalar formatted in HSV to a scalar formatted with RGBA
@@ -46,6 +62,29 @@ public class ImageConversionUtils {
         MatOfPoint2f pointMat = new MatOfPoint2f();
         pointMat.fromList(points);
         return pointMat;
+    }
+
+    public static MatOfPoint2f convertListToMatOfPoint2f(List<Point> points) {
+        MatOfPoint2f mat = new MatOfPoint2f();
+        mat.fromList(points);
+        return mat;
+    }
+
+    /**
+     * Converts a MatOfPoint2f to a MatOfPoint3f
+     * @param mat The MatOfPoint2f
+     * @return The MatOfPoint3f
+     */
+    public static MatOfPoint3f convertMatOfPoint2fTo3f(MatOfPoint2f mat, double z) {
+        List<Point3> point3fList = new ArrayList<>();
+        MatOfPoint3f matOfPoint3f = new MatOfPoint3f();
+
+        for (Point point : mat.toList()) {
+            point3fList.add(new Point3(point.x, point.y, z));
+        }
+
+        matOfPoint3f.fromList(point3fList);
+        return matOfPoint3f;
     }
 
 }

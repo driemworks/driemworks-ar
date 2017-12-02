@@ -3,6 +3,7 @@ package com.driemworks.ar.dto;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.imgproc.Imgproc;
 
 /**
  * Class to hold all info we need to know about the extracted features of the object.
@@ -98,5 +99,11 @@ public class FeatureWrapper {
 
     public void setMatches(MatOfDMatch matches) {
         this.matches = matches;
+    }
+
+    public Mat getFrameAsGrayscale() {
+        Mat gray = new Mat();
+        Imgproc.cvtColor(frame, gray, Imgproc.COLOR_RGBA2GRAY);
+        return gray;
     }
 }
