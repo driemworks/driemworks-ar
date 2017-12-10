@@ -4,20 +4,12 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
-import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfDMatch;
-import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -28,13 +20,10 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 
-import com.driemworks.ar.MonocularVisualOdometry.FeatureService;
-import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.imageProcessing.ColorBlobDetector;
 import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
-import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.enums.Resolution;
 import com.driemworks.simplecv.enums.Tags;
@@ -45,10 +34,6 @@ import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.simplecv.utils.DisplayUtils;
 
 import org.opencv.core.Size;
-import org.opencv.video.Video;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
