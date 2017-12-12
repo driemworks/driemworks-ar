@@ -2,13 +2,13 @@ package com.driemworks.common.factories;
 
 import android.app.Activity;
 
+import com.driemworks.common.views.CustomSurfaceView;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
-import com.driemworks.common.views.CustomSurfaceView;
 /**
- * Created by Tony on 7/7/2017.
+ * @author Tony
  */
-
 public class BaseLoaderCallbackFactory {
 
     /**

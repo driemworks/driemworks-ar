@@ -18,31 +18,18 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 /**
- *
+ * Test suite for the CameraPoseDTO
  */
-public class ShapeDetectorTest {
-
-    ShapeDetector shapeDetector;
-
-    Mat image;
+public class CameraPoseDTOTest {
 
     /** load the opencv lib */
     static {
         System.loadLibrary("opencv_java3");
     }
 
-    @Before
-    public void setup() {
-        shapeDetector = new ShapeDetector();
-        image = new Mat(400, 400, CvType.CV_32F);
-        image.setTo(new Scalar(255, 255, 255));
-        Imgproc.rectangle(image, new Point(100, 100), new Point(200, 200), new Scalar(0,0,0), 2);
-        Imgcodecs.imwrite("D:/work/rect.jpg", image);
+    @Test
+    public void testCanAdd() {
+
     }
 
-    @Test
-    public void can_locate_vertices() throws Exception {
-        List<Pair> vertices = shapeDetector.findVertices(image);
-        Assert.assertNotNull(vertices);
-    }
 }

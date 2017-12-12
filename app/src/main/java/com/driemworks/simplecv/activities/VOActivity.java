@@ -21,8 +21,10 @@ import android.util.Log;
 import android.view.WindowManager;
 
 import com.driemworks.ar.MonocularVisualOdometry.services.impl.FeatureServiceImpl;
+import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
+import com.driemworks.ar.utils.CvUtils;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.simplecv.R;
@@ -31,12 +33,15 @@ import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.simplecv.utils.DisplayUtils;
 
 /**
- * The Monocular Visual Odometry activity
+ * The Monocular Visual Odometry testing activity
  * @author Tony
  */
 public class VOActivity extends Activity implements CvCameraViewListener2 {
 
-    private Mat traj;
+    /**
+     * The camera pose dto - the current pose of the camera
+     */
+    private CameraPoseDTO currentPose;
 
     /* load the opencv lib */
     static {
@@ -76,7 +81,14 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     private FeatureWrapper wrapper = null;
 
     // TODO calculate intrinsic params of camera (camera calibration)
+    // the values provided are not actual values
+    /**
+     * The focal length
+     */
     private static final float focal = 718.8560f;
+    /**
+     * The principal point
+     */
     private static final Point pp = new Point(607.1928, 185.2157);
 
     /** The current sequential frame features */
@@ -131,8 +143,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         rotationMatrix = new Mat(3, 3, CvType.CV_64FC1);
         translationMatrix = new Mat(3, 1, CvType.CV_64FC1);
 
-        traj = new Mat(320, 240, CvType.CV_8UC1);
-        traj.setTo(new Scalar(0, 0, 0));
+        currentPose = new CameraPoseDTO();
 
         currentPoints = new MatOfPoint2f();
         previousPoints = new MatOfPoint2f();
@@ -231,8 +242,10 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
             long startTimeNew = System.currentTimeMillis();
             Log.d(TAG, "START - findEssentialMat - numCurrentPoints: "
                     + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
-            essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints);
-//                    focal, pp, Calib3d.RANSAC, 0.95, 0.99, mask);
+
+            // RANSAC was far too costly...using LMEDS
+            essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
+                    focal, pp, Calib3d.LMEDS, 0.75 , 1, mask);
             Log.d(TAG, "END - findEssentialMat - time elapsed "
                     + (System.currentTimeMillis() - startTimeNew) + " ms");
 
@@ -248,15 +261,22 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
                         (System.currentTimeMillis() - startTimeNew) + " ms");
                 Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
                 if (!translationMatrix.empty()) {
-                    Point pos = calculateTrajectory(translationMatrix);
-                    pos.x += 50;
-                    pos.y += 50;
+                    Point deltaPos = calculateTrajectory(translationMatrix);
+                    deltaPos.x += 50;
+                    deltaPos.y += 50;
 //                    Imgproc.circle(traj, pos, 5, new Scalar(255, 0, 0), 2);
-                    Log.d(TAG, "Drawing trajectory, current points: " + pos.toString());
+                    Log.d(TAG, "Calculated deltaPos: in orthogonal plane " + deltaPos.toString());
                 }
-//                Mat finalTranslationMatrix = new Mat(3, 1, CvType.CV_64FC1);
-//                Core.multiply(translationMatrix, rotationMatrix, finalTranslationMatrix);
-//                Core.add(finalTranslationMa trix, translationMatrix, finalTranslationMatrix);
+
+                if (!translationMatrix.empty() && !rotationMatrix.empty()) {
+//                    currentPose.update(translationMatrix, rotationMatrix);
+                    Log.d(TAG, currentPose.toString());
+                    Log.d(TAG, "#= translationMatrix " + CvUtils.printMat(translationMatrix));
+                    Log.d(TAG, "#= rotationMatrix " + CvUtils.printMat(rotationMatrix));
+                } else {
+                    Log.d(TAG, "translation and/or rotation matrix was empty.");
+                }
+
             }
 
             mask.release();
@@ -264,25 +284,9 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
             status.release();
         }
 
-        Log.d(TAG, "#= rotationMatrix " + rotationMatrix);
-        Log.d(TAG, "#= translationMatrix " + translationMatrix);
-        Log.d(TAG, "#= currentPoints " + currentPoints);
-        Log.d(TAG, "#= previousPoints " + previousPoints);
-        Log.d(TAG, "#= essentialMat " + essentialMat);
-
-//        rotationMatrix.release();
-//        translationMatrix.release();
-//        currentPoints.release();
-//        previousPoints.release();
-//        essentialMat.release();
-//        mRgba.release();
-//        gray.release();
-//        intermediateMat.release();
-
         if (!wrapper.getFrame().empty()) {
             Log.d(TAG, "Cloning feature wrapper");
             previousWrapper = FeatureWrapper.clone(wrapper);
-//            wrapper.release();
         }
 
         Log.d(TAG, "END - onCameraFrame - time elapsed: " +
@@ -290,11 +294,18 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         return output;
     }
 
+    /**
+     * Calculate the change in trajectory in the XY plane
+     * @param translationMatrix the translation matrix
+     * @return The change in trajectory as a vector
+     */
     private Point calculateTrajectory(Mat translationMatrix) {
-        Point traj = new Point(translationMatrix.get(0, 0)[0],
+        return new Point(translationMatrix.get(0, 0)[0],
                 translationMatrix.get(2, 0)[0]);
-        Log.d(TAG, "Trajectory: " + traj.toString());
-        return traj;
+    }
+
+    private void updatePose() {
+
     }
 
     @Override

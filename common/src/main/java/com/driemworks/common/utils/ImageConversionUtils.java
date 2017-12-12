@@ -16,13 +16,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Utility class for image conversions
  * @author Tony
  */
 public class ImageConversionUtils {
 
-    /**
-     *
-     */
+    /** private constructor */
     private ImageConversionUtils() {}
 
     /**
@@ -38,8 +37,8 @@ public class ImageConversionUtils {
 
     /**
      * Convert a scalar formatted in HSV to a scalar formatted with RGBA
-     * @param hsvColor
-     * @return
+     * @param hsvColor the HSV color
+     * @return the converted RGBA scalar
      */
     public static Scalar convertScalarHsv2Rgba(Scalar hsvColor) {
         Mat pointMatRgba = new Mat();
