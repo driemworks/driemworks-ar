@@ -2,10 +2,11 @@ apply plugin: 'com.android.library'
 
 buildscript {
     repositories {
+        jcenter()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.3.3'
+        classpath 'com.android.tools.build:gradle:3.0.1'
     }
 }
 
@@ -33,4 +34,7 @@ android {
             aidl.srcDirs = ['src']
         }
     }
+}
+repositories {
+    google()
 }

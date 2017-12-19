@@ -123,19 +123,19 @@ public class FeatureServiceImpl implements FeatureService {
 
         MatOfPoint2f currentKeyPoints2f = new MatOfPoint2f();
 
+        // img_0 => img_1
         Video.calcOpticalFlowPyrLK(previousFrameGray, currentFrameGray,
                 previousKeyPoints2f, currentKeyPoints2f,
-                status, err, size, 0, termCriteria, 0, 0.001);
+                status, err, size, 0, termCriteria, 0, 0.0001);
+
+        // img_1 => img_2
+        Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
+                currentKeyPoints2f, previousKeyPoints2f,
+                status, err, size, 0, termCriteria, 0, 0.0001);
 
         byte[] statusArray = status.toArray();
-        Log.d("statusArray", "length: " + statusArray.length);
-
-        Map<String, LinkedList<Point>> filteredPointMap = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), statusArray);
         Log.d(this.getClass().getCanonicalName(), "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
-//        previousKeyPoints2f.release();
-//        previousKPConverted.release();
-//        currentKeyPoints2f.release();
-        return new SequentialFrameFeatures(filteredPointMap.get(PREVIOUS), filteredPointMap.get(CURRENT));
+        return filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), statusArray);
     }
 
     /**
@@ -144,8 +144,9 @@ public class FeatureServiceImpl implements FeatureService {
      * @param currentKeypoints The list of keypoints in the current image
      * @param statusArray The status array
      */
-    private Map<String, LinkedList<Point>> filterPoints(List<Point> previousKeypoints, List<Point> currentKeypoints, byte[] statusArray) {
+    private SequentialFrameFeatures filterPoints(List<Point> previousKeypoints, List<Point> currentKeypoints, byte[] statusArray) {
         int indexCorrection = 0;
+        // copy lists
         LinkedList<Point> currentCopy = new LinkedList<>(currentKeypoints);
         LinkedList<Point> previousCopy = new LinkedList<>(previousKeypoints);
         for (int i = 0; i < currentKeypoints.size(); i++) {
@@ -166,7 +167,8 @@ public class FeatureServiceImpl implements FeatureService {
         Map<String, LinkedList<Point>> filteredPointsMap = new LinkedHashMap<>();
         filteredPointsMap.put(PREVIOUS, previousCopy);
         filteredPointsMap.put(CURRENT, currentCopy);
-        return filteredPointsMap;
+        return new SequentialFrameFeatures(previousCopy, currentCopy);
+
     }
 
     /**

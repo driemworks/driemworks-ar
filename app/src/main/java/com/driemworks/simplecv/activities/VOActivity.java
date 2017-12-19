@@ -9,6 +9,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfFloat;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
@@ -89,7 +90,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     /**
      * The principal point
      */
-    private static final Point pp = new Point(607.1928, 185.2157);
+    private static final Point pp = new Point(100, 100);
 
     /** The current sequential frame features */
     private SequentialFrameFeatures sequentialFrameFeatures;
@@ -117,6 +118,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     }
 
     @Override
+
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
@@ -201,8 +203,102 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         output.release();
     }
 
+    private int threshold = 100;
+    private int retry;
+
+
+    private Mat myMethod(CvCameraViewFrame inputFrame) {
+        Log.d(TAG, "START - onCameraFrame");
+        long startTime = System.currentTimeMillis();
+        mRgba = inputFrame.rgba();
+        gray = inputFrame.gray();
+        output = mRgba.clone();
+
+        if (previousWrapper == null) {
+            previousWrapper = featureService.featureDetection(mRgba);
+        } else if (previousWrapper != null && previousWrapper.getFrame() != null && ! previousWrapper.getKeyPoints().empty()) {
+
+            // reset status and err mats
+            status = new MatOfByte();
+            err = new MatOfFloat();
+
+            // track feature from the previous image into the current image
+            sequentialFrameFeatures = featureService.featureTracking(
+                    previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints(), status, err);
+
+            // now check if number of features tracked is less than the threshold value
+            if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < threshold) {
+                // just redetect - not redetection AND tracking
+                previousWrapper = featureService.featureDetection(previousWrapper.getFrame());
+                return output;
+            }
+
+            // draws filtered feature points on output
+            if (true) {
+                for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
+                    Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
+                }
+            }
+
+            // convert the lists of points to MatOfPoint2f's
+            currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(
+                    sequentialFrameFeatures.getCurrentFrameFeaturePoints());
+            previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(
+                    sequentialFrameFeatures.getPreviousFrameFeaturePoints());
+
+
+            if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
+                mask = new Mat();
+                // calculate the essential matrix
+                long startTimeNew = System.currentTimeMillis();
+                Log.d(TAG, "START - findEssentialMat - numCurrentPoints: "
+                        + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
+
+                // RANSAC was far too costly...using LMEDS
+                essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
+                        focal, pp, Calib3d.LMEDS, 0.99, 1, mask);
+                Log.d(TAG, "END - findEssentialMat - time elapsed "
+                        + (System.currentTimeMillis() - startTimeNew) + " ms");
+
+                // calculate rotation and translation matrices
+                if (!essentialMat.empty() && essentialMat.rows() == 3 &&
+                        essentialMat.cols() == 3 && essentialMat.isContinuous()) {
+                    Log.d(TAG, "START - recoverPose");
+                    startTimeNew = System.currentTimeMillis();
+                    Calib3d.recoverPose(essentialMat, currentPoints,
+                            previousPoints, rotationMatrix, translationMatrix, focal, pp, mask);
+                    Log.d(TAG, "END - recoverPose - time elapsed " +
+                            (System.currentTimeMillis() - startTimeNew) + " ms");
+                    Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
+
+                    if (!translationMatrix.empty() && !rotationMatrix.empty()) {
+                        currentPose.update(translationMatrix, rotationMatrix);
+                        Log.d(TAG, currentPose.toString());
+                        Log.d(TAG, "#= translationMatrix " + CvUtils.printMat(translationMatrix));
+                        Log.d(TAG, "#= rotationMatrix " + CvUtils.printMat(rotationMatrix));
+                    } else {
+                        Log.d(TAG, "translation and/or rotation matrix was empty.");
+                    }
+                }
+                mask.release();
+            }
+            err.release();
+            status.release();
+
+            if (!wrapper.getFrame().empty()) {
+                Log.d(TAG, "Cloning feature wrapper");
+                previousWrapper = FeatureWrapper.clone(wrapper);
+            }
+
+            Log.d(TAG, "END - onCameraFrame - time elapsed: " +
+                    (System.currentTimeMillis() - startTime) + " ms");
+        }
+        return output;
+    }
+
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+//        return myMethod(inputFrame);
         Log.d(TAG, "START - onCameraFrame");
         long startTime = System.currentTimeMillis();
         // get the image from the input frame
@@ -212,12 +308,10 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
         Imgproc.cvtColor(mRgba, intermediateMat, Imgproc.COLOR_RGBA2RGB);
 
+        // this needs to be moved...
+        // we only want to redetect features if the number of tracked features has fallen below a
+        // specific threshold
         wrapper = featureService.featureDetection(mRgba);
-
-        if (true) {
-            Features2d.drawKeypoints(intermediateMat, wrapper.getKeyPoints(), intermediateMat);
-            Imgproc.cvtColor(intermediateMat, output, Imgproc.COLOR_RGB2RGBA);
-        }
 
         // track into next image
         if (previousWrapper != null && previousWrapper.getFrame() != null
@@ -232,56 +326,58 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
                     previousWrapper.getFrameAsGrayscale(), gray,
                     previousWrapper.getKeyPoints(), status, err);
 
+            // draws filtered feature points on output
+            if (true) {
+                for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
+                    Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
+                }
+            }
+
             // convert the points
             currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(
                     sequentialFrameFeatures.getCurrentFrameFeaturePoints());
             previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(
                     sequentialFrameFeatures.getPreviousFrameFeaturePoints());
 
+
             // calculate the essential matrix
             long startTimeNew = System.currentTimeMillis();
             Log.d(TAG, "START - findEssentialMat - numCurrentPoints: "
                     + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
 
-            // RANSAC was far too costly...using LMEDS
-            essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
-                    focal, pp, Calib3d.LMEDS, 0.75 , 1, mask);
-            Log.d(TAG, "END - findEssentialMat - time elapsed "
-                    + (System.currentTimeMillis() - startTimeNew) + " ms");
+            if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
+                // RANSAC was far too costly...using LMEDS
+                essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
+                        focal, pp, Calib3d.LMEDS, 0.99, 1, mask);
+                Log.d(TAG, "END - findEssentialMat - time elapsed "
+                        + (System.currentTimeMillis() - startTimeNew) + " ms");
 
+                // calculate rotation and translation matrices
+                if (!essentialMat.empty() && essentialMat.rows() == 3 &&
+                        essentialMat.cols() == 3 && essentialMat.isContinuous()) {
+                    Log.d(TAG, "START - recoverPose");
+                    startTimeNew = System.currentTimeMillis();
+                    Calib3d.recoverPose(essentialMat, currentPoints,
+                            previousPoints, rotationMatrix, translationMatrix, focal, pp, mask);
+                    Log.d(TAG, "END - recoverPose - time elapsed " +
+                            (System.currentTimeMillis() - startTimeNew) + " ms");
+                    Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
 
-            // calculate rotation and translation matrices
-            if (!essentialMat.empty() && essentialMat.rows() == 3 &&
-                    essentialMat.cols() == 3 && essentialMat.isContinuous()) {
-                Log.d(TAG, "START - recoverPose");
-                startTimeNew = System.currentTimeMillis();
-                Calib3d.recoverPose(essentialMat, currentPoints,
-                        previousPoints, rotationMatrix, translationMatrix, focal, pp, mask);
-                Log.d(TAG, "END - recoverPose - time elapsed " +
-                        (System.currentTimeMillis() - startTimeNew) + " ms");
-                Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
-                if (!translationMatrix.empty()) {
-                    Point deltaPos = calculateTrajectory(translationMatrix);
-                    deltaPos.x += 50;
-                    deltaPos.y += 50;
-//                    Imgproc.circle(traj, pos, 5, new Scalar(255, 0, 0), 2);
-                    Log.d(TAG, "Calculated deltaPos: in orthogonal plane " + deltaPos.toString());
+                    if (!translationMatrix.empty() && !rotationMatrix.empty()) {
+                        currentPose.update(translationMatrix, rotationMatrix);
+                        Log.d(TAG, currentPose.toString());
+                        Log.d(TAG, "#= translationMatrix " + CvUtils.printMat(translationMatrix));
+                        Log.d(TAG, "#= rotationMatrix " + CvUtils.printMat(rotationMatrix));
+                    } else {
+                        Log.d(TAG, "translation and/or rotation matrix was empty.");
+                    }
+
                 }
 
-                if (!translationMatrix.empty() && !rotationMatrix.empty()) {
-//                    currentPose.update(translationMatrix, rotationMatrix);
-                    Log.d(TAG, currentPose.toString());
-                    Log.d(TAG, "#= translationMatrix " + CvUtils.printMat(translationMatrix));
-                    Log.d(TAG, "#= rotationMatrix " + CvUtils.printMat(rotationMatrix));
-                } else {
-                    Log.d(TAG, "translation and/or rotation matrix was empty.");
-                }
-
+                mask.release();
+                err.release();
+                status.release();
             }
-
-            mask.release();
-            err.release();
-            status.release();
         }
 
         if (!wrapper.getFrame().empty()) {

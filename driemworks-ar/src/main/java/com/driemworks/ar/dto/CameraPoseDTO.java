@@ -33,11 +33,11 @@ public class CameraPoseDTO {
         super();
 
         // init coordinate to (0, 0, 0)
-        this.coordinate = new Mat(3, 1, CvType.CV_32FC1);
+        this.coordinate = new Mat(3, 1, CvType.CV_64FC1);
         coordinate.setTo(new Scalar(0, 0,0));
 
         // init direction to identity
-        this.direction = new Mat(3,3, CvType.CV_32FC1);
+        this.direction = new Mat(3,3, CvType.CV_64FC1);
         direction.setTo(new Scalar(0, 0, 0));
         double[] one = {1};
         direction.put(0, 0,one);

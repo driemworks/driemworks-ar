@@ -36,6 +36,7 @@ public class FeatureWrapper {
      * The mat of matches
      */
     private MatOfDMatch matches;
+
     /**
      * Creates a clone of a FeatureWrapper
      * @param wrapper the FeatureWrapper to be cloned
