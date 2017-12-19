@@ -26,12 +26,9 @@ public interface FeatureService {
      * @param previousFrameGray The previous image in grayscale
      * @param currentFrameGray The current image in grayscale
      * @param previousKeyPoints The list of previously detected key points
-     * @param status The status matrix
-     * @param err The error matrix
      * @return {@link SequentialFrameFeatures}
      */
     SequentialFrameFeatures featureTracking(Mat previousFrameGray, Mat currentFrameGray,
-                                                   MatOfKeyPoint previousKeyPoints,
-                                                   MatOfByte status, MatOfFloat err);
+                                                   MatOfKeyPoint previousKeyPoints);
 
 }

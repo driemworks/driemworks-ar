@@ -110,10 +110,12 @@ public class FeatureServiceImpl implements FeatureService {
 
     @Override
     public SequentialFrameFeatures featureTracking(Mat previousFrameGray, Mat currentFrameGray,
-                                                   MatOfKeyPoint previousKeyPoints,
-                                                   MatOfByte status, MatOfFloat err) {
+                                                   MatOfKeyPoint previousKeyPoints) {
         Log.d(this.getClass().getCanonicalName(), "START - featureTracking");
         long startTime = System.currentTimeMillis();
+
+        MatOfByte status = new MatOfByte();
+        MatOfFloat err = new MatOfFloat();
 
         // filter out points not tracked in current frame
         MatOfPoint2f previousKeyPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(previousKeyPoints);
@@ -129,13 +131,16 @@ public class FeatureServiceImpl implements FeatureService {
                 status, err, size, 0, termCriteria, 0, 0.0001);
 
         // img_1 => img_2
-        Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
-                currentKeyPoints2f, previousKeyPoints2f,
-                status, err, size, 0, termCriteria, 0, 0.0001);
+//        Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
+//                currentKeyPoints2f, previousKeyPoints2f,
+//                status, err, size, 0, termCriteria, 0, 0.0001);
 
         byte[] statusArray = status.toArray();
         Log.d(this.getClass().getCanonicalName(), "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
-        return filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), statusArray);
+        SequentialFrameFeatures features = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), statusArray);
+        status.release();
+        err.release();
+        return features;
     }
 
     /**
@@ -164,9 +169,6 @@ public class FeatureServiceImpl implements FeatureService {
             }
         }
 
-        Map<String, LinkedList<Point>> filteredPointsMap = new LinkedHashMap<>();
-        filteredPointsMap.put(PREVIOUS, previousCopy);
-        filteredPointsMap.put(CURRENT, currentCopy);
         return new SequentialFrameFeatures(previousCopy, currentCopy);
 
     }

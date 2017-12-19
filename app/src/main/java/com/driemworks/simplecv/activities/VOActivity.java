@@ -105,10 +105,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     private Mat rotationMatrix;
     /** The translation matrix */
     private Mat translationMatrix;
-    /** The status matrix */
-    private MatOfByte status;
-    /** The error matrix */
-    private MatOfFloat err;
     /** The mask matrix */
     private Mat mask;
 
@@ -203,11 +199,18 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         output.release();
     }
 
-    private int threshold = 100;
+    /**
+     * The minimum number of tracked features per image
+     */
+    private static final int threshold = 20;
     private int retry;
 
-
-    private Mat myMethod(CvCameraViewFrame inputFrame) {
+    /**
+     *
+     * @param inputFrame
+     * @return
+     */
+    private Mat monocularVisualOdometry(CvCameraViewFrame inputFrame) {
         Log.d(TAG, "START - onCameraFrame");
         long startTime = System.currentTimeMillis();
         mRgba = inputFrame.rgba();
@@ -216,15 +219,12 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
         if (previousWrapper == null) {
             previousWrapper = featureService.featureDetection(mRgba);
+            return output;
         } else if (previousWrapper != null && previousWrapper.getFrame() != null && ! previousWrapper.getKeyPoints().empty()) {
-
-            // reset status and err mats
-            status = new MatOfByte();
-            err = new MatOfFloat();
 
             // track feature from the previous image into the current image
             sequentialFrameFeatures = featureService.featureTracking(
-                    previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints(), status, err);
+                    previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
 
             // now check if number of features tracked is less than the threshold value
             if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < threshold) {
@@ -282,13 +282,9 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
                 }
                 mask.release();
             }
-            err.release();
-            status.release();
 
-            if (!wrapper.getFrame().empty()) {
-                Log.d(TAG, "Cloning feature wrapper");
-                previousWrapper = FeatureWrapper.clone(wrapper);
-            }
+            previousWrapper.setFrame(mRgba);
+            previousWrapper.setKeyPoints(ImageConversionUtils.convertMatOf2fToKeyPoints(currentPoints, 2, 2));
 
             Log.d(TAG, "END - onCameraFrame - time elapsed: " +
                     (System.currentTimeMillis() - startTime) + " ms");
@@ -298,110 +294,95 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-//        return myMethod(inputFrame);
-        Log.d(TAG, "START - onCameraFrame");
-        long startTime = System.currentTimeMillis();
-        // get the image from the input frame
-        mRgba = inputFrame.rgba();
-        gray = inputFrame.gray();
-        output = mRgba.clone();
+        if (true) {
+            return monocularVisualOdometry(inputFrame);
+        } else {
+            Log.d(TAG, "START - onCameraFrame");
+            long startTime = System.currentTimeMillis();
+            // get the image from the input frame
+            mRgba = inputFrame.rgba();
+            gray = inputFrame.gray();
+            output = mRgba.clone();
 
-        Imgproc.cvtColor(mRgba, intermediateMat, Imgproc.COLOR_RGBA2RGB);
+            Imgproc.cvtColor(mRgba, intermediateMat, Imgproc.COLOR_RGBA2RGB);
 
-        // this needs to be moved...
-        // we only want to redetect features if the number of tracked features has fallen below a
-        // specific threshold
-        wrapper = featureService.featureDetection(mRgba);
+            // this needs to be moved...
+            // we only want to redetect features if the number of tracked features has fallen below a
+            // specific threshold
+            wrapper = featureService.featureDetection(mRgba);
 
-        // track into next image
-        if (previousWrapper != null && previousWrapper.getFrame() != null
-                && !previousWrapper.getKeyPoints().empty()) {
-            // I think these can all be initialized in the onCreate function, as well as be local to the class
-            status = new MatOfByte();
-            err = new MatOfFloat();
-            mask = new Mat();
+            // track into next image
+            if (previousWrapper != null && previousWrapper.getFrame() != null
+                    && !previousWrapper.getKeyPoints().empty()) {
+                // I think these can all be initialized in the onCreate function, as well as be local to the class
+                mask = new Mat();
 
-            // track features into next image, filters out bad points
-            sequentialFrameFeatures = featureService.featureTracking(
-                    previousWrapper.getFrameAsGrayscale(), gray,
-                    previousWrapper.getKeyPoints(), status, err);
+                // track features into next image, filters out bad points
+                sequentialFrameFeatures = featureService.featureTracking(
+                        previousWrapper.getFrameAsGrayscale(), gray,
+                        previousWrapper.getKeyPoints());
 
-            // draws filtered feature points on output
-            if (true) {
-                for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
-                    Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
+                // draws filtered feature points on output
+                if (true) {
+                    for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
+                        Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
+                    }
                 }
-            }
 
-            // convert the points
-            currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(
-                    sequentialFrameFeatures.getCurrentFrameFeaturePoints());
-            previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(
-                    sequentialFrameFeatures.getPreviousFrameFeaturePoints());
+                // convert the points
+                currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(
+                        sequentialFrameFeatures.getCurrentFrameFeaturePoints());
+                previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(
+                        sequentialFrameFeatures.getPreviousFrameFeaturePoints());
 
 
-            // calculate the essential matrix
-            long startTimeNew = System.currentTimeMillis();
-            Log.d(TAG, "START - findEssentialMat - numCurrentPoints: "
-                    + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
+                // calculate the essential matrix
+                long startTimeNew = System.currentTimeMillis();
+                Log.d(TAG, "START - findEssentialMat - numCurrentPoints: "
+                        + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
 
-            if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
-                // RANSAC was far too costly...using LMEDS
-                essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
-                        focal, pp, Calib3d.LMEDS, 0.99, 1, mask);
-                Log.d(TAG, "END - findEssentialMat - time elapsed "
-                        + (System.currentTimeMillis() - startTimeNew) + " ms");
+                if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
+                    // RANSAC was far too costly...using LMEDS
+                    essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
+                            focal, pp, Calib3d.LMEDS, 0.99, 1, mask);
+                    Log.d(TAG, "END - findEssentialMat - time elapsed "
+                            + (System.currentTimeMillis() - startTimeNew) + " ms");
 
-                // calculate rotation and translation matrices
-                if (!essentialMat.empty() && essentialMat.rows() == 3 &&
-                        essentialMat.cols() == 3 && essentialMat.isContinuous()) {
-                    Log.d(TAG, "START - recoverPose");
-                    startTimeNew = System.currentTimeMillis();
-                    Calib3d.recoverPose(essentialMat, currentPoints,
-                            previousPoints, rotationMatrix, translationMatrix, focal, pp, mask);
-                    Log.d(TAG, "END - recoverPose - time elapsed " +
-                            (System.currentTimeMillis() - startTimeNew) + " ms");
-                    Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
+                    // calculate rotation and translation matrices
+                    if (!essentialMat.empty() && essentialMat.rows() == 3 &&
+                            essentialMat.cols() == 3 && essentialMat.isContinuous()) {
+                        Log.d(TAG, "START - recoverPose");
+                        startTimeNew = System.currentTimeMillis();
+                        Calib3d.recoverPose(essentialMat, currentPoints,
+                                previousPoints, rotationMatrix, translationMatrix, focal, pp, mask);
+                        Log.d(TAG, "END - recoverPose - time elapsed " +
+                                (System.currentTimeMillis() - startTimeNew) + " ms");
+                        Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
 
-                    if (!translationMatrix.empty() && !rotationMatrix.empty()) {
-                        currentPose.update(translationMatrix, rotationMatrix);
-                        Log.d(TAG, currentPose.toString());
-                        Log.d(TAG, "#= translationMatrix " + CvUtils.printMat(translationMatrix));
-                        Log.d(TAG, "#= rotationMatrix " + CvUtils.printMat(rotationMatrix));
-                    } else {
-                        Log.d(TAG, "translation and/or rotation matrix was empty.");
+                        if (!translationMatrix.empty() && !rotationMatrix.empty()) {
+                            currentPose.update(translationMatrix, rotationMatrix);
+                            Log.d(TAG, currentPose.toString());
+                            Log.d(TAG, "#= translationMatrix " + CvUtils.printMat(translationMatrix));
+                            Log.d(TAG, "#= rotationMatrix " + CvUtils.printMat(rotationMatrix));
+                        } else {
+                            Log.d(TAG, "translation and/or rotation matrix was empty.");
+                        }
+
                     }
 
+                    mask.release();
                 }
-
-                mask.release();
-                err.release();
-                status.release();
             }
+
+            if (!wrapper.getFrame().empty()) {
+                Log.d(TAG, "Cloning feature wrapper");
+                previousWrapper = FeatureWrapper.clone(wrapper);
+            }
+
+            Log.d(TAG, "END - onCameraFrame - time elapsed: " +
+                    (System.currentTimeMillis() - startTime) + " ms");
+            return output;
         }
-
-        if (!wrapper.getFrame().empty()) {
-            Log.d(TAG, "Cloning feature wrapper");
-            previousWrapper = FeatureWrapper.clone(wrapper);
-        }
-
-        Log.d(TAG, "END - onCameraFrame - time elapsed: " +
-                (System.currentTimeMillis() - startTime) + " ms");
-        return output;
-    }
-
-    /**
-     * Calculate the change in trajectory in the XY plane
-     * @param translationMatrix the translation matrix
-     * @return The change in trajectory as a vector
-     */
-    private Point calculateTrajectory(Mat translationMatrix) {
-        return new Point(translationMatrix.get(0, 0)[0],
-                translationMatrix.get(2, 0)[0]);
-    }
-
-    private void updatePose() {
-
     }
 
     @Override

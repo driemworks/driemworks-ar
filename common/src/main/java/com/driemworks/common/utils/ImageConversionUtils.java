@@ -74,6 +74,16 @@ public class ImageConversionUtils {
         return mat;
     }
 
+    public static MatOfKeyPoint convertMatOf2fToKeyPoints(MatOfPoint2f matOfPoint2f, float size, float angle) {
+        MatOfKeyPoint matOfKeyPoint = new MatOfKeyPoint();
+        List<KeyPoint> keypoints = new ArrayList<>();
+        for (Point p : matOfPoint2f.toList()) {
+            keypoints.add(new KeyPoint((float)p.x, (float)p.y, size, angle));
+        }
+        matOfKeyPoint.fromList(keypoints);
+        return matOfKeyPoint;
+    }
+
     /**
      * Converts a MatOfPoint2f to a MatOfPoint3f
      * @param mat The MatOfPoint2f
