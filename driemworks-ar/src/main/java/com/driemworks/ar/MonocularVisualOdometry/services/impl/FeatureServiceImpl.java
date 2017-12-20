@@ -128,12 +128,12 @@ public class FeatureServiceImpl implements FeatureService {
         // img_0 => img_1
         Video.calcOpticalFlowPyrLK(previousFrameGray, currentFrameGray,
                 previousKeyPoints2f, currentKeyPoints2f,
-                status, err, size, 0, termCriteria, 0, 0.0001);
+                status, err, size, 3, termCriteria, Video.OPTFLOW_LK_GET_MIN_EIGENVALS, 0.0001);
 
         // img_1 => img_2
-//        Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
-//                currentKeyPoints2f, previousKeyPoints2f,
-//                status, err, size, 0, termCriteria, 0, 0.0001);
+        Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
+                currentKeyPoints2f, previousKeyPoints2f,
+                status, err, size, 3, termCriteria, Video.OPTFLOW_LK_GET_MIN_EIGENVALS,0.0001);
 
         byte[] statusArray = status.toArray();
         Log.d(this.getClass().getCanonicalName(), "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
