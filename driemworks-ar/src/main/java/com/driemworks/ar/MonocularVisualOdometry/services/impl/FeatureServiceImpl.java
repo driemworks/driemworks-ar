@@ -59,15 +59,7 @@ public class FeatureServiceImpl implements FeatureService {
     /** The size */
     private Size size;
 
-    /**
-     * The constant "previous"
-     */
-    private static final String PREVIOUS = "previous";
-
-    /**
-     * The constant "current"
-     */
-    private static final String CURRENT = "current";
+    private static final double MIN_EIGEN_THRESHOLD = 0.0002;
 
     /**
      * Constructor for the FeatureServiceImpl with default params (FAST/ORB/HAMMING)
@@ -80,7 +72,7 @@ public class FeatureServiceImpl implements FeatureService {
         // brute force hamming metric
         descriptorMatcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
         size = new Size(21, 21);
-        termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 10, 0.02);
+        termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 10, 0.01);
     }
 
     /**
@@ -128,12 +120,14 @@ public class FeatureServiceImpl implements FeatureService {
         // img_0 => img_1
         Video.calcOpticalFlowPyrLK(previousFrameGray, currentFrameGray,
                 previousKeyPoints2f, currentKeyPoints2f,
-                status, err, size, 3, termCriteria, Video.OPTFLOW_LK_GET_MIN_EIGENVALS, 0.0001);
+                status, err, size, 3, termCriteria,
+                Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
 
         // img_1 => img_2
         Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
                 currentKeyPoints2f, previousKeyPoints2f,
-                status, err, size, 3, termCriteria, Video.OPTFLOW_LK_GET_MIN_EIGENVALS,0.0001);
+                status, err, size, 3, termCriteria,
+                Video.OPTFLOW_LK_GET_MIN_EIGENVALS,MIN_EIGEN_THRESHOLD);
 
         byte[] statusArray = status.toArray();
         Log.d(this.getClass().getCanonicalName(), "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");

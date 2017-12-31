@@ -39,8 +39,9 @@ public class CameraPoseDTO {
         // init direction to identity
         this.direction = new Mat(3,3, CvType.CV_64FC1);
         direction.setTo(new Scalar(0, 0, 0));
+
         double[] one = {1};
-        direction.put(0, 0,one);
+        direction.put(0, 0, one);
         direction.put(1, 1, one);
         direction.put(2, 2, one);
     }

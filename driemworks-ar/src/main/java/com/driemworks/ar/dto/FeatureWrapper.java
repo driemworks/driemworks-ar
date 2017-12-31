@@ -107,6 +107,14 @@ public class FeatureWrapper {
     }
 
     /**
+     * Checks if either the input frame or keypoits are empty
+     * @return true if either are empty, false otherwise
+     */
+    public boolean empty() {
+        return frame.empty() || keyPoints.empty();
+    }
+
+    /**
      * Getter for the frame
      * @return frame The frame
      */

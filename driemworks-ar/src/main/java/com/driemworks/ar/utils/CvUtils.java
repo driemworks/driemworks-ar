@@ -7,9 +7,9 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 /**
- * Created by Tony on 12/10/2017.
+ * Computer Vision utilities
+ * @author Tony
  */
-
 public class CvUtils {
 
     /**

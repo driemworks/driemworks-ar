@@ -7,13 +7,9 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfFloat;
-import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -25,7 +21,6 @@ import com.driemworks.ar.MonocularVisualOdometry.services.impl.FeatureServiceImp
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
-import com.driemworks.ar.utils.CvUtils;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.simplecv.R;
@@ -93,13 +88,13 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     // TODO calculate intrinsic params of camera (camera calibration)
     // the values provided are not actual values
     /**
-     * The focal length
+     * The FOCAL length
      */
-    private static final float focal = 718.8560f;
+    private static final float FOCAL = 718.8560f;
     /**
      * The principal point
      */
-    private static final Point pp = new Point(100, 100);
+    private static final Point PRINCIPAL_POINT = new Point(100, 100);
 
     /** The current sequential frame features */
     private SequentialFrameFeatures sequentialFrameFeatures;
@@ -121,7 +116,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     }
 
     @Override
-
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
@@ -157,7 +151,8 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
         customSurfaceView.setCvCameraViewListener(this);
         customSurfaceView.setMaxFrameSize(
-                Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth(), Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight());
+                Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth(),
+                Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight());
 
         // init base loader callback
         mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(
@@ -216,20 +211,23 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     private Mat monocularVisualOdometry(CvCameraViewFrame inputFrame) {
         Log.d(TAG, "START - onCameraFrame");
         long startTime = System.currentTimeMillis();
+
         mRgba = inputFrame.rgba();
         gray = inputFrame.gray();
         output = mRgba.clone();
 
+        // if the previous wrapper has not been initialized
+        // or the wrapper is empty (no frame or no keypoints)
         if (previousWrapper == null) {
             previousWrapper = featureService.featureDetection(mRgba);
             return output;
-        } else if (previousWrapper.getFrame() != null && ! previousWrapper.getKeyPoints().empty()) {
-
+        } else if (!previousWrapper.empty()) {
             // track feature from the previous image into the current image
             sequentialFrameFeatures = featureService.featureTracking(
                     previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
 
-            // now check if number of features tracked is less than the threshold value
+            // check if number of features tracked is less than the threshold value
+            // if less than threshold, then redetect features
             if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < threshold) {
                 previousWrapper = featureService.featureDetection(previousWrapper.getFrame());
                 return output;
@@ -248,7 +246,8 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
             previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(
                     sequentialFrameFeatures.getPreviousFrameFeaturePoints());
 
-
+            // check that the list of points detected in the current frames are non empty and of
+            // the correct format
             if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
                 Mat mask = new Mat();
                 // calculate the essential matrix
@@ -257,7 +256,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
                         + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
                 // RANSAC was far too costly...using LMEDS
                 essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
-                        focal, pp, Calib3d.LMEDS, 0.99, 1, mask);
+                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.2, mask);
                 Log.d(TAG, "END - findEssentialMat - time elapsed "
                         + (System.currentTimeMillis() - startTimeNew) + " ms");
 
@@ -267,7 +266,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
                     Log.d(TAG, "START - recoverPose");
                     startTimeNew = System.currentTimeMillis();
                     Calib3d.recoverPose(essentialMat, currentPoints,
-                            previousPoints, rotationMatrix, translationMatrix, focal, pp, mask);
+                            previousPoints, rotationMatrix, translationMatrix, FOCAL, PRINCIPAL_POINT, mask);
                     Log.d(TAG, "END - recoverPose - time elapsed " +
                             (System.currentTimeMillis() - startTimeNew) + " ms");
 
@@ -295,7 +294,10 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-            return monocularVisualOdometry(inputFrame);
+        // should this be multithreaded?
+        // i.e. for each frame, start a thread to call the mvo method
+        // then have a separate thread for the camera that simply returns the camera capture
+        return monocularVisualOdometry(inputFrame);
     }
 
     @Override

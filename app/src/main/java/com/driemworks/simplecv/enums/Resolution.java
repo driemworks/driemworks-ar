@@ -30,18 +30,34 @@ public enum Resolution {
         this.height = height;
     }
 
+    /**
+     * Getter for the width
+     * @return width The width
+     */
     public int getWidth() {
         return width;
     }
 
+    /**
+     * Setter for the width
+     * @param width The width to set
+     */
     public void setWidth(int width) {
         this.width = width;
     }
 
+    /**
+     * Getter for the height
+     * @return The height
+     */
     public int getHeight() {
         return height;
     }
 
+    /**
+     * Setter for the height
+     * @param height The height to set
+     */
     public void setHeight(int height) {
         this.height = height;
     }

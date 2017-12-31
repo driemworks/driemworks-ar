@@ -6,9 +6,9 @@ import android.view.Display;
 import android.view.MotionEvent;
 
 /**
- * Created by Tony on 10/15/2017.
+ * Utility class for correcting coordinates for display purposes
+ * @author Tony
  */
-
 public class DisplayUtils {
 
     /**
