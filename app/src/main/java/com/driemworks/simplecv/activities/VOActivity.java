@@ -48,7 +48,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     /**
      * The minimum number of tracked features per image
      */
-    private static final int threshold = 20;
+    private static final int THRESHOLD = 10;
 
     /** The service to request permission to use camera at runtime */
     private CameraPermissionServiceImpl cameraPermissionService;
@@ -218,17 +218,19 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
         // if the previous wrapper has not been initialized
         // or the wrapper is empty (no frame or no keypoints)
-        if (previousWrapper == null) {
+        if (previousWrapper == null || previousWrapper.empty()) {
+            Log.d(TAG, "previous wrapper is null!");
             previousWrapper = featureService.featureDetection(mRgba);
             return output;
-        } else if (!previousWrapper.empty()) {
+        } else {
+
             // track feature from the previous image into the current image
             sequentialFrameFeatures = featureService.featureTracking(
                     previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
 
-            // check if number of features tracked is less than the threshold value
-            // if less than threshold, then redetect features
-            if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < threshold) {
+            // check if number of features tracked is less than the THRESHOLD value
+            // if less than THRESHOLD, then redetect features
+            if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
                 previousWrapper = featureService.featureDetection(previousWrapper.getFrame());
                 return output;
             }

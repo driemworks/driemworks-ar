@@ -59,7 +59,7 @@ public class FeatureServiceImpl implements FeatureService {
     /** The size */
     private Size size;
 
-    private static final double MIN_EIGEN_THRESHOLD = 0.0002;
+    private static final double MIN_EIGEN_THRESHOLD = 0.001;
 
     /**
      * Constructor for the FeatureServiceImpl with default params (FAST/ORB/HAMMING)
@@ -72,7 +72,7 @@ public class FeatureServiceImpl implements FeatureService {
         // brute force hamming metric
         descriptorMatcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
         size = new Size(21, 21);
-        termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 10, 0.01);
+        termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 20, 0.02);
     }
 
     /**
@@ -117,13 +117,13 @@ public class FeatureServiceImpl implements FeatureService {
 
         MatOfPoint2f currentKeyPoints2f = new MatOfPoint2f();
 
-        // img_0 => img_1
+        // previous => current
         Video.calcOpticalFlowPyrLK(previousFrameGray, currentFrameGray,
                 previousKeyPoints2f, currentKeyPoints2f,
                 status, err, size, 3, termCriteria,
                 Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
 
-        // img_1 => img_2
+        // current => previous (backtracking)
         Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
                 currentKeyPoints2f, previousKeyPoints2f,
                 status, err, size, 3, termCriteria,

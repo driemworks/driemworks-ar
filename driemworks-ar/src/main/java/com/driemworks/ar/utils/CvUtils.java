@@ -37,7 +37,7 @@ public class CvUtils {
         assert m1.size() == m2.size();
         assert m1.type() == m2.type();
         Mat prod = new Mat(m1.size(), m1.type());
-        Core.multiply(m1, m2, prod);
+        Core.gemm(m1, m2, 1, new Mat(), 0, prod);
         return prod;
     }
 

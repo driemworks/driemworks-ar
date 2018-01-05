@@ -1,7 +1,10 @@
 package com.driemworks.ar.dto;
 
+import android.util.Log;
+
 import com.driemworks.ar.utils.CvUtils;
 
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
@@ -62,8 +65,10 @@ public class CameraPoseDTO {
      * @param rotation The 3 x 3 rotation matrix
      */
     public void update(Mat translation, Mat rotation) {
-        this.coordinate = CvUtils.add(this.coordinate, translation);
+        Log.d("rotation: ", "" + rotation);
+        Log.d("translation: ", "" + translation);
         this.direction = CvUtils.mult(this.direction, rotation);
+        this.coordinate = CvUtils.add(this.coordinate, CvUtils.mult(this.direction, translation));
     }
 
     @Override
