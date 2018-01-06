@@ -10,30 +10,36 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.WindowManager;
 
 import com.driemworks.ar.MonocularVisualOdometry.services.impl.FeatureServiceImpl;
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
+import com.driemworks.ar.utils.CvUtils;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.enums.Resolution;
+import com.driemworks.simplecv.graphics.rendering.CubeRenderer;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
 import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.simplecv.utils.DisplayUtils;
+import com.threed.jpct.Object3D;
 
 /**
  * The Monocular Visual Odometry testing activity
  * @author Tony
  */
-public class VOActivity extends Activity implements CvCameraViewListener2 {
+public class VOActivity extends Activity implements CvCameraViewListener2, View.OnTouchListener {
 
     /**
      * The camera pose dto - the current pose of the camera
@@ -109,6 +115,14 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
     private Mat rotationMatrix;
     /** The translation matrix */
     private Mat translationMatrix;
+    /** The device's trajectory */
+    private Mat trajectory;
+    /** The is touch flag */
+    private boolean isTouch;
+    /** The multiplier for mapping trajectory */
+    private static final float MULTIPLIER = 2.0f;
+
+//    private CubeRenderer cubeRenderer;
 
     /** The default constructor */
     public VOActivity() {
@@ -160,6 +174,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
         // init service(s)
         featureService = new FeatureServiceImpl();
+//        cubeRenderer = new CubeRenderer(this);
     }
 
     @Override
@@ -220,10 +235,12 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         // or the wrapper is empty (no frame or no keypoints)
         if (previousWrapper == null || previousWrapper.empty()) {
             Log.d(TAG, "previous wrapper is null!");
+            trajectory = new Mat (Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight(),
+                    Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth(), CvType.CV_8UC3,
+                    new Scalar(0, 0, 0));
             previousWrapper = featureService.featureDetection(mRgba);
             return output;
         } else {
-
             // track feature from the previous image into the current image
             sequentialFrameFeatures = featureService.featureTracking(
                     previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
@@ -231,7 +248,8 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
             // check if number of features tracked is less than the THRESHOLD value
             // if less than THRESHOLD, then redetect features
             if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
-                previousWrapper = featureService.featureDetection(previousWrapper.getFrame());
+                // the Error ! if previous wrapper's image is empty... should do it in the current frame instead
+                previousWrapper = featureService.featureDetection(mRgba);
                 return output;
             }
 
@@ -276,7 +294,25 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
 
                     if (!translationMatrix.empty() && !rotationMatrix.empty()) {
                         currentPose.update(translationMatrix, rotationMatrix);
+                        Log.d(TAG,"trajectory " + "x: " + currentPose.getCoordinate().get(0,0)[0]);
+                        Log.d("trajectory ", "y: " + currentPose.getCoordinate().get(1,0)[0]);
+                        // centered at 0
+                        Log.d("trajectory ", "z: " + currentPose.getCoordinate().get(2,0)[0]);
+//                        cubeRenderer.setZ(12f*(float)currentPose.getCoordinate().get(2,0)[0]);
+
+                        MotionEvent ev = MotionEvent.obtain(0,0,0,
+                                 (float)currentPose.getCoordinate().get(0,0)[0],
+                                 (float)currentPose.getCoordinate().get(1, 0)[0],
+                                0);
+                        Point correctedPoint = DisplayUtils.correctCoordinate(ev, screenWidth, screenHeight);
+                        correctedPoint.x = MULTIPLIER * correctedPoint.x;
+                        correctedPoint.y = MULTIPLIER * correctedPoint.y;
+                        Imgproc.rectangle(trajectory,
+                               new Point(correctedPoint.x + 100, correctedPoint.y + 199),
+                                new Point(correctedPoint.x + 101, correctedPoint.y + 200),
+                                new Scalar(255,0,0));
                         Log.d(TAG, currentPose.toString());
+                        output = trajectory;
                     } else {
                         Log.d(TAG, "translation and/or rotation matrix was empty.");
                     }
@@ -299,7 +335,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         // should this be multithreaded?
         // i.e. for each frame, start a thread to call the mvo method
         // then have a separate thread for the camera that simply returns the camera capture
-        return monocularVisualOdometry(inputFrame);
+         return monocularVisualOdometry(inputFrame);
     }
 
     @Override
@@ -308,5 +344,16 @@ public class VOActivity extends Activity implements CvCameraViewListener2 {
         if (requestCode == CameraPermissionServiceImpl.REQUEST_CODE) {
             cameraPermissionService.handleResponse(requestCode, permissions, grantResults);
         }
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            isTouch = true;
+        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+            isTouch = false;
+        }
+
+        return isTouch;
     }
 }
