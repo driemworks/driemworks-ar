@@ -35,6 +35,8 @@ import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.simplecv.utils.DisplayUtils;
 import com.threed.jpct.Object3D;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * The Monocular Visual Odometry testing activity
  * @author Tony
@@ -257,7 +259,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             }
 
             // draws filtered feature points on output
-            if (true) {
+            if (false) {
                 for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
                     Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
                 }
@@ -279,7 +281,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                         + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
                 // RANSAC was far too costly...using LMEDS
                 essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
-                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.0, mask);
+                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 2.0, mask);
                 Log.d(TAG, "END - findEssentialMat - time elapsed "
                         + (System.currentTimeMillis() - startTimeNew) + " ms");
 
@@ -308,16 +310,25 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                                  (float)currentPose.getCoordinate().get(2, 0)[0],
                                 0);
                         Point correctedPoint = DisplayUtils.correctCoordinate(ev, screenWidth, screenHeight);
-                        correctedPoint.x = MULTIPLIER * correctedPoint.x + 100;
-                        correctedPoint.y = MULTIPLIER * correctedPoint.y + 100;
+                        correctedPoint.x = MULTIPLIER * correctedPoint.x;
+                        correctedPoint.y = MULTIPLIER * correctedPoint.y;
                         Log.d(TAG, "correctedPoint y: " + correctedPoint.y);
                         Imgproc.circle(trajectory, correctedPoint, 5, new Scalar(255, 0, 0));
-//                        Imgproc.rectangle(trajectory,
-//                               new Point(correctedPoint.x + 100, correctedPoint.y + 200),
-//                                new Point(correctedPoint.x + 101, correctedPoint.y + 201),
-//                                new Scalar(255,0,0));
                         Log.d(TAG, currentPose.toString());
-                        output = trajectory;
+//                        output = trajectory;
+                        Log.d(TAG, "radius of circle: " + (int)(correctedPoint.y * 6));
+
+                        int radius;
+
+                        if (correctedPoint.y > 0) {
+                            radius = (int)(correctedPoint.y * 6);
+                        } else {
+                            radius = (int)(-correctedPoint.y * 6);
+                        }
+                        Imgproc.circle(output,
+                                new Point(Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth() / 2,
+                                        Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight() / 2),
+                                radius, new Scalar(0, 0, 255));
                     } else {
                         Log.d(TAG, "translation and/or rotation matrix was empty.");
                     }
