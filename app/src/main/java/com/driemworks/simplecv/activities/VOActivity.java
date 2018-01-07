@@ -120,7 +120,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     /** The is touch flag */
     private boolean isTouch;
     /** The multiplier for mapping trajectory */
-    private static final float MULTIPLIER = 2.0f;
+    private static final float MULTIPLIER = 3f;
 
 //    private CubeRenderer cubeRenderer;
 
@@ -235,9 +235,12 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         // or the wrapper is empty (no frame or no keypoints)
         if (previousWrapper == null || previousWrapper.empty()) {
             Log.d(TAG, "previous wrapper is null!");
+            // reset the trajectory
             trajectory = new Mat (Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight(),
                     Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth(), CvType.CV_8UC3,
                     new Scalar(0, 0, 0));
+            // reset the camera pose
+            currentPose.reset();
             previousWrapper = featureService.featureDetection(mRgba);
             return output;
         } else {
@@ -276,7 +279,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                         + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
                 // RANSAC was far too costly...using LMEDS
                 essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
-                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.2, mask);
+                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.0, mask);
                 Log.d(TAG, "END - findEssentialMat - time elapsed "
                         + (System.currentTimeMillis() - startTimeNew) + " ms");
 
@@ -295,22 +298,24 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                     if (!translationMatrix.empty() && !rotationMatrix.empty()) {
                         currentPose.update(translationMatrix, rotationMatrix);
                         Log.d(TAG,"trajectory " + "x: " + currentPose.getCoordinate().get(0,0)[0]);
-                        Log.d("trajectory ", "y: " + currentPose.getCoordinate().get(1,0)[0]);
+                        Log.d("trajectory ", "y: " + currentPose.getCoordinate().get(2,0)[0]);
                         // centered at 0
                         Log.d("trajectory ", "z: " + currentPose.getCoordinate().get(2,0)[0]);
 //                        cubeRenderer.setZ(12f*(float)currentPose.getCoordinate().get(2,0)[0]);
 
                         MotionEvent ev = MotionEvent.obtain(0,0,0,
                                  (float)currentPose.getCoordinate().get(0,0)[0],
-                                 (float)currentPose.getCoordinate().get(1, 0)[0],
+                                 (float)currentPose.getCoordinate().get(2, 0)[0],
                                 0);
                         Point correctedPoint = DisplayUtils.correctCoordinate(ev, screenWidth, screenHeight);
-                        correctedPoint.x = MULTIPLIER * correctedPoint.x;
-                        correctedPoint.y = MULTIPLIER * correctedPoint.y;
-                        Imgproc.rectangle(trajectory,
-                               new Point(correctedPoint.x + 100, correctedPoint.y + 199),
-                                new Point(correctedPoint.x + 101, correctedPoint.y + 200),
-                                new Scalar(255,0,0));
+                        correctedPoint.x = MULTIPLIER * correctedPoint.x + 100;
+                        correctedPoint.y = MULTIPLIER * correctedPoint.y + 100;
+                        Log.d(TAG, "correctedPoint y: " + correctedPoint.y);
+                        Imgproc.circle(trajectory, correctedPoint, 5, new Scalar(255, 0, 0));
+//                        Imgproc.rectangle(trajectory,
+//                               new Point(correctedPoint.x + 100, correctedPoint.y + 200),
+//                                new Point(correctedPoint.x + 101, correctedPoint.y + 201),
+//                                new Scalar(255,0,0));
                         Log.d(TAG, currentPose.toString());
                         output = trajectory;
                     } else {

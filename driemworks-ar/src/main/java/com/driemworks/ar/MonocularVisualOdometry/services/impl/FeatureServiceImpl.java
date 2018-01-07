@@ -59,7 +59,7 @@ public class FeatureServiceImpl implements FeatureService {
     /** The size */
     private Size size;
 
-    private static final double MIN_EIGEN_THRESHOLD = 0.001;
+    private static final double MIN_EIGEN_THRESHOLD = 0.0001;
 
     /**
      * Constructor for the FeatureServiceImpl with default params (FAST/ORB/HAMMING)

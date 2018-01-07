@@ -34,19 +34,7 @@ public class CameraPoseDTO {
      */
     public CameraPoseDTO() {
         super();
-
-        // init coordinate to (0, 0, 0)
-        this.coordinate = new Mat(3, 1, CvType.CV_64FC1);
-        coordinate.setTo(new Scalar(0, 0,0));
-
-        // init direction to identity
-        this.direction = new Mat(3,3, CvType.CV_64FC1);
-        direction.setTo(new Scalar(0, 0, 0));
-
-        double[] one = {1};
-        direction.put(0, 0, one);
-        direction.put(1, 1, one);
-        direction.put(2, 2, one);
+        reset();
     }
 
     /**
@@ -71,24 +59,70 @@ public class CameraPoseDTO {
         this.coordinate = CvUtils.add(this.coordinate, CvUtils.mult(this.direction, translation));
     }
 
+    /**
+     * Set the coordinate to (0,0,0)
+     * Set the direction to the identity matrix
+     */
+    public void reset() {
+        resetDirection();
+        resetCoordinate();
+    }
+
+    /**
+     * Set the coordinate to (0,0,0)
+     */
+    private void resetCoordinate() {
+        this.coordinate = new Mat(3, 1, CvType.CV_64FC1);
+        coordinate.setTo(new Scalar(0, 0,0));
+    }
+
+    /**
+     * Set the direction to the (3x3) identity matrix
+     */
+    private void resetDirection() {
+        this.direction = new Mat(3,3, CvType.CV_64FC1);
+        direction.setTo(new Scalar(0, 0, 0));
+
+        double[] one = {1};
+        direction.put(0, 0, one);
+        direction.put(1, 1, one);
+        direction.put(2, 2, one);
+    }
+
     @Override
     public String toString() {
         return "CameraPoseDTO: " + "current coordinate: "
                 + CvUtils.printMat(coordinate) + "current direction: " + CvUtils.printMat(direction);
     }
 
+    /**
+     * Getter for the coordinate
+     * @return coordinate The coordinate
+     */
     public Mat getCoordinate() {
         return coordinate;
     }
 
+    /**
+     * Setter for the coordinate
+     * @param coordinate The coordinate to set
+     */
     public void setCoordinate(Mat coordinate) {
         this.coordinate = coordinate;
     }
 
+    /**
+     * Getter for the direction
+     * @return direction
+     */
     public Mat getDirection() {
         return direction;
     }
 
+    /**
+     * Setter for the direction
+     * @param direction The direction to set
+     */
     public void setDirection(Mat direction) {
         this.direction = direction;
     }
