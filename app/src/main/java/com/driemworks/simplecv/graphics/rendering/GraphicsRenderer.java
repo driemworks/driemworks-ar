@@ -1,21 +1,16 @@
 package com.driemworks.simplecv.graphics.rendering;
 
 import android.app.Activity;
-import android.content.res.AssetManager;
 import android.opengl.GLSurfaceView;
-import android.renderscript.ScriptGroup;
 import android.util.Log;
 
 import com.driemworks.sensor.utils.OrientationUtils;
 import com.driemworks.simplecv.activities.GameActivity;
-import com.driemworks.simplecv.enums.Resolution;
+import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.enums.Tags;
-import com.google.android.gms.wearable.Asset;
 import com.threed.jpct.Camera;
 import com.threed.jpct.FrameBuffer;
 import com.threed.jpct.Light;
-import com.threed.jpct.Loader;
-import com.threed.jpct.Matrix;
 import com.threed.jpct.Object3D;
 import com.threed.jpct.Primitives;
 import com.threed.jpct.RGBColor;
@@ -25,10 +20,6 @@ import com.threed.jpct.util.MemoryHelper;
 
 import org.opencv.core.Rect;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -38,7 +29,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * Created by Tony on 5/6/2017.
+ * @author Tony
  */
 public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.Renderer {
 

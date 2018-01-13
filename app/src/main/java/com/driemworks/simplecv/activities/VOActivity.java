@@ -1,6 +1,7 @@
 package com.driemworks.simplecv.activities;
 
 import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.OpenCVLoader;
@@ -10,7 +11,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
@@ -24,18 +24,13 @@ import com.driemworks.ar.MonocularVisualOdometry.services.impl.FeatureServiceImp
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
-import com.driemworks.ar.utils.CvUtils;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.simplecv.R;
-import com.driemworks.simplecv.enums.Resolution;
-import com.driemworks.simplecv.graphics.rendering.CubeRenderer;
+import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
 import com.driemworks.common.views.CustomSurfaceView;
-import com.driemworks.simplecv.utils.DisplayUtils;
-import com.threed.jpct.Object3D;
-
-import java.util.concurrent.atomic.AtomicInteger;
+import com.driemworks.common.utils.DisplayUtils;
 
 /**
  * The Monocular Visual Odometry testing activity
@@ -122,8 +117,21 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     /** The is touch flag */
     private boolean isTouch;
     /** The multiplier for mapping trajectory */
-    private static final float MULTIPLIER = 3f;
+    private static final float MULTIPLIER = 18f;
 
+    /** The runnable used to run the monocular visual odometry */
+    private Runnable run;
+
+    private boolean isRunning = false;
+
+    private Runnable createRunnable(final CvCameraViewFrame inputFrame) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                monocularVisualOdometry(inputFrame);
+            }
+        };
+    }
 //    private CubeRenderer cubeRenderer;
 
     /** The default constructor */
@@ -229,9 +237,9 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         Log.d(TAG, "START - onCameraFrame");
         long startTime = System.currentTimeMillis();
 
-        mRgba = inputFrame.rgba();
-        gray = inputFrame.gray();
-        output = mRgba.clone();
+//        mRgba = inputFrame.rgba();
+//        gray = inputFrame.gray();
+//        output = mRgba.clone();
 
         // if the previous wrapper has not been initialized
         // or the wrapper is empty (no frame or no keypoints)
@@ -298,38 +306,14 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                     Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
 
                     if (!translationMatrix.empty() && !rotationMatrix.empty()) {
+                        // this should be moved to a private method
                         currentPose.update(translationMatrix, rotationMatrix);
                         Log.d(TAG,"trajectory " + "x: " + currentPose.getCoordinate().get(0,0)[0]);
                         Log.d("trajectory ", "y: " + currentPose.getCoordinate().get(2,0)[0]);
                         // centered at 0
                         Log.d("trajectory ", "z: " + currentPose.getCoordinate().get(2,0)[0]);
 //                        cubeRenderer.setZ(12f*(float)currentPose.getCoordinate().get(2,0)[0]);
-
-                        MotionEvent ev = MotionEvent.obtain(0,0,0,
-                                 (float)currentPose.getCoordinate().get(0,0)[0],
-                                 (float)currentPose.getCoordinate().get(2, 0)[0],
-                                0);
-                        Point correctedPoint = DisplayUtils.correctCoordinate(ev, screenWidth, screenHeight);
-                        correctedPoint.x = MULTIPLIER * correctedPoint.x;
-                        correctedPoint.y = MULTIPLIER * correctedPoint.y;
-                        Log.d(TAG, "correctedPoint y: " + correctedPoint.y);
-                        Imgproc.circle(trajectory, correctedPoint, 5, new Scalar(255, 0, 0));
-                        Log.d(TAG, currentPose.toString());
-//                        output = trajectory;
-                        Log.d(TAG, "radius of circle: " + (int)(correctedPoint.y * 6));
-
-                        int radius;
-
-                        if (correctedPoint.y > 0) {
-                            radius = (int)(correctedPoint.y * 6);
-                        } else {
-                            radius = (int)(-correctedPoint.y * 6);
-                        }
-                        Imgproc.circle(output,
-                                new Point(Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth() / 2,
-                                        Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight() / 2),
-                                radius, new Scalar(0, 0, 255));
-                    } else {
+                     } else {
                         Log.d(TAG, "translation and/or rotation matrix was empty.");
                     }
                 }
@@ -343,15 +327,58 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             Log.d(TAG, "END - onCameraFrame - time elapsed: " +
                     (System.currentTimeMillis() - startTime) + " ms");
         }
+        isRunning = false;
         return output;
+    }
+
+    private void draw(boolean doDrawTrajectory) {
+        MotionEvent ev = MotionEvent.obtain(0, 0, 0,
+                (float) currentPose.getCoordinate().get(0, 0)[0],
+                (float) currentPose.getCoordinate().get(2, 0)[0],
+                0);
+        Point correctedPoint = DisplayUtils.correctCoordinate(ev, screenWidth, screenHeight);
+        correctedPoint.x = MULTIPLIER * correctedPoint.x / 6 + 100;
+        correctedPoint.y = MULTIPLIER * correctedPoint.y / 6 + 100;
+        Log.d(TAG, "correctedPoint y: " + correctedPoint.y);
+        Log.d(TAG, currentPose.toString());
+        if (doDrawTrajectory) {
+            Imgproc.circle(output, correctedPoint, 5, new Scalar(255, 0, 0));
+            output = trajectory;
+        } else {
+            Log.d(TAG, "radius of circle: " + (int) (correctedPoint.y));
+
+            int radius;
+            if (correctedPoint.y > 0) {
+                radius = (int) (correctedPoint.y);
+            } else {
+                radius = (int) (-correctedPoint.y);
+            }
+            // TODO I want to move the camera in the z direction...
+            Imgproc.circle(output,
+                    new Point(Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth() / 2,
+                            Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight() / 2),
+                    radius, new Scalar(0, 0, 255));
+        }
     }
 
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        // should this be multithreaded?
-        // i.e. for each frame, start a thread to call the mvo method
-        // then have a separate thread for the camera that simply returns the camera capture
-         return monocularVisualOdometry(inputFrame);
+//         return monocularVisualOdometry(inputFrame);
+        mRgba = inputFrame.rgba();
+        gray = inputFrame.gray();
+        output = mRgba.clone();
+
+        if (!isRunning) {
+            Log.d("thread ", "Starting the thread");
+            run = createRunnable(inputFrame);
+            run.run();
+        }
+
+        if (currentPose != null) {
+            draw(false);
+        }
+        Log.d("thread ", "Returning input frame");
+        return output;
     }
 
     @Override
@@ -372,4 +399,5 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
 
         return isTouch;
     }
+
 }

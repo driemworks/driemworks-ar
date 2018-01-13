@@ -3,7 +3,7 @@ package com.driemworks.simplecv.graphics.rendering;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
-import com.driemworks.simplecv.enums.Resolution;
+import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.graphics.EightCube;
 import com.driemworks.simplecv.utils.RandomUtils;
 import com.driemworks.simplecv.utils.RenderUtils;

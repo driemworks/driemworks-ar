@@ -21,11 +21,11 @@ import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.enums.IntentIdentifer;
-import com.driemworks.simplecv.enums.Resolution;
+import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.layout.impl.GameActivityLayoutManager;
 import com.driemworks.common.views.CustomSurfaceView;
-import com.driemworks.simplecv.utils.DisplayUtils;
+import com.driemworks.common.utils.DisplayUtils;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;

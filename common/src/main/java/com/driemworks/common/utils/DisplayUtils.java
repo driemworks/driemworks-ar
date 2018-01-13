@@ -1,4 +1,4 @@
-package com.driemworks.simplecv.utils;
+package com.driemworks.common.utils;
 
 import android.app.Activity;
 import android.graphics.Point;

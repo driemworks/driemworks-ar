@@ -25,13 +25,13 @@ import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.simplecv.R;
-import com.driemworks.simplecv.enums.Resolution;
+import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.enums.Tags;
 import com.driemworks.simplecv.layout.impl.ConfigurationLayoutManager;
 import com.driemworks.simplecv.services.permission.impl.LocationPermissionServiceImpl;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
 import com.driemworks.common.views.CustomSurfaceView;
-import com.driemworks.simplecv.utils.DisplayUtils;
+import com.driemworks.common.utils.DisplayUtils;
 
 import org.opencv.core.Size;
 

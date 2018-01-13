@@ -71,7 +71,7 @@ public class CameraPoseDTO {
     /**
      * Set the coordinate to (0,0,0)
      */
-    private void resetCoordinate() {
+    private void  resetCoordinate() {
         this.coordinate = new Mat(3, 1, CvType.CV_64FC1);
         coordinate.setTo(new Scalar(0, 0,0));
     }

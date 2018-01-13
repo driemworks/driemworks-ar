@@ -10,7 +10,7 @@ import com.driemworks.sensor.utils.OrientationUtils;
 import com.driemworks.simplecv.activities.MainActivity;
 import com.driemworks.simplecv.enums.ColorsEnum;
 import com.driemworks.simplecv.enums.IntentIdentifer;
-import com.driemworks.simplecv.enums.Resolution;
+import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.graphics.EightCube;
 import com.driemworks.simplecv.utils.RandomUtils;
 import com.driemworks.simplecv.utils.RenderUtils;
