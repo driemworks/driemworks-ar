@@ -2,10 +2,6 @@
 <p>An augmented reality application for android.</p>
 
 <h2>Getting Started</h2>
-
-The application should run on android 6.0 (Lollipop) and higher.
-See https://developer.android.com/studio/run/device.html to setup a hardware device.
-
 In progress features include:
 
 <ul>
