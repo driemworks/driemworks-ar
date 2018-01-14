@@ -124,11 +124,16 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
 
     private boolean isRunning = false;
 
-    private Runnable createRunnable(final CvCameraViewFrame inputFrame) {
+    /**
+     *
+     * @param drawKeypoints
+     * @return
+     */
+    private Runnable createRunnable(final boolean drawKeypoints) {
         return new Runnable() {
             @Override
             public void run() {
-                monocularVisualOdometry(inputFrame);
+                monocularVisualOdometry(drawKeypoints);
             }
         };
     }
@@ -184,6 +189,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
 
         // init service(s)
         featureService = new FeatureServiceImpl();
+        run = createRunnable(false);
 //        cubeRenderer = new CubeRenderer(this);
     }
 
@@ -230,16 +236,11 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     /**
      * This method performs feature detection and feature tracking on real time
      * camera input
-     * @param inputFrame The input frame
      * @return output The output frame
      */
-    private Mat monocularVisualOdometry(CvCameraViewFrame inputFrame) {
+    private void monocularVisualOdometry(boolean drawKeypoints) {
         Log.d(TAG, "START - onCameraFrame");
         long startTime = System.currentTimeMillis();
-
-//        mRgba = inputFrame.rgba();
-//        gray = inputFrame.gray();
-//        output = mRgba.clone();
 
         // if the previous wrapper has not been initialized
         // or the wrapper is empty (no frame or no keypoints)
@@ -252,7 +253,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             // reset the camera pose
             currentPose.reset();
             previousWrapper = featureService.featureDetection(mRgba);
-            return output;
+//            return output;
         } else {
             // track feature from the previous image into the current image
             sequentialFrameFeatures = featureService.featureTracking(
@@ -263,11 +264,11 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
                 // the Error ! if previous wrapper's image is empty... should do it in the current frame instead
                 previousWrapper = featureService.featureDetection(mRgba);
-                return output;
+//                return output;
             }
 
             // draws filtered feature points on output
-            if (false) {
+            if (drawKeypoints) {
                 for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
                     Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
                 }
@@ -327,57 +328,62 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             Log.d(TAG, "END - onCameraFrame - time elapsed: " +
                     (System.currentTimeMillis() - startTime) + " ms");
         }
+
         isRunning = false;
-        return output;
+//        return output;
     }
 
+    /**
+     * Draws on the image
+     * @param doDrawTrajectory
+     */
     private void draw(boolean doDrawTrajectory) {
         MotionEvent ev = MotionEvent.obtain(0, 0, 0,
                 (float) currentPose.getCoordinate().get(0, 0)[0],
                 (float) currentPose.getCoordinate().get(2, 0)[0],
                 0);
         Point correctedPoint = DisplayUtils.correctCoordinate(ev, screenWidth, screenHeight);
-        correctedPoint.x = MULTIPLIER * correctedPoint.x / 6 + 100;
-        correctedPoint.y = MULTIPLIER * correctedPoint.y / 6 + 100;
         Log.d(TAG, "correctedPoint y: " + correctedPoint.y);
+        Log.d(TAG, "z coord: " + (int) currentPose.getCoordinate().get(2, 0)[0]);
+        correctedPoint.x = MULTIPLIER * correctedPoint.x + 50;
+        correctedPoint.y = MULTIPLIER * correctedPoint.y + 50;
         Log.d(TAG, currentPose.toString());
         if (doDrawTrajectory) {
-            Imgproc.circle(output, correctedPoint, 5, new Scalar(255, 0, 0));
+            Log.d(TAG, "Drawing trajectory");
+            Imgproc.circle(trajectory, correctedPoint, 5, new Scalar(255, 0, 0));
             output = trajectory;
         } else {
-            Log.d(TAG, "radius of circle: " + (int) (correctedPoint.y));
-
             int radius;
-            if (correctedPoint.y > 0) {
-                radius = (int) (correctedPoint.y);
-            } else {
-                radius = (int) (-correctedPoint.y);
+            // will only work if we are moving in a forward direction
+            radius = 2 * Math.abs((int) currentPose.getCoordinate().get(2, 0)[0]);
+
+            Log.d(TAG, "radius of circle: " + radius);
+            if (radius > 0) {
+                Imgproc.circle(output,
+                        new Point(Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth() / 2,
+                                Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight() / 2),
+                        radius, new Scalar(0, 0, 255));
             }
-            // TODO I want to move the camera in the z direction...
-            Imgproc.circle(output,
-                    new Point(Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth() / 2,
-                            Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight() / 2),
-                    radius, new Scalar(0, 0, 255));
         }
     }
 
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-//         return monocularVisualOdometry(inputFrame);
         mRgba = inputFrame.rgba();
         gray = inputFrame.gray();
         output = mRgba.clone();
 
         if (!isRunning) {
             Log.d("thread ", "Starting the thread");
-            run = createRunnable(inputFrame);
             run.run();
         }
 
         if (currentPose != null) {
             draw(false);
         }
+
         Log.d("thread ", "Returning input frame");
+        Log.d(TAG, "isTouch ? = " + isTouch);
         return output;
     }
 
