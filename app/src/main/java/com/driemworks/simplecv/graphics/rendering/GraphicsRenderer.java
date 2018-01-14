@@ -5,7 +5,7 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 
 import com.driemworks.sensor.utils.OrientationUtils;
-import com.driemworks.simplecv.activities.GameActivity;
+import com.driemworks.simplecv.activities.CubeActivity;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.enums.Tags;
 import com.threed.jpct.Camera;
@@ -52,7 +52,7 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
 
     private Camera cam;
 
-    private GameActivity master = null;
+    private CubeActivity master = null;
 
     /** //////////////////////// Location and Orientation /////////////////////////// */
     private float[] previousRotationVector = new float[3];

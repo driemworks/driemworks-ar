@@ -42,20 +42,20 @@
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:screenOrientation="landscape">
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.LAUNCHER" />-->
-            <!--</intent-filter>-->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".activities.LineGameActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:screenOrientation="landscape">
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.LAUNCHER" />-->
-            <!--</intent-filter>-->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
         <activity
             android:name=".activities.ConfigurationActivity"
@@ -64,7 +64,7 @@
             android:screenOrientation="landscape">
             <!--<intent-filter>-->
                 <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.DEFAULT" />-->
+                <!--<category android:name="android.intent.category.LAUNCHER" />-->
             <!--</intent-filter>-->
         </activity>
         <activity
@@ -82,20 +82,20 @@
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.DEFAULT" />-->
-            <!--</intent-filter>-->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
         <activity
-            android:name=".activities.GameActivity"
+            android:name=".activities.CubeActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.DEFAULT" />-->
-            <!--</intent-filter>-->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
     </application>

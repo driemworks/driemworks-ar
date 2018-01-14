@@ -14,6 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
@@ -23,7 +24,7 @@ import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.enums.IntentIdentifer;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
-import com.driemworks.simplecv.layout.impl.GameActivityLayoutManager;
+import com.driemworks.simplecv.layout.impl.CubeActivityLayoutManager;
 import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.common.utils.DisplayUtils;
 
@@ -37,12 +38,12 @@ import org.opencv.core.Size;
 import java.lang.reflect.Field;
 
 /**
- * Created by Tony on 5/6/2017.
+ * @author Tony
  */
-public class GameActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2,
+public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2,
         SensorEventListener, View.OnTouchListener {
 
-    private static final String TAG = "GameActivity: ";
+    private static final String TAG = "CubeActivity: ";
 
     /** //////////////   OPEN CV    /////////////////////// */
     private CustomSurfaceView customSurfaceView;
@@ -50,17 +51,20 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     private SurfaceDetectionService surfaceDetector;
     private SurfaceDataDTO surfaceData;
 
+    /**
+     * The current frame in rgba
+     */
     private Mat mRgba;
 
     /** /////////////     JPCT    /////////////////////// */
     // Used to handle pause and resume...
-    private static GameActivity master = null;
+    private static CubeActivity master = null;
 
     private GLSurfaceView mGLView;
     private GraphicsRenderer renderer;
 
     /** ///////////////     ANDROID    ///////////////// */
-    public GameActivityLayoutManager layoutManager;
+    public CubeActivityLayoutManager layoutManager;
 
     /** The sensor manager */
     private SensorManager sensorManager;
@@ -78,13 +82,31 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     private long elapsedTime;
 
     /**
+     * The camera pose dto
+     */
+    private CameraPoseDTO cameraPoseDTO;
+
+    /**
      *
      */
     private BaseLoaderCallback baseLoaderCallback;
 
     /**
      *
-     * @param savedInstanceState
+     * @param drawKeypoints
+     * @return
+     */
+    private Runnable createRunnable(final boolean drawKeypoints) {
+        return new Runnable() {
+            @Override
+            public void run() {
+//                monocularVisualOdometry(drawKeypoints);
+            }
+        };
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -123,16 +145,15 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
         mGLView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
 
         // setup the layout
-        layoutManager = GameActivityLayoutManager.getInstance();
+        layoutManager = CubeActivityLayoutManager.getInstance();
         layoutManager.setActivity(this);
         layoutManager.setRenderer(renderer);
-        layoutManager.setup(GameActivityLayoutManager.RECONFIG, findViewById(R.id.reconfigure_button));
-        layoutManager.setup(GameActivityLayoutManager.SHOW_RECT, findViewById(R.id.show_opencv));
+        layoutManager.setup(CubeActivityLayoutManager.RECONFIG, findViewById(R.id.reconfigure_button));
+        layoutManager.setup(CubeActivityLayoutManager.SHOW_RECT, findViewById(R.id.show_opencv));
     }
 
     /**
-     *
-     * @param savedInstanceState
+     * {@inheritDoc}
      */
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
@@ -140,7 +161,7 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     /**
-     *
+     * {@inheritDoc}
      */
     @Override
     protected void onPause() {
@@ -149,7 +170,7 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     /**
-     *
+     * {@inheritDoc}
      */
     @Override
     protected void onResume() {
@@ -186,10 +207,9 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     /**
-     *
-     * @param inputFrame
-     * @return
+     * {@inheritDoc}
      */
+    @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         // get the images from the input frame
         mRgba = inputFrame.rgba();
@@ -203,10 +223,9 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     /**
-     *
-     * @param width -  the width of the frames that will be delivered
-     * @param height - the height of the frames that will be delivered
+     * {@inheritDoc}
      */
+    @Override
     public void onCameraViewStarted(int width, int height) {
         Log.d(TAG, "camera view started");
         mRgba = new Mat();
@@ -217,8 +236,9 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     /**
-     *
+     * {@inheritDoc}
      */
+    @Override
     public void onCameraViewStopped() {
         Log.d(TAG, "camera view stopped");
 //        mGray.release();
@@ -234,8 +254,7 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
     }
 
     /**
-     *
-     * @param event
+     * {@inheritDoc}
      */
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -251,11 +270,17 @@ public class GameActivity extends Activity implements CameraBridgeViewBase.CvCam
         startTime = System.currentTimeMillis();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     private float pressure;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         Log.d(TAG, "screen touched.");

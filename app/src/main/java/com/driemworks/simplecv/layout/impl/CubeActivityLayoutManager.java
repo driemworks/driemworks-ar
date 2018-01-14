@@ -6,17 +6,16 @@ import android.opengl.GLSurfaceView;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.SeekBar;
 
 import com.driemworks.simplecv.activities.ConfigurationActivity;
-import com.driemworks.simplecv.activities.GameActivity;
+import com.driemworks.simplecv.activities.CubeActivity;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.layout.LayoutManager;
 
 /**
  * Created by Tony on 5/13/2017.
  */
-public class GameActivityLayoutManager implements LayoutManager {
+public class CubeActivityLayoutManager implements LayoutManager {
 
     public static Button reconfigureButton = null;
     public static final String RECONFIG = "Reconfig";
@@ -27,13 +26,13 @@ public class GameActivityLayoutManager implements LayoutManager {
     public static Button newObjectButton = null;
     public static final String NEW_OBJ_BTN = "newObjBtn";
 
-    private static GameActivity activity = null;
+    private static CubeActivity activity = null;
 
     private static GraphicsRenderer graphicsRenderer = null;
 
     public <T extends Activity> void setActivity(T activity) {
-        if (activity instanceof  GameActivity) {
-            this.activity = (GameActivity) activity;
+        if (activity instanceof CubeActivity) {
+            this.activity = (CubeActivity) activity;
         }
     }
 
@@ -43,7 +42,7 @@ public class GameActivityLayoutManager implements LayoutManager {
         }
     }
 
-    private static GameActivityLayoutManager layoutManager;
+    private static CubeActivityLayoutManager layoutManager;
 
     @Override
     public <T extends View> void setup(String name, T layoutElement) {
@@ -108,9 +107,9 @@ public class GameActivityLayoutManager implements LayoutManager {
      *
      * @return
      */
-    public static GameActivityLayoutManager getInstance() {
+    public static CubeActivityLayoutManager getInstance() {
         if (activity == null) {
-            layoutManager = new GameActivityLayoutManager();
+            layoutManager = new CubeActivityLayoutManager();
         }
 
         return layoutManager;

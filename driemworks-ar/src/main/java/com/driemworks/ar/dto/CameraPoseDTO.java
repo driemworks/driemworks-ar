@@ -91,8 +91,8 @@ public class CameraPoseDTO {
 
     @Override
     public String toString() {
-        return "CameraPoseDTO: " + "current coordinate: "
-                + CvUtils.printMat(coordinate) + "current direction: " + CvUtils.printMat(direction);
+        return "CameraPoseDTO: \n" + "current coordinate: "
+                + CvUtils.printMat(coordinate) + "\ncurrent direction: " + CvUtils.printMat(direction);
     }
 
     /**

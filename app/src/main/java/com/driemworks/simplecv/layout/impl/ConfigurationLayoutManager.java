@@ -9,8 +9,7 @@ import android.widget.TextView;
 
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.simplecv.activities.ConfigurationActivity;
-import com.driemworks.simplecv.activities.GameActivity;
-import com.driemworks.simplecv.activities.MainActivity;
+import com.driemworks.simplecv.activities.CubeActivity;
 import com.driemworks.simplecv.enums.Constants;
 import com.driemworks.simplecv.enums.IntentIdentifer;
 import com.driemworks.simplecv.layout.LayoutManager;
@@ -89,8 +88,8 @@ public class ConfigurationLayoutManager implements LayoutManager {
                             Log.d(TAG, "creating intent to start game activity");
                             Map<String, ConfigurationDTO> configDTOMap = new HashMap<>();
                             configDTOMap.put(IntentIdentifer.CONFIG_DTO.getValue(), configurationDTO);
-//                            Intent intent = new Intent(configurationActivity, GameActivity.class);
-                            Intent intent = new Intent(configurationActivity, MainActivity.class);
+                            Intent intent = new Intent(configurationActivity, CubeActivity.class);
+//                            Intent intent = new Intent(configurationActivity, MainActivity.class);
                             intent.putExtra(Constants.CONFIG_DTO.getValue(), configurationDTO);
                             configurationActivity.startActivity(intent);
                             configurationActivity.finish();

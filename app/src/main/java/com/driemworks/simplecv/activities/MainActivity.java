@@ -55,7 +55,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     /** /////////////    JPCT    /////////////////////// */
     // Used to handle pause and resume...
-    private static GameActivity master = null;
+    private static CubeActivity master = null;
 
     /** ///////////////     ANDROID    ///////////////// */
     public MainActivityLayoutManager layoutManager;
