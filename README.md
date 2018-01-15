@@ -40,6 +40,7 @@ https://gradle.org/install/
 
 <h2>Author</h2>
 Tony Riemer
+<br>
 tonyrriemer@gmail.com
 
 <h2>License</h2>
