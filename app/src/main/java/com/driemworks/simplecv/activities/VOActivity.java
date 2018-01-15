@@ -13,6 +13,8 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
+import android.graphics.PixelFormat;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -29,6 +31,8 @@ import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
+import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
+import com.driemworks.simplecv.graphics.rendering.StaticCubeRenderer;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
 import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.common.utils.DisplayUtils;
@@ -94,7 +98,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     /**
      * The FOCAL length
      */
-    private static final float FOCAL = 718.8560f;
+    private static final float FOCAL = 900.00f;
     /**
      * The principal point
      */
@@ -128,17 +132,34 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
 
     private boolean isRunning = false;
 
+    private StaticCubeRenderer staticCubeRenderer;
+
+    private GLSurfaceView glSurfaceView;
+
+    // TODO
+//    /**
+//     *
+//     * @return
+//     */
+//    private Runnable createRunnable() {
+//        return new Runnable() {
+//            @Override
+//            public void run() {
+//                updateCameraPose();
+//            }
+//        };
+//    }
+
     /**
-     *
+     * Create the runnable to run the monocular visual odometry
+     * @param drawKeypoints
      * @return
      */
-    private Runnable createRunnable() {
-//        isRunning = true;
-
+    private Runnable createRunnable(final boolean drawKeypoints) {
         return new Runnable() {
             @Override
             public void run() {
-                updateCameraPose();
+                monocularVisualOdometry(drawKeypoints);
             }
         };
     }
@@ -171,7 +192,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
 
         cameraPermissionService = new CameraPermissionServiceImpl(this);
 
-        setContentView(R.layout.main_surface_view);
+        setContentView(R.layout.vo_layout);
 
         // init the matrices
         essentialMat = new Mat(3, 3, CvType.CV_64FC1);
@@ -187,17 +208,26 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
         customSurfaceView.setCvCameraViewListener(this);
         customSurfaceView.setMaxFrameSize(
-                Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth(),
-                Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight());
+                Resolution.RES_STANDARD.getWidth(),
+                Resolution.RES_STANDARD.getHeight());
 
         // init base loader callback
         mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(
                 this, customSurfaceView);
 
-        // init service(s)
+        // init services
         featureService = new FeatureServiceImpl();
         monocularVisualOdometryService = new MonocularVisualOdometryService();
-        run = createRunnable();
+        run = createRunnable(false);
+
+        staticCubeRenderer = new StaticCubeRenderer();
+
+        glSurfaceView = (GLSurfaceView) findViewById(R.id.gl_surface_view);
+        glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+        glSurfaceView.setOnTouchListener(this);
+        glSurfaceView.setRenderer(staticCubeRenderer);
+        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+        glSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
     }
 
     /**
@@ -207,6 +237,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     public void onPause() {
         Log.d(TAG, "Called onPause");
         super.onPause();
+        glSurfaceView.onPause();
         if (customSurfaceView != null) {
             customSurfaceView.disableView();
         }
@@ -218,6 +249,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     @Override
     public void onResume() {
         super.onResume();
+        glSurfaceView.onResume();
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mLoaderCallback);
         customSurfaceView.setMaxFrameSize(320, 240);
     }
@@ -256,6 +288,110 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     }
 
     /**
+     * This method performs feature detection and feature tracking on real time
+     * camera input
+     * @return output The output frame
+     */
+    private void monocularVisualOdometry(boolean drawKeypoints) {
+        Log.d(TAG, "START - onCameraFrame");
+        long startTime = System.currentTimeMillis();
+
+        // if the previous wrapper has not been initialized
+        // or the wrapper is empty (no frame or no keypoints)
+        if (previousWrapper == null || previousWrapper.empty()) {
+            Log.d(TAG, "previous wrapper is null!");
+            // reset the trajectory
+            trajectory = new Mat (Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight(),
+                    Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth(), CvType.CV_8UC3,
+                    new Scalar(0, 0, 0));
+            // reset the camera pose
+            currentPose.reset();
+            staticCubeRenderer.setZ(0);
+            previousWrapper = featureService.featureDetection(mRgba);
+//            return output;
+        } else {
+            // track feature from the previous image into the current image
+            sequentialFrameFeatures = featureService.featureTracking(
+                    previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
+
+            // check if number of features tracked is less than the THRESHOLD value
+            // if less than THRESHOLD, then redetect features
+            if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
+                // the Error ! if previous wrapper's image is empty... should do it in the current frame instead
+                previousWrapper = featureService.featureDetection(mRgba);
+//                return output;
+            }
+
+            // draws filtered feature points on output
+            if (drawKeypoints) {
+                for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
+                    Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
+                }
+            }
+
+            // convert the lists of points to MatOfPoint2f's
+            currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(
+                    sequentialFrameFeatures.getCurrentFrameFeaturePoints());
+            previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(
+                    sequentialFrameFeatures.getPreviousFrameFeaturePoints());
+
+            // check that the list of points detected in the current frames are non empty and of
+            // the correct format
+            if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
+                Mat mask = new Mat();
+                // calculate the essential matrix
+                long startTimeNew = System.currentTimeMillis();
+                Log.d(TAG, "START - findEssentialMat - numCurrentPoints: "
+                        + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
+                // RANSAC was far too costly...using LMEDS
+                essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
+                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 2.0, mask);
+                Log.d(TAG, "END - findEssentialMat - time elapsed "
+                        + (System.currentTimeMillis() - startTimeNew) + " ms");
+
+                // calculate rotation and translation matrices
+                if (!essentialMat.empty() && essentialMat.rows() == 3 &&
+                        essentialMat.cols() == 3 && essentialMat.isContinuous()) {
+                    Log.d(TAG, "START - recoverPose");
+                    startTimeNew = System.currentTimeMillis();
+                    Calib3d.recoverPose(essentialMat, currentPoints,
+                            previousPoints, rotationMatrix, translationMatrix, FOCAL, PRINCIPAL_POINT, mask);
+                    Log.d(TAG, "END - recoverPose - time elapsed " +
+                            (System.currentTimeMillis() - startTimeNew) + " ms");
+
+                    Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
+
+                    if (!translationMatrix.empty() && !rotationMatrix.empty()) {
+                        // this should be moved to a private method``f
+                        currentPose.update(translationMatrix, rotationMatrix);
+//                        staticCubeRenderer.setX(2 * (int) (4.77 * currentPose.getCoordinate().get(1, 0)[0]));
+//                        staticCubeRenderer.setY(2 * (int) (4.77 * currentPose.getCoordinate().get(0, 0)[0]));
+                        staticCubeRenderer.setZ(2 * (int) (5.05 * currentPose.getCoordinate().get(2, 0)[0]));
+                        Log.d(TAG,"trajectory " + "x: " + currentPose.getCoordinate().get(0,0)[0]);
+                        Log.d("trajectory ", "y: " + currentPose.getCoordinate().get(2,0)[0]);
+                        // centered at 0
+                        Log.d("trajectory ", "z: " + currentPose.getCoordinate().get(2,0)[0]);
+//                        cubeRenderer.setZ(12f*(float)currentPose.getCoordinate().get(2,0)[0]);
+                    } else {
+                        Log.d(TAG, "translation and/or rotation matrix was empty.");
+                    }
+                }
+                mask.release();
+            }
+
+            previousWrapper.setFrame(mRgba);
+            previousWrapper.setKeyPoints(ImageConversionUtils.convertMatOf2fToKeyPoints(
+                    currentPoints, 2, 2));
+
+            Log.d(TAG, "END - onCameraFrame - time elapsed: " +
+                    (System.currentTimeMillis() - startTime) + " ms");
+        }
+
+        isRunning = false;
+//        return output;
+    }
+
+    /**
      * Draws on the image
      * @param doDrawTrajectory
      */
@@ -267,8 +403,8 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         Point correctedPoint = DisplayUtils.correctCoordinate(ev, screenWidth, screenHeight);
         Log.d(TAG, "correctedPoint y: " + correctedPoint.y);
         Log.d(TAG, "z coord: " + (int) currentPose.getCoordinate().get(2, 0)[0]);
-        correctedPoint.x = MULTIPLIER * correctedPoint.x/6 + 50;
-        correctedPoint.y = MULTIPLIER * correctedPoint.y/6 + 50;
+        correctedPoint.x = MULTIPLIER * correctedPoint.x + 50;
+        correctedPoint.y = MULTIPLIER * correctedPoint.y + 50;
         Log.d(TAG, currentPose.toString());
         if (doDrawTrajectory) {
             Log.d(TAG, "Drawing trajectory");
@@ -294,15 +430,31 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
      */
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+//        mRgba = inputFrame.rgba();
+//        gray = inputFrame.gray();
+//        output = mRgba.clone();
+//
+//        // if the runnable is not running, then run the runnable
+//        if (!isRunning) {
+//            Log.d("thread ", "Starting the thread");
+//            isRunning = true;
+//            run.run();
+//        }
+//
+//        Log.d("thread ", "Returning input frame");
+//        Log.d(TAG, "isTouch ? = " + isTouch);
+//        return output;
         mRgba = inputFrame.rgba();
         gray = inputFrame.gray();
         output = mRgba.clone();
 
-        // if the runnable is not running, then run the runnable
         if (!isRunning) {
             Log.d("thread ", "Starting the thread");
-            isRunning = true;
             run.run();
+        }
+
+        if (currentPose != null) {
+            draw(false);
         }
 
         Log.d("thread ", "Returning input frame");
@@ -310,50 +462,55 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         return output;
     }
 
-    /**
-     * Update the camera pose
-     */
-    private void updateCameraPose() {
-        isRunning = true;
-        if (previousWrapper == null || previousWrapper.empty()) {
-            Log.d(TAG, "previous wrapper is null!");
-            // reset the trajectory
-            trajectory = new Mat(Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight(),
-                    Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth(), CvType.CV_8UC3,
-                    new Scalar(0, 0, 0));
-            // reset the camera pose
-            currentPose.reset();
-            previousWrapper = featureService.featureDetection(mRgba);
-        } else {
-            // track feature from the previous image into the current image
-            SequentialFrameFeatures sequentialFrameFeatures = featureService.featureTracking(
-                    previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
-
-            // check if number of features tracked is less than the THRESHOLD value
-            // if less than THRESHOLD, then redetect features
-            if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
-                // the Error ! if previous wrapper's image is empty... should do it in the current frame instead
-                Log.d(TAG, "redetecting features");
-                previousWrapper = featureService.featureDetection(mRgba);
-//                return output;
-            } else {
-                Log.d(TAG, "updating camera pose");
-                OdometryDataDTO odometryDataDTO = monocularVisualOdometryService.monocularVisualOdometry(sequentialFrameFeatures);
-                Log.d(TAG, "");
-                currentPose.update(odometryDataDTO.getTranslationMatrix(), odometryDataDTO.getRotationMatrix());
-                Log.d(TAG, currentPose.toString());
-                draw(false);
-            }
-
-            // update the previous wrapper... this should be handled OUTSIDE of this method
-            previousWrapper.setFrame(mRgba);
-            previousWrapper.setKeyPoints(ImageConversionUtils.convertMatOf2fToKeyPoints(
-                    currentPoints, 2, 2));
-        }
-
-        isRunning = false;
-//        return output;
-    }
+    // TODO
+//    /**
+//     * Update the camera pose
+//     */
+//    private void updateCameraPose() {
+//        isRunning = true;
+//        if (previousWrapper == null || previousWrapper.empty()) {
+//            Log.d(TAG, "previous wrapper is null!");
+//            // reset the trajectory
+//            trajectory = new Mat(Resolution.RES_STANDARD.getHeight(),
+//                    Resolution.RES_STANDARD.getWidth(), CvType.CV_8UC3,
+//                    new Scalar(0, 0, 0));
+//            // reset the camera pose
+//            currentPose.reset();
+//            previousWrapper = featureService.featureDetection(mRgba);
+//        } else {
+//            // track feature from the previous image into the current image
+//            SequentialFrameFeatures sequentialFrameFeatures = featureService.featureTracking(
+//                    previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
+//
+//            // check if number of features tracked is less than the THRESHOLD value
+//            // if less than THRESHOLD, then redetect features
+//            if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
+//                Log.d(TAG, "redetecting features");
+//                previousWrapper = featureService.featureDetection(mRgba);
+//            } else {
+//                Log.d(TAG, "updating camera pose");
+//                OdometryDataDTO odometryDataDTO = monocularVisualOdometryService
+//                        .monocularVisualOdometry(sequentialFrameFeatures);
+//                currentPose.update(odometryDataDTO.getTranslationMatrix(),
+//                        odometryDataDTO.getRotationMatrix());
+//                Log.d(TAG, currentPose.toString());
+////                draw(false);
+//                int radius = 2 * Math.abs((int) (10 * odometryDataDTO.getTranslationMatrix() .get(2, 0)[0]));
+//                Log.d(TAG, "radius of circle: " + radius);
+////                            new Point(Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth() / 2,
+////                                    Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight() / 2),
+////                            radius, new Scalar(0, 0, 255));
+////                }
+//            }
+//
+//            // update the previous wrapper... this should be handled OUTSIDE of this method
+//            previousWrapper.setFrame(mRgba);
+//            previousWrapper.setKeyPoints(ImageConversionUtils.convertMatOf2fToKeyPoints(
+//                    currentPoints, 2, 2));
+//        }
+//
+//        isRunning = false;
+//    }
 
     /**
      * {@inheritDoc}

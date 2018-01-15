@@ -10,9 +10,8 @@ import org.opencv.core.Rect;
 import java.util.List;
 
 /**
- * Created by Tony on 5/6/2017.
+ * @author Tony
  */
-
 public class SurfaceDataDTO {
 
     private Mat mRgba;
@@ -32,10 +31,12 @@ public class SurfaceDataDTO {
     private List<MatOfPoint> mHullPoints;
     private List<MatOfPoint> mDefectPoints;
 
+    private int zCoordinate;
+
     public SurfaceDataDTO() {}
 
     public SurfaceDataDTO(List<MatOfPoint> contours, Rect boundRect, double alpha, MatOfInt4 convexDefect,
-                          MatOfInt hull,List<Point> hullPoints, List<Point> defectPoints, List<MatOfPoint> mDefectPoints, List<MatOfPoint> mHullPoints) {
+                          MatOfInt hull,List<Point> hullPoints, List<Point> defectPoints, List<MatOfPoint> mDefectPoints, List<MatOfPoint> mHullPoints, int zCoordinate) {
         this.contours = contours;
         this.boundRect = boundRect;
         this.alpha = alpha;
@@ -45,8 +46,16 @@ public class SurfaceDataDTO {
         this.defectPoints = defectPoints;
         this.mDefectPoints = mDefectPoints;
         this.mHullPoints = mHullPoints;
+        this.zCoordinate = zCoordinate;
     }
 
+    public int getzCoordinate() {
+        return zCoordinate;
+    }
+
+    public void setzCoordinate(int zCoordinate) {
+        this.zCoordinate = zCoordinate;
+    }
 
     public Mat getmRgba() {
         return mRgba;
