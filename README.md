@@ -40,6 +40,7 @@ https://gradle.org/install/
 
 <h2>Author</h2>
 Tony Riemer
+tonyrriemer@gmail.com
 
 <h2>License</h2>
 This project is licensed under the MIT License - see the LICENSE.md file for details
