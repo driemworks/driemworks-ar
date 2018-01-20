@@ -22,7 +22,7 @@ public class SequentialFrameFeatures {
     public SequentialFrameFeatures() {super();}
 
     /**
-     *
+     * Constructor for the SequentialFrameFeatures
      * @param previousFrameFeaturePoints
      * @param currentFrameFeaturePoints
      */

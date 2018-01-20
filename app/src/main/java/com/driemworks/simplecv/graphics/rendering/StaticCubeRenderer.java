@@ -156,6 +156,7 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
 
         Log.d("Origin of cube: ","" + cube.getOrigin());
         Log.d("Position of camera: ","" + cam.getPosition());
+
     }
 
     /**

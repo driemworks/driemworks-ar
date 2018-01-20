@@ -37,6 +37,7 @@ import com.driemworks.common.utils.TagUtils;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
+import com.driemworks.simplecv.builders.GLSurfaceViewBuilder;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.graphics.rendering.StaticCubeRenderer;
 import com.driemworks.simplecv.services.PropertyReader;
@@ -250,13 +251,20 @@ public class VOActivity extends Activity implements
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         orientationService = new OrientationService(sensorManager);
 
-        glSurfaceView = (GLSurfaceView) findViewById(R.id.gl_surface_view);
-        glSurfaceView.setEGLConfigChooser(
-                8, 8, 8, 8, 16, 0);
-        glSurfaceView.setOnTouchListener(this);
-        glSurfaceView.setRenderer(staticCubeRenderer);
-        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-        glSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
+        glSurfaceView = new GLSurfaceViewBuilder(this, R.id.gl_surface_view)
+                .setEGLConfigChooser(8,8,8,8,16,0)
+                .setOnTouchListener(this)
+                .setRenderer(staticCubeRenderer)
+                .setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY)
+                .setFormat(PixelFormat.TRANSLUCENT)
+                .build();
+//        glSurfaceView = (GLSurfaceView) findViewById(R.id.gl_surface_view);
+//        glSurfaceView.setEGLConfigChooser(
+//                8, 8, 8, 8, 16, 0);
+//        glSurfaceView.setOnTouchListener(this);
+//        glSurfaceView.setRenderer(staticCubeRenderer);
+//        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
+//        glSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
     }
 
     /**
@@ -391,9 +399,9 @@ public class VOActivity extends Activity implements
                     if (!translationMatrix.empty() && !rotationMatrix.empty()) {
                         // this should be moved to a private method``f
                         currentPose.update(translationMatrix, rotationMatrix);
-//                        staticCubeRenderer.setX(2 * (int) (4.77 * currentPose.getCoordinate().get(1, 0)[0]));
+                        staticCubeRenderer.setX(-2 * (int) (4.77 * currentPose.getCoordinate().get(1, 0)[0]));
 //                        staticCubeRenderer.setY(2 * (int) (4.77 * currentPose.getCoordinate().get(0, 0)[0]));
-                        staticCubeRenderer.setZ(2 * (int) (5.5 * currentPose.getCoordinate().get(2, 0)[0]));
+                        staticCubeRenderer.setZ(3 * (int) (5.7 * currentPose.getCoordinate().get(2, 0)[0]));
                         Log.d(TAG,"trajectory " + "x: " + currentPose.getCoordinate().get(0,0)[0]);
                         Log.d("trajectory ", "y: " + currentPose.getCoordinate().get(2,0)[0]);
                         Log.d("trajectory ", "z: " + currentPose.getCoordinate().get(2,0)[0]);
