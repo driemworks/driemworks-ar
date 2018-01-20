@@ -8,7 +8,7 @@ import android.util.Log;
 
 /**
  *
- * @author  driemworks
+ * @author Tony
  *
  * Service for calculating the rotation and translation of the device
  * relative to the device's starting point.
@@ -20,6 +20,8 @@ import android.util.Log;
  *
  */
 public class OrientationService {
+
+    private final String TAG = "OrientationService: ";
 
     /** The sensor manager */
     private SensorManager sensorManager;
@@ -146,6 +148,7 @@ public class OrientationService {
      * @param event
      */
     public float[] updateRotationMatrix(SensorEvent event) {
+        Log.d(TAG, "called updateRotationMatrix");
         final int type = event.sensor.getType();
         if (type == Sensor.TYPE_LINEAR_ACCELERATION) {
             accelerationData = event.values.clone();

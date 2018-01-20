@@ -59,7 +59,7 @@ public class FeatureServiceImpl implements FeatureService {
     /** The size */
     private Size size;
 
-    private static final double MIN_EIGEN_THRESHOLD = 0.001;
+    private static final double MIN_EIGEN_THRESHOLD = 0.0005;
 
     /**
      * Constructor for the FeatureServiceImpl with default params (FAST/ORB/HAMMING)
@@ -72,7 +72,7 @@ public class FeatureServiceImpl implements FeatureService {
         // brute force hamming metric
         descriptorMatcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
         size = new Size(21, 21);
-        termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 10, 0.001);
+        termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 15, 0.001);
     }
 
     /**

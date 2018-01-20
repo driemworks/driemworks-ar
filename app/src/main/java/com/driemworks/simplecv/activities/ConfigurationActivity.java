@@ -24,9 +24,9 @@ import com.driemworks.ar.imageProcessing.ColorBlobDetector;
 import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
+import com.driemworks.common.utils.TagUtils;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
-import com.driemworks.simplecv.enums.Tags;
 import com.driemworks.simplecv.layout.impl.ConfigurationLayoutManager;
 import com.driemworks.simplecv.services.permission.impl.LocationPermissionServiceImpl;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
@@ -55,7 +55,7 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     private ConfigurationLayoutManager layoutManager;
 
     /** The tag used for logging */
-    private static final String TAG = Tags.ConfigurationActivity.getTag();
+    private final String TAG = TagUtils.getTag(this.getClass());
 
     /** The input camera frame in RGBA format */
     private Mat mRgba;

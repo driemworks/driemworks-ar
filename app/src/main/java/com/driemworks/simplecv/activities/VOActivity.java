@@ -14,6 +14,10 @@ import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.graphics.PixelFormat;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
@@ -29,19 +33,26 @@ import com.driemworks.ar.dto.OdometryDataDTO;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
+import com.driemworks.common.utils.TagUtils;
+import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.graphics.rendering.StaticCubeRenderer;
+import com.driemworks.simplecv.services.PropertyReader;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
 import com.driemworks.common.views.CustomSurfaceView;
 import com.driemworks.common.utils.DisplayUtils;
+
+import java.io.IOException;
+import java.util.Properties;
 
 /**
  * The Monocular Visual Odometry testing activity
  * @author Tony
  */
-public class VOActivity extends Activity implements CvCameraViewListener2, View.OnTouchListener {
+public class VOActivity extends Activity implements
+        CvCameraViewListener2, View.OnTouchListener, SensorEventListener {
 
     /**
      * The camera pose dto - the current pose of the camera
@@ -56,13 +67,13 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     /**
      * The minimum number of tracked features per image
      */
-    private static final int THRESHOLD = 10;
+    private static final int THRESHOLD = 50;
 
     /** The service to request permission to use camera at runtime */
     private CameraPermissionServiceImpl cameraPermissionService;
 
     /** The tag used for logging */
-    private static final String TAG = "VOActivity: ";
+    private final String TAG = TagUtils.getTag(this.getClass());
 
     /** The input camera frame in RGBA format */
     private Mat mRgba;
@@ -132,23 +143,32 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
 
     private boolean isRunning = false;
 
+    /**
+     * The static cube renderer
+     */
     private StaticCubeRenderer staticCubeRenderer;
 
+    /**
+     * The gl surface view
+     */
     private GLSurfaceView glSurfaceView;
 
-    // TODO
-//    /**
-//     *
-//     * @return
-//     */
-//    private Runnable createRunnable() {
-//        return new Runnable() {
-//            @Override
-//            public void run() {
-//                updateCameraPose();
-//            }
-//        };
-//    }
+    private float[] rotationVector = new float[3];
+
+    /**
+     * The orientation service
+     */
+    private OrientationService orientationService;
+
+    /**
+     * The sensor manager
+     */
+    private SensorManager sensorManager;
+
+    /**
+     * The is rotation enabled flag
+     */
+    private boolean isRotationEnabled;
 
     /**
      * Create the runnable to run the monocular visual odometry
@@ -189,9 +209,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         }
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
-        cameraPermissionService = new CameraPermissionServiceImpl(this);
-
         setContentView(R.layout.vo_layout);
 
         // init the matrices
@@ -216,14 +233,26 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                 this, customSurfaceView);
 
         // init services
+        cameraPermissionService = new CameraPermissionServiceImpl(this);
         featureService = new FeatureServiceImpl();
         monocularVisualOdometryService = new MonocularVisualOdometryService();
         run = createRunnable(false);
 
-        staticCubeRenderer = new StaticCubeRenderer();
+        try {
+            Properties props = PropertyReader.readProperties(this.getApplicationContext(), "driemworks.properties");
+            isRotationEnabled = Boolean.valueOf(props.getProperty("feature.rotation.enabled"));
+            Log.d(TAG, "isRotationEnabled ? " + isRotationEnabled);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        staticCubeRenderer = new StaticCubeRenderer(Resolution.RES_STANDARD, isRotationEnabled);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        orientationService = new OrientationService(sensorManager);
 
         glSurfaceView = (GLSurfaceView) findViewById(R.id.gl_surface_view);
-        glSurfaceView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
+        glSurfaceView.setEGLConfigChooser(
+                8, 8, 8, 8, 16, 0);
         glSurfaceView.setOnTouchListener(this);
         glSurfaceView.setRenderer(staticCubeRenderer);
         glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
@@ -250,6 +279,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     public void onResume() {
         super.onResume();
         glSurfaceView.onResume();
+        orientationService.registerListeners(this);
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mLoaderCallback);
         customSurfaceView.setMaxFrameSize(320, 240);
     }
@@ -308,22 +338,19 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             currentPose.reset();
             staticCubeRenderer.setZ(0);
             previousWrapper = featureService.featureDetection(mRgba);
-//            return output;
         } else {
             // track feature from the previous image into the current image
             sequentialFrameFeatures = featureService.featureTracking(
                     previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
-
             // check if number of features tracked is less than the THRESHOLD value
             // if less than THRESHOLD, then redetect features
             if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
                 // the Error ! if previous wrapper's image is empty... should do it in the current frame instead
                 previousWrapper = featureService.featureDetection(mRgba);
-//                return output;
             }
 
             // draws filtered feature points on output
-            if (drawKeypoints) {
+            if (true) {
                 for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
                     Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
                 }
@@ -341,17 +368,18 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                 Mat mask = new Mat();
                 // calculate the essential matrix
                 long startTimeNew = System.currentTimeMillis();
+
                 Log.d(TAG, "START - findEssentialMat - numCurrentPoints: "
                         + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
-                // RANSAC was far too costly...using LMEDS
                 essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
-                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 2.0, mask);
+                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.0, mask);
                 Log.d(TAG, "END - findEssentialMat - time elapsed "
                         + (System.currentTimeMillis() - startTimeNew) + " ms");
 
                 // calculate rotation and translation matrices
                 if (!essentialMat.empty() && essentialMat.rows() == 3 &&
                         essentialMat.cols() == 3 && essentialMat.isContinuous()) {
+
                     Log.d(TAG, "START - recoverPose");
                     startTimeNew = System.currentTimeMillis();
                     Calib3d.recoverPose(essentialMat, currentPoints,
@@ -360,18 +388,15 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                             (System.currentTimeMillis() - startTimeNew) + " ms");
 
                     Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
-
                     if (!translationMatrix.empty() && !rotationMatrix.empty()) {
                         // this should be moved to a private method``f
                         currentPose.update(translationMatrix, rotationMatrix);
 //                        staticCubeRenderer.setX(2 * (int) (4.77 * currentPose.getCoordinate().get(1, 0)[0]));
 //                        staticCubeRenderer.setY(2 * (int) (4.77 * currentPose.getCoordinate().get(0, 0)[0]));
-                        staticCubeRenderer.setZ(2 * (int) (5.05 * currentPose.getCoordinate().get(2, 0)[0]));
+                        staticCubeRenderer.setZ(2 * (int) (5.5 * currentPose.getCoordinate().get(2, 0)[0]));
                         Log.d(TAG,"trajectory " + "x: " + currentPose.getCoordinate().get(0,0)[0]);
                         Log.d("trajectory ", "y: " + currentPose.getCoordinate().get(2,0)[0]);
-                        // centered at 0
                         Log.d("trajectory ", "z: " + currentPose.getCoordinate().get(2,0)[0]);
-//                        cubeRenderer.setZ(12f*(float)currentPose.getCoordinate().get(2,0)[0]);
                     } else {
                         Log.d(TAG, "translation and/or rotation matrix was empty.");
                     }
@@ -388,41 +413,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         }
 
         isRunning = false;
-//        return output;
-    }
-
-    /**
-     * Draws on the image
-     * @param doDrawTrajectory
-     */
-    private void draw(boolean doDrawTrajectory) {
-        MotionEvent ev = MotionEvent.obtain(0, 0, 0,
-                (float) currentPose.getCoordinate().get(0, 0)[0],
-                (float) currentPose.getCoordinate().get(2, 0)[0],
-                0);
-        Point correctedPoint = DisplayUtils.correctCoordinate(ev, screenWidth, screenHeight);
-        Log.d(TAG, "correctedPoint y: " + correctedPoint.y);
-        Log.d(TAG, "z coord: " + (int) currentPose.getCoordinate().get(2, 0)[0]);
-        correctedPoint.x = MULTIPLIER * correctedPoint.x + 50;
-        correctedPoint.y = MULTIPLIER * correctedPoint.y + 50;
-        Log.d(TAG, currentPose.toString());
-        if (doDrawTrajectory) {
-            Log.d(TAG, "Drawing trajectory");
-            Imgproc.circle(trajectory, correctedPoint, 5, new Scalar(255, 0, 0));
-            output = trajectory;
-        } else {
-            int radius;
-            // will only work if we are moving in a forward direction
-            radius = 2 * Math.abs((int) currentPose.getCoordinate().get(2, 0)[0]);
-
-            Log.d(TAG, "radius of circle: " + radius);
-            if (radius > 0) {
-                Imgproc.circle(output,
-                        new Point(Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth() / 2,
-                                Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight() / 2),
-                        radius, new Scalar(0, 0, 255));
-            }
-        }
     }
 
     /**
@@ -430,20 +420,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
      */
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-//        mRgba = inputFrame.rgba();
-//        gray = inputFrame.gray();
-//        output = mRgba.clone();
-//
-//        // if the runnable is not running, then run the runnable
-//        if (!isRunning) {
-//            Log.d("thread ", "Starting the thread");
-//            isRunning = true;
-//            run.run();
-//        }
-//
-//        Log.d("thread ", "Returning input frame");
-//        Log.d(TAG, "isTouch ? = " + isTouch);
-//        return output;
         mRgba = inputFrame.rgba();
         gray = inputFrame.gray();
         output = mRgba.clone();
@@ -453,64 +429,31 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             run.run();
         }
 
-        if (currentPose != null) {
-            draw(false);
-        }
-
         Log.d("thread ", "Returning input frame");
         Log.d(TAG, "isTouch ? = " + isTouch);
         return output;
     }
 
-    // TODO
-//    /**
-//     * Update the camera pose
-//     */
-//    private void updateCameraPose() {
-//        isRunning = true;
-//        if (previousWrapper == null || previousWrapper.empty()) {
-//            Log.d(TAG, "previous wrapper is null!");
-//            // reset the trajectory
-//            trajectory = new Mat(Resolution.RES_STANDARD.getHeight(),
-//                    Resolution.RES_STANDARD.getWidth(), CvType.CV_8UC3,
-//                    new Scalar(0, 0, 0));
-//            // reset the camera pose
-//            currentPose.reset();
-//            previousWrapper = featureService.featureDetection(mRgba);
-//        } else {
-//            // track feature from the previous image into the current image
-//            SequentialFrameFeatures sequentialFrameFeatures = featureService.featureTracking(
-//                    previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
-//
-//            // check if number of features tracked is less than the THRESHOLD value
-//            // if less than THRESHOLD, then redetect features
-//            if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
-//                Log.d(TAG, "redetecting features");
-//                previousWrapper = featureService.featureDetection(mRgba);
-//            } else {
-//                Log.d(TAG, "updating camera pose");
-//                OdometryDataDTO odometryDataDTO = monocularVisualOdometryService
-//                        .monocularVisualOdometry(sequentialFrameFeatures);
-//                currentPose.update(odometryDataDTO.getTranslationMatrix(),
-//                        odometryDataDTO.getRotationMatrix());
-//                Log.d(TAG, currentPose.toString());
-////                draw(false);
-//                int radius = 2 * Math.abs((int) (10 * odometryDataDTO.getTranslationMatrix() .get(2, 0)[0]));
-//                Log.d(TAG, "radius of circle: " + radius);
-////                            new Point(Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth() / 2,
-////                                    Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight() / 2),
-////                            radius, new Scalar(0, 0, 255));
-////                }
-//            }
-//
-//            // update the previous wrapper... this should be handled OUTSIDE of this method
-//            previousWrapper.setFrame(mRgba);
-//            previousWrapper.setKeyPoints(ImageConversionUtils.convertMatOf2fToKeyPoints(
-//                    currentPoints, 2, 2));
-//        }
-//
-//        isRunning = false;
-//    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onSensorChanged(SensorEvent event) {
+        Log.d(TAG, "called onSensorChanged");
+        rotationVector = orientationService.calcDeviceOrientationVector(event);
+        if (staticCubeRenderer.getRotationVector() == null) {
+            staticCubeRenderer.setPreviousRotationVector(rotationVector);
+        }
+        staticCubeRenderer.setRotationVector(rotationVector);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        Log.d(TAG,"called onAccuracyChanged");
+    }
 
     /**
      * {@inheritDoc}
@@ -529,12 +472,13 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            isTouch = true;
+
+            return true;
         } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            isTouch = false;
+
         }
 
-        return isTouch;
+        return false;
     }
 
 }

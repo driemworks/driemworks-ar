@@ -91,19 +91,6 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
      */
     private BaseLoaderCallback baseLoaderCallback;
 
-    /**
-     *
-     * @param drawKeypoints
-     * @return
-     */
-    private Runnable createRunnable(final boolean drawKeypoints) {
-        return new Runnable() {
-            @Override
-            public void run() {
-//                monocularVisualOdometry(drawKeypoints);
-            }
-        };
-    }
 
     /**
      * {@inheritDoc}

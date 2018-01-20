@@ -1,9 +1,11 @@
 package com.driemworks.sensor.utils;
 
-/**
- * Created by Tony on 6/24/2017.
- */
+import android.util.Log;
 
+/**
+ * Utility methods for calculating device orientation
+ * @author Tony
+ */
 public class OrientationUtils {
 
     /**
@@ -21,7 +23,19 @@ public class OrientationUtils {
      */
     public static void calcDeltaRotation(float multiplier, float[] src1, float[] src2, float[] dest) {
         for (int i = 0; i < 3; i++) {
+            Log.d("src minus src: ", ""  + (src1[i] - src2[i]));
             dest[i] = (multiplier != 0) ? (src1[i] - src2[i]) * multiplier : 0;
+        }
+    }
+
+    /**
+     * Copies src array to dest array
+     * @param src The source array
+     * @param dest The destination array
+     */
+    public static void copyVectors(float[] src, float[] dest) {
+        if (src != null) {
+            System.arraycopy(src,0, dest, 0, 3);
         }
     }
 }

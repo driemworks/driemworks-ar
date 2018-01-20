@@ -16,9 +16,9 @@ import java.lang.reflect.Field;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * Created by Tony on 6/17/2017.
+ * Utility methods for rendering objects, making calculations needed to render objects
+ * @author Tony
  */
-
 public class RenderUtils {
 
     public static float calcEuclideanDistanceX(SimpleVector vec1, SimpleVector vec2) {

@@ -4,10 +4,10 @@ import android.app.Activity;
 import android.opengl.GLSurfaceView;
 import android.util.Log;
 
+import com.driemworks.common.utils.TagUtils;
 import com.driemworks.sensor.utils.OrientationUtils;
 import com.driemworks.simplecv.activities.CubeActivity;
 import com.driemworks.common.enums.Resolution;
-import com.driemworks.simplecv.enums.Tags;
 import com.threed.jpct.Camera;
 import com.threed.jpct.FrameBuffer;
 import com.threed.jpct.Light;
@@ -38,7 +38,7 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
     /**
      * The tag used for logging
      */
-    private static final String TAG = Tags.GraphicsRenderer.getTag();
+    private final String TAG = TagUtils.getTag(this.getClass());
 
     /**
      * The current system time (in ms)
@@ -148,9 +148,9 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
     private AtomicInteger frameCounter = new AtomicInteger(0);
 
     /**
-     *
-     * @param g1
+     * {@inheritDoc}
      */
+    @Override
     public void onDrawFrame(GL10 g1) {
         frameCounter.incrementAndGet();
         if (fb != null) {

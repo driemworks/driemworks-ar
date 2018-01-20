@@ -7,7 +7,7 @@ import com.driemworks.common.dto.SurfaceDataDTO;
 import org.opencv.core.Mat;
 
 /**
- * Created by Tony on 7/15/2017.
+ * @author Tony
  */
 public abstract class AbstractRenderer implements GLSurfaceView.Renderer {
 
