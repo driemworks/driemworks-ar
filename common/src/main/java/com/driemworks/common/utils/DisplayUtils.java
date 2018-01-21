@@ -1,6 +1,7 @@
 package com.driemworks.common.utils;
 
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Point;
 import android.view.Display;
 import android.view.MotionEvent;
@@ -23,34 +24,14 @@ public class DisplayUtils {
     }
 
     /**
-     * Calculate the width of the display
-     * @param activity
-     * @return
-     */
-    public static int getScreenWidth(Activity activity) {
-        return getScreenSize(activity).x;
-    }
-
-    /**
-     * Calculate the height of the display
-     * @param activity
-     * @return
-     */
-    public static int getScreenHeight(Activity activity) {
-        return getScreenSize(activity).y;
-    }
-
-    /**
      * Calculate the dimensions of the display
-     * @param activity
-     * @return
+     * @param activity The activity
+     * @return {@link Point} A point with the x value the width and y value the height
      */
     public static Point getScreenSize(Activity activity) {
-        // get screen dimensions
         Display display = activity.getWindowManager().getDefaultDisplay();
         Point size = new android.graphics.Point();
         display.getSize(size);
         return size;
     }
-
 }

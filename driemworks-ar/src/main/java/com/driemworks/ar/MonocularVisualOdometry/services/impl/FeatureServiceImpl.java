@@ -6,6 +6,8 @@ import com.driemworks.ar.MonocularVisualOdometry.services.FeatureService;
 import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
 import com.driemworks.common.utils.ImageConversionUtils;
+import com.driemworks.common.utils.OpenCvUtils;
+import com.driemworks.common.utils.TagUtils;
 
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -21,13 +23,8 @@ import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.video.Video;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * An implementation of the FeatureService
@@ -35,6 +32,11 @@ import java.util.Map;
  * @author Tony
  */
 public class FeatureServiceImpl implements FeatureService {
+
+    /**
+     * The tag used for logging
+     */
+    private final String TAG = TagUtils.getTag(this);
 
     /**
      * The detector
@@ -59,7 +61,10 @@ public class FeatureServiceImpl implements FeatureService {
     /** The size */
     private Size size;
 
-    private static final double MIN_EIGEN_THRESHOLD = 0.0005;
+    /**
+     * The minimum eigen threshold
+     */
+    private static final double MIN_EIGEN_THRESHOLD = 0.001;
 
     /**
      * Constructor for the FeatureServiceImpl with default params (FAST/ORB/HAMMING)
@@ -87,6 +92,9 @@ public class FeatureServiceImpl implements FeatureService {
         this.descriptorMatcher = descriptorMatcher;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public FeatureWrapper featureDetection(Mat frame) {
         Log.d(this.getClass().getCanonicalName(), "START - featureDetection");
@@ -94,12 +102,17 @@ public class FeatureServiceImpl implements FeatureService {
         MatOfKeyPoint mKeyPoints = new MatOfKeyPoint();
         Mat mIntermediateMat = new Mat();
 
-        detector.detect(frame, mKeyPoints);
-        descriptorExtractor.compute(frame, mKeyPoints, mIntermediateMat);
-        Log.d(this.getClass().getCanonicalName(), "END - featureDetection - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
-        return new FeatureWrapper("fast", "orb", frame, mIntermediateMat, mKeyPoints, null);
+        Mat sharpenedFrame = OpenCvUtils.sharpenImage(frame);
+
+        detector.detect(sharpenedFrame, mKeyPoints);
+        descriptorExtractor.compute(sharpenedFrame, mKeyPoints, mIntermediateMat);
+        Log.d(TAG, "END - featureDetection - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
+        return new FeatureWrapper("fast", "orb", sharpenedFrame, mIntermediateMat, mKeyPoints, null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public SequentialFrameFeatures featureTracking(Mat previousFrameGray, Mat currentFrameGray,
                                                    MatOfKeyPoint previousKeyPoints) {
@@ -130,7 +143,7 @@ public class FeatureServiceImpl implements FeatureService {
                 Video.OPTFLOW_LK_GET_MIN_EIGENVALS,MIN_EIGEN_THRESHOLD);
 
         byte[] statusArray = status.toArray();
-        Log.d(this.getClass().getCanonicalName(), "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
+        Log.d(TAG, "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
         SequentialFrameFeatures features = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), statusArray);
         status.release();
         err.release();

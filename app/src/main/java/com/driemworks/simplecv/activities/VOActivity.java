@@ -29,7 +29,6 @@ import com.driemworks.ar.MonocularVisualOdometry.services.impl.FeatureServiceImp
 import com.driemworks.ar.MonocularVisualOdometry.services.impl.MonocularVisualOdometryService;
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.dto.FeatureWrapper;
-import com.driemworks.ar.dto.OdometryDataDTO;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
@@ -37,8 +36,8 @@ import com.driemworks.common.utils.TagUtils;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
+import com.driemworks.simplecv.builders.CustomSurfaceViewBuilder;
 import com.driemworks.simplecv.builders.GLSurfaceViewBuilder;
-import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.graphics.rendering.StaticCubeRenderer;
 import com.driemworks.simplecv.services.PropertyReader;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
@@ -74,7 +73,7 @@ public class VOActivity extends Activity implements
     private CameraPermissionServiceImpl cameraPermissionService;
 
     /** The tag used for logging */
-    private final String TAG = TagUtils.getTag(this.getClass());
+    private final String TAG = TagUtils.getTag(this);
 
     /** The input camera frame in RGBA format */
     private Mat mRgba;
@@ -90,11 +89,6 @@ public class VOActivity extends Activity implements
 
     /** The customSurfaceView surface view */
     private CustomSurfaceView customSurfaceView;
-    /** The width of the device screen */
-    private int screenWidth;
-
-    /** The height of the device screen */
-    private int screenHeight;
 
     /** The base loader callback */
     private BaseLoaderCallback mLoaderCallback;
@@ -121,20 +115,18 @@ public class VOActivity extends Activity implements
 
     /** The currently detected points */
     private MatOfPoint2f currentPoints;
+
     /** The previously detected points */
     private MatOfPoint2f previousPoints;
+
     /** The essential matrix */
     private Mat essentialMat;
+
     /** The rotation matrix */
     private Mat rotationMatrix;
+
     /** The translation matrix */
     private Mat translationMatrix;
-    /** The device's trajectory */
-    private Mat trajectory;
-    /** The is touch flag */
-    private boolean isTouch;
-    /** The multiplier for mapping trajectory */
-    private static final float MULTIPLIER = 18f;
 
     /** The runnable used to monocularVisualOdometryService the monocular visual odometry */
     private MonocularVisualOdometryService monocularVisualOdometryService;
@@ -154,6 +146,9 @@ public class VOActivity extends Activity implements
      */
     private GLSurfaceView glSurfaceView;
 
+    /**
+     * The rotation vector
+     */
     private float[] rotationVector = new float[3];
 
     /**
@@ -174,13 +169,13 @@ public class VOActivity extends Activity implements
     /**
      * Create the runnable to run the monocular visual odometry
      * @param drawKeypoints
-     * @return
+     * @return {@link Runnable}
      */
     private Runnable createRunnable(final boolean drawKeypoints) {
         return new Runnable() {
             @Override
             public void run() {
-                monocularVisualOdometry(drawKeypoints);
+                monocularVisualOdometry();
             }
         };
     }
@@ -198,11 +193,6 @@ public class VOActivity extends Activity implements
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
 
-        // get screen dimensions
-        android.graphics.Point size = DisplayUtils.getScreenSize(this);
-        screenWidth = size.x;
-        screenHeight = size.y;
-
         if (!OpenCVLoader.initDebug()) {
             Log.e("OpvenCVLoader", "OvenCVLoader successful: false");
         } else {
@@ -218,16 +208,13 @@ public class VOActivity extends Activity implements
         translationMatrix = new Mat(3, 1, CvType.CV_64FC1);
 
         currentPose = new CameraPoseDTO();
-
         currentPoints = new MatOfPoint2f();
         previousPoints = new MatOfPoint2f();
 
-        // setup the surface view
-        customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
-        customSurfaceView.setCvCameraViewListener(this);
-        customSurfaceView.setMaxFrameSize(
-                Resolution.RES_STANDARD.getWidth(),
-                Resolution.RES_STANDARD.getHeight());
+        customSurfaceView = new CustomSurfaceViewBuilder(this, R.id.main_surface_view)
+                .setCvCameraViewListener(this)
+                .setMaxFrameSize(Resolution.RES_STANDARD)
+                .build();
 
         // init base loader callback
         mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(
@@ -258,13 +245,6 @@ public class VOActivity extends Activity implements
                 .setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY)
                 .setFormat(PixelFormat.TRANSLUCENT)
                 .build();
-//        glSurfaceView = (GLSurfaceView) findViewById(R.id.gl_surface_view);
-//        glSurfaceView.setEGLConfigChooser(
-//                8, 8, 8, 8, 16, 0);
-//        glSurfaceView.setOnTouchListener(this);
-//        glSurfaceView.setRenderer(staticCubeRenderer);
-//        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY);
-//        glSurfaceView.getHolder().setFormat(PixelFormat.TRANSLUCENT);
     }
 
     /**
@@ -330,7 +310,7 @@ public class VOActivity extends Activity implements
      * camera input
      * @return output The output frame
      */
-    private void monocularVisualOdometry(boolean drawKeypoints) {
+    private void monocularVisualOdometry() {
         Log.d(TAG, "START - onCameraFrame");
         long startTime = System.currentTimeMillis();
 
@@ -339,9 +319,6 @@ public class VOActivity extends Activity implements
         if (previousWrapper == null || previousWrapper.empty()) {
             Log.d(TAG, "previous wrapper is null!");
             // reset the trajectory
-            trajectory = new Mat (Resolution.THREE_TWENTY_BY_TWO_FORTY.getHeight(),
-                    Resolution.THREE_TWENTY_BY_TWO_FORTY.getWidth(), CvType.CV_8UC3,
-                    new Scalar(0, 0, 0));
             // reset the camera pose
             currentPose.reset();
             staticCubeRenderer.setZ(0);
@@ -399,12 +376,11 @@ public class VOActivity extends Activity implements
                     if (!translationMatrix.empty() && !rotationMatrix.empty()) {
                         // this should be moved to a private method``f
                         currentPose.update(translationMatrix, rotationMatrix);
-                        staticCubeRenderer.setX(-2 * (int) (4.77 * currentPose.getCoordinate().get(1, 0)[0]));
-//                        staticCubeRenderer.setY(2 * (int) (4.77 * currentPose.getCoordinate().get(0, 0)[0]));
-                        staticCubeRenderer.setZ(3 * (int) (5.7 * currentPose.getCoordinate().get(2, 0)[0]));
-                        Log.d(TAG,"trajectory " + "x: " + currentPose.getCoordinate().get(0,0)[0]);
-                        Log.d("trajectory ", "y: " + currentPose.getCoordinate().get(2,0)[0]);
-                        Log.d("trajectory ", "z: " + currentPose.getCoordinate().get(2,0)[0]);
+//                        staticCubeRenderer.setCameraCoordinate();
+                        // z seems to be working okay, but x and y are incredibly unstable
+//                        staticCubeRenderer.setX(-3 * (int) (6.1 * currentPose.getCoordinate().get(1 , 0)[0]));
+//                        staticCubeRenderer.setY(2 * (int) (6.1 * currentPose.getCoordinate().get(0, 0)[0]));
+                        staticCubeRenderer.setZ(3 * (int) (5.77 * currentPose.getCoordinate().get(2, 0)[0]));
                     } else {
                         Log.d(TAG, "translation and/or rotation matrix was empty.");
                     }
@@ -438,7 +414,6 @@ public class VOActivity extends Activity implements
         }
 
         Log.d("thread ", "Returning input frame");
-        Log.d(TAG, "isTouch ? = " + isTouch);
         return output;
     }
 
@@ -449,10 +424,11 @@ public class VOActivity extends Activity implements
     public void onSensorChanged(SensorEvent event) {
         Log.d(TAG, "called onSensorChanged");
         rotationVector = orientationService.calcDeviceOrientationVector(event);
-        if (staticCubeRenderer.getRotationVector() == null) {
+        if (staticCubeRenderer.getCurrentRotationVector() == null) {
             staticCubeRenderer.setPreviousRotationVector(rotationVector);
         }
-        staticCubeRenderer.setRotationVector(rotationVector);
+
+        staticCubeRenderer.setCurrentRotationVector(rotationVector);
     }
 
     /**
@@ -479,11 +455,13 @@ public class VOActivity extends Activity implements
      */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-
-            return true;
-        } else if (event.getAction() == MotionEvent.ACTION_UP) {
-
+        if (isRotationEnabled) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                staticCubeRenderer.setRotationEnabled(false);
+                return true;
+            } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                staticCubeRenderer.setRotationEnabled(true);
+            }
         }
 
         return false;

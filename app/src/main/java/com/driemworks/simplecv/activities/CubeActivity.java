@@ -3,6 +3,7 @@ package com.driemworks.simplecv.activities;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.PixelFormat;
+import android.graphics.Point;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -81,6 +82,8 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
     private long startTime = System.currentTimeMillis();
     private long elapsedTime;
 
+    private Point screenSize;
+
     /**
      * The camera pose dto
      */
@@ -123,6 +126,8 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
         orientationService = new OrientationService(sensorManager);
 
         renderer = new GraphicsRenderer(this);
+
+        screenSize = DisplayUtils.getScreenSize(this);
 
         mGLView = (GLSurfaceView) findViewById(R.id.gl_surface_view0);
         mGLView.setEGLConfigChooser(8, 8, 8, 8, 16, 0);
@@ -273,8 +278,8 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
         Log.d(TAG, "screen touched.");
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             pressure = event.getPressure();
-            renderer.setTouchedX(DisplayUtils.getScreenWidth(this));
-            renderer.setTouchedY(DisplayUtils.getScreenHeight(this));
+            renderer.setTouchedX(screenSize.x);
+            renderer.setTouchedY(screenSize.y);
             renderer.pushCube(pressure);
             return true;
         }

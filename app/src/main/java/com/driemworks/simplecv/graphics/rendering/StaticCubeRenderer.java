@@ -18,6 +18,7 @@ import com.threed.jpct.World;
 import com.threed.jpct.util.MemoryHelper;
 
 import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -25,12 +26,12 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * @author Tony
  */
-public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceView.Renderer {
+public class StaticCubeRenderer implements GLSurfaceView.Renderer {
 
     /**
      * The tag used for logging
      */
-    private final String TAG = TagUtils.getTag(this.getClass());
+    private final String TAG = TagUtils.getTag(this);
 
     /**
      * The frame buffer
@@ -47,9 +48,24 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
      */
     private Light sun = null;
 
+    /**
+     * The camera
+     */
     private Camera cam;
 
+    /**
+     * The previous rotation vector
+     */
     private float[] previousRotationVector = new float[3];
+
+    /**
+     * The current rotation vector
+     */
+    private float[] currentRotationVector = new float[3];
+
+    /**
+     * The change in rotation
+     */
     private float[] deltaRotation = new float[3];
 
     /** The x camera coordinate */
@@ -65,7 +81,14 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
      */
     private float z = 100;
 
+    /**
+     * The width of the screen
+     */
     private int width;
+
+    /**
+     * The height of the screen
+     */
     private int height;
 
     private Object3D cube;
@@ -112,7 +135,7 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
         // setup the camera
         cam = world.getCamera();
         cam.setPosition(0,0,0);
-        cam.lookAt(new SimpleVector(0,0,100));
+        cam.lookAt(new SimpleVector(0,0,300));
 
         sun = new Light(world);
         sun.setIntensity(255, 255, 255);
@@ -143,20 +166,19 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
             world.renderScene(fb);
             cam.setPosition(new SimpleVector(x, y, z));
 
-            if (isRotationEnabled && super.getRotationVector() != null) {
+            if (isRotationEnabled && currentRotationVector != null) {
                 OrientationUtils.calcDeltaRotation(
-                        1.0f, super.getRotationVector(), previousRotationVector, deltaRotation);
+                        1.0f, currentRotationVector, previousRotationVector, deltaRotation);
                 updateRotation();
-                OrientationUtils.copyVectors(super.getRotationVector(), previousRotationVector);
+                OrientationUtils.copyVectors(currentRotationVector, previousRotationVector);
+            } else {
+                currentRotationVector = null;
             }
 
+            Log.d(TAG, "camera direction: " + cam.getDirection());
             world.draw(fb);
             fb.display();
         }
-
-        Log.d("Origin of cube: ","" + cube.getOrigin());
-        Log.d("Position of camera: ","" + cam.getPosition());
-
     }
 
     /**
@@ -166,6 +188,16 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
         cam.rotateCameraY(-deltaRotation[0]);
         cam.rotateCameraX(deltaRotation[1]);
         cam.rotateCameraZ(deltaRotation[2]);
+    }
+
+    /**
+     * Set the camera coordinate
+     * @param coord The float array to set as the current coordainte
+     */
+    public void setCameraCoordinate(float[] coord) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
     }
 
     /**
@@ -181,6 +213,7 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
      * @param x The x coordinate to set
      */
     public void setX(float x) {
+        Log.d(TAG, "Setting x: " + x);
         this.x = x;
     }
 
@@ -197,6 +230,7 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
      * @param y The y coordinate to set
      */
     public void setY(float y) {
+        Log.d(TAG, "Setting y: " + y);
         this.y = y;
     }
 
@@ -213,8 +247,55 @@ public class StaticCubeRenderer extends AbstractRenderer implements GLSurfaceVie
      * @param z The z coordinate to set
      */
     public void setZ(float z) {
+        Log.d(TAG, "Setting z: " + z);
         this.z = z;
     }
 
+    /**
+     * Getter for the current rotation vector
+     * @return currentRotationVector The current rotation vector
+     */
+    public float[] getCurrentRotationVector() {
+        return currentRotationVector;
+    }
 
+    /**
+     * Setter for the current rotation vector
+     * @param currentRotationVector The current rotation vector
+     */
+    public void setCurrentRotationVector(float[] currentRotationVector) {
+        this.currentRotationVector = currentRotationVector;
+    }
+
+    /**
+     * Getter for the previous rotation vector
+     * @return previousRotationVector The previous rotation vector
+     */
+    public float[] getPreviousRotationVector() {
+        return previousRotationVector;
+    }
+
+    /**
+     * Setter for the previous rotation vector
+     * @param previousRotationVector The previous rotation vector
+     */
+    public void setPreviousRotationVector(float[] previousRotationVector) {
+        this.previousRotationVector = previousRotationVector;
+    }
+
+    /**
+     * Getter for the isRotationEnabled frame
+     * @return {@link boolean}
+     */
+    public boolean isRotationEnabled() {
+        return isRotationEnabled;
+    }
+
+    /**
+     * Setter for the isRotationEnabled flag
+     * @param rotationEnabled The isRotationEnabled flag to set
+     */
+    public void setRotationEnabled(boolean rotationEnabled) {
+        isRotationEnabled = rotationEnabled;
+    }
 }
