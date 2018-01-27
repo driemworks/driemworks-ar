@@ -61,6 +61,9 @@ public class FeatureServiceImpl implements FeatureService {
     /** The size */
     private Size size;
 
+    /** The maxmimum level */
+    private static final int MAX_LEVEL = 3;
+
     /**
      * The minimum eigen threshold
      */
@@ -77,7 +80,7 @@ public class FeatureServiceImpl implements FeatureService {
         // brute force hamming metric
         descriptorMatcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
         size = new Size(21, 21);
-        termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 15, 0.001);
+        termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, 15, 0.0001);
     }
 
     /**
@@ -97,26 +100,23 @@ public class FeatureServiceImpl implements FeatureService {
      */
     @Override
     public FeatureWrapper featureDetection(Mat frame) {
-        Log.d(this.getClass().getCanonicalName(), "START - featureDetection");
+        Log.d(TAG, "START - featureDetection");
         long startTime = System.currentTimeMillis();
         MatOfKeyPoint mKeyPoints = new MatOfKeyPoint();
         Mat mIntermediateMat = new Mat();
-
         Mat sharpenedFrame = OpenCvUtils.sharpenImage(frame);
-
         detector.detect(sharpenedFrame, mKeyPoints);
-        descriptorExtractor.compute(sharpenedFrame, mKeyPoints, mIntermediateMat);
+//        descriptorExtractor.compute(sharpenedFrame, mKeyPoints, mIntermediateMat);
         Log.d(TAG, "END - featureDetection - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
-        return new FeatureWrapper("fast", "orb", sharpenedFrame, mIntermediateMat, mKeyPoints, null);
+        return new FeatureWrapper("fast", "orb", frame, mIntermediateMat, mKeyPoints, null);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public SequentialFrameFeatures featureTracking(Mat previousFrameGray, Mat currentFrameGray,
-                                                   MatOfKeyPoint previousKeyPoints) {
-        Log.d(this.getClass().getCanonicalName(), "START - featureTracking");
+    public SequentialFrameFeatures featureTracking(Mat previousFrameGray, Mat currentFrameGray, MatOfKeyPoint previousKeyPoints) {
+        Log.d(TAG, "START - featureTracking");
         long startTime = System.currentTimeMillis();
 
         MatOfByte status = new MatOfByte();
@@ -133,18 +133,17 @@ public class FeatureServiceImpl implements FeatureService {
         // previous => current
         Video.calcOpticalFlowPyrLK(previousFrameGray, currentFrameGray,
                 previousKeyPoints2f, currentKeyPoints2f,
-                status, err, size, 3, termCriteria,
+                status, err, size, MAX_LEVEL, termCriteria,
                 Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
 
-        // current => previous (backtracking)
-        Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
-                currentKeyPoints2f, previousKeyPoints2f,
-                status, err, size, 3, termCriteria,
-                Video.OPTFLOW_LK_GET_MIN_EIGENVALS,MIN_EIGEN_THRESHOLD);
+        // backtracking keypoints
+//        Video.calcOpticalFlowPyrLK(currentFrameGray, previousFrameGray,
+//                currentKeyPoints2f, previousKeyPoints2f,
+//                status, err, size, MAX_LEVEL, termCriteria,
+//                Video.OPTFLOW_LK_GET_MIN_EIGENVALS,MIN_EIGEN_THRESHOLD);
 
-        byte[] statusArray = status.toArray();
         Log.d(TAG, "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
-        SequentialFrameFeatures features = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), statusArray);
+        SequentialFrameFeatures features = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), status.toArray());
         status.release();
         err.release();
         return features;

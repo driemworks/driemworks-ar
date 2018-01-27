@@ -21,15 +21,16 @@ import android.hardware.SensorManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.Pair;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
 import com.driemworks.ar.MonocularVisualOdometry.services.impl.FeatureServiceImpl;
-import com.driemworks.ar.MonocularVisualOdometry.services.impl.MonocularVisualOdometryService;
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.dto.FeatureWrapper;
 import com.driemworks.ar.dto.SequentialFrameFeatures;
+import com.driemworks.common.cs.Constants;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.common.utils.TagUtils;
@@ -42,17 +43,17 @@ import com.driemworks.simplecv.graphics.rendering.StaticCubeRenderer;
 import com.driemworks.simplecv.services.PropertyReader;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
 import com.driemworks.common.views.CustomSurfaceView;
-import com.driemworks.common.utils.DisplayUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
  * The Monocular Visual Odometry testing activity
  * @author Tony
  */
-public class VOActivity extends Activity implements
-        CvCameraViewListener2, View.OnTouchListener, SensorEventListener {
+public class VOActivity extends Activity implements CvCameraViewListener2, View.OnTouchListener, SensorEventListener {
 
     /**
      * The camera pose dto - the current pose of the camera
@@ -77,6 +78,7 @@ public class VOActivity extends Activity implements
 
     /** The input camera frame in RGBA format */
     private Mat mRgba;
+
     /**
      * The (current) gray camera frame
      */
@@ -104,14 +106,11 @@ public class VOActivity extends Activity implements
     /**
      * The FOCAL length
      */
-    private static final float FOCAL = 900.00f;
+    private static final float FOCAL = 800.00f;
     /**
      * The principal point
      */
     private static final Point PRINCIPAL_POINT = new Point(100, 100);
-
-    /** The current sequential frame features */
-    private SequentialFrameFeatures sequentialFrameFeatures;
 
     /** The currently detected points */
     private MatOfPoint2f currentPoints;
@@ -119,21 +118,18 @@ public class VOActivity extends Activity implements
     /** The previously detected points */
     private MatOfPoint2f previousPoints;
 
-    /** The essential matrix */
-    private Mat essentialMat;
-
     /** The rotation matrix */
     private Mat rotationMatrix;
 
     /** The translation matrix */
     private Mat translationMatrix;
 
-    /** The runnable used to monocularVisualOdometryService the monocular visual odometry */
-    private MonocularVisualOdometryService monocularVisualOdometryService;
-
     /** The runnable used for running the mvo service */
     private Runnable run;
 
+    /**
+     * The is running flag
+     */
     private boolean isRunning = false;
 
     /**
@@ -147,19 +143,9 @@ public class VOActivity extends Activity implements
     private GLSurfaceView glSurfaceView;
 
     /**
-     * The rotation vector
-     */
-    private float[] rotationVector = new float[3];
-
-    /**
      * The orientation service
      */
     private OrientationService orientationService;
-
-    /**
-     * The sensor manager
-     */
-    private SensorManager sensorManager;
 
     /**
      * The is rotation enabled flag
@@ -168,10 +154,9 @@ public class VOActivity extends Activity implements
 
     /**
      * Create the runnable to run the monocular visual odometry
-     * @param drawKeypoints
      * @return {@link Runnable}
      */
-    private Runnable createRunnable(final boolean drawKeypoints) {
+    private Runnable createRunnable() {
         return new Runnable() {
             @Override
             public void run() {
@@ -203,7 +188,6 @@ public class VOActivity extends Activity implements
         setContentView(R.layout.vo_layout);
 
         // init the matrices
-        essentialMat = new Mat(3, 3, CvType.CV_64FC1);
         rotationMatrix = new Mat(3, 3, CvType.CV_64FC1);
         translationMatrix = new Mat(3, 1, CvType.CV_64FC1);
 
@@ -218,13 +202,12 @@ public class VOActivity extends Activity implements
 
         // init base loader callback
         mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(
-                this, customSurfaceView);
+                this, customSurfaceView, Resolution.RES_STANDARD);
 
         // init services
         cameraPermissionService = new CameraPermissionServiceImpl(this);
         featureService = new FeatureServiceImpl();
-        monocularVisualOdometryService = new MonocularVisualOdometryService();
-        run = createRunnable(false);
+        run = createRunnable();
 
         try {
             Properties props = PropertyReader.readProperties(this.getApplicationContext(), "driemworks.properties");
@@ -235,8 +218,7 @@ public class VOActivity extends Activity implements
         }
 
         staticCubeRenderer = new StaticCubeRenderer(Resolution.RES_STANDARD, isRotationEnabled);
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        orientationService = new OrientationService(sensorManager);
+        orientationService = new OrientationService((SensorManager) getSystemService(SENSOR_SERVICE));
 
         glSurfaceView = new GLSurfaceViewBuilder(this, R.id.gl_surface_view)
                 .setEGLConfigChooser(8,8,8,8,16,0)
@@ -308,94 +290,61 @@ public class VOActivity extends Activity implements
     /**
      * This method performs feature detection and feature tracking on real time
      * camera input
-     * @return output The output frame
      */
     private void monocularVisualOdometry() {
-        Log.d(TAG, "START - onCameraFrame");
-        long startTime = System.currentTimeMillis();
-
-        // if the previous wrapper has not been initialized
-        // or the wrapper is empty (no frame or no keypoints)
+        float startTime = System.currentTimeMillis();
+        Log.d("###","START - monocularVisualOdometry");
         if (previousWrapper == null || previousWrapper.empty()) {
-            Log.d(TAG, "previous wrapper is null!");
-            // reset the trajectory
-            // reset the camera pose
             currentPose.reset();
-            staticCubeRenderer.setZ(0);
-            previousWrapper = featureService.featureDetection(mRgba);
+            staticCubeRenderer.setCameraCoordinate(Constants.ZERO3D);
+            previousWrapper = featureService.featureDetection(output);
         } else {
             // track feature from the previous image into the current image
-            sequentialFrameFeatures = featureService.featureTracking(
+            SequentialFrameFeatures sequentialFrameFeatures = featureService.featureTracking(
                     previousWrapper.getFrameAsGrayscale(), gray, previousWrapper.getKeyPoints());
-            // check if number of features tracked is less than the THRESHOLD value
-            // if less than THRESHOLD, then redetect features
             if (sequentialFrameFeatures.getCurrentFrameFeaturePoints().size() < THRESHOLD) {
-                // the Error ! if previous wrapper's image is empty... should do it in the current frame instead
-                previousWrapper = featureService.featureDetection(mRgba);
-            }
+                previousWrapper = featureService.featureDetection(output);
+            } else {
 
-            // draws filtered feature points on output
-            if (true) {
-                for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
-                    Imgproc.circle(output, p, 2, new Scalar(255, 0, 0));
-                }
-            }
-
-            // convert the lists of points to MatOfPoint2f's
-            currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(
-                    sequentialFrameFeatures.getCurrentFrameFeaturePoints());
-            previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(
-                    sequentialFrameFeatures.getPreviousFrameFeaturePoints());
-
-            // check that the list of points detected in the current frames are non empty and of
-            // the correct format
-            if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
-                Mat mask = new Mat();
-                // calculate the essential matrix
-                long startTimeNew = System.currentTimeMillis();
-
-                Log.d(TAG, "START - findEssentialMat - numCurrentPoints: "
-                        + currentPoints.size() + " numPreviousPoints: " + previousPoints.size());
-                essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
-                        FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.0, mask);
-                Log.d(TAG, "END - findEssentialMat - time elapsed "
-                        + (System.currentTimeMillis() - startTimeNew) + " ms");
-
-                // calculate rotation and translation matrices
-                if (!essentialMat.empty() && essentialMat.rows() == 3 &&
-                        essentialMat.cols() == 3 && essentialMat.isContinuous()) {
-
-                    Log.d(TAG, "START - recoverPose");
-                    startTimeNew = System.currentTimeMillis();
-                    Calib3d.recoverPose(essentialMat, currentPoints,
-                            previousPoints, rotationMatrix, translationMatrix, FOCAL, PRINCIPAL_POINT, mask);
-                    Log.d(TAG, "END - recoverPose - time elapsed " +
-                            (System.currentTimeMillis() - startTimeNew) + " ms");
-
-                    Log.d(TAG, "Calculated rotation matrix: " + rotationMatrix.toString());
-                    if (!translationMatrix.empty() && !rotationMatrix.empty()) {
-                        // this should be moved to a private method``f
-                        currentPose.update(translationMatrix, rotationMatrix);
-//                        staticCubeRenderer.setCameraCoordinate();
-                        // z seems to be working okay, but x and y are incredibly unstable
-//                        staticCubeRenderer.setX(-3 * (int) (6.1 * currentPose.getCoordinate().get(1 , 0)[0]));
-//                        staticCubeRenderer.setY(2 * (int) (6.1 * currentPose.getCoordinate().get(0, 0)[0]));
-                        staticCubeRenderer.setZ(3 * (int) (5.77 * currentPose.getCoordinate().get(2, 0)[0]));
-                    } else {
-                        Log.d(TAG, "translation and/or rotation matrix was empty.");
+                // draws filtered feature points on output
+                if (true) {
+                    for (Point p : sequentialFrameFeatures.getCurrentFrameFeaturePoints()) {
+                        Imgproc.circle(mRgba, p, 2, new Scalar(255, 0, 0));
                     }
                 }
-                mask.release();
+
+                // convert the lists of points to MatOfPoint2f's
+                currentPoints = ImageConversionUtils.convertListToMatOfPoint2f(sequentialFrameFeatures.getCurrentFrameFeaturePoints());
+                previousPoints = ImageConversionUtils.convertListToMatOfPoint2f(sequentialFrameFeatures.getPreviousFrameFeaturePoints());
+
+                if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
+                    Mat mask = new Mat();
+                    Mat essentialMat = Calib3d.findEssentialMat(currentPoints, previousPoints,
+                            FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99,1.0, mask);
+                    // calculate rotation and translation matrices
+                    if (!essentialMat.empty() && essentialMat.rows() == 3 &&
+                            essentialMat.cols() == 3 && essentialMat.isContinuous()) {
+                        Calib3d.recoverPose(essentialMat, currentPoints,
+                                previousPoints, rotationMatrix, translationMatrix, FOCAL, PRINCIPAL_POINT, mask);
+                        if (!translationMatrix.empty() && !rotationMatrix.empty()) {
+                            currentPose.update(translationMatrix, rotationMatrix);
+//                            staticCubeRenderer.setX(2 * (int) (5.77 * currentPose.getCoordinate().get(1 , 0)[0]));
+//                            staticCubeRenderer.setY(2 * (int) (5.77  * currentPose.getCoordinate().get(0, 0)[0]));
+                            staticCubeRenderer.setZ(2 * (int) (5.77 * currentPose.getCoordinate().get(2, 0)[0]));
+                        }
+                    }
+
+                    mask.release();
+                    essentialMat.release();
+                }
+
+                previousWrapper.setFrame(mRgba);
+                previousWrapper.setKeyPoints(ImageConversionUtils.convertMatOf2fToKeyPoints(
+                        currentPoints, 2, 2));
             }
-
-            previousWrapper.setFrame(mRgba);
-            previousWrapper.setKeyPoints(ImageConversionUtils.convertMatOf2fToKeyPoints(
-                    currentPoints, 2, 2));
-
-            Log.d(TAG, "END - onCameraFrame - time elapsed: " +
-                    (System.currentTimeMillis() - startTime) + " ms");
         }
 
+        Log.d("###","END - monocularVisualOdometry - " + (System.currentTimeMillis() - startTime) + " ms");
         isRunning = false;
     }
 
@@ -404,17 +353,22 @@ public class VOActivity extends Activity implements
      */
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
+        float startTime = System.currentTimeMillis();
+
+        Log.d("###", "START - onCameraFrame");
+
         mRgba = inputFrame.rgba();
         gray = inputFrame.gray();
         output = mRgba.clone();
 
         if (!isRunning) {
-            Log.d("thread ", "Starting the thread");
+            Log.d("###", "Starting the thread");
             run.run();
         }
 
-        Log.d("thread ", "Returning input frame");
-        return output;
+        Log.d("###", "Returning input frame");
+        Log.d("###", "END - onCameraFrame - " + (System.currentTimeMillis() - startTime) + "ms");
+        return mRgba;
     }
 
     /**
@@ -423,7 +377,7 @@ public class VOActivity extends Activity implements
     @Override
     public void onSensorChanged(SensorEvent event) {
         Log.d(TAG, "called onSensorChanged");
-        rotationVector = orientationService.calcDeviceOrientationVector(event);
+        float[] rotationVector = orientationService.calcDeviceOrientationVector(event);
         if (staticCubeRenderer.getCurrentRotationVector() == null) {
             staticCubeRenderer.setPreviousRotationVector(rotationVector);
         }

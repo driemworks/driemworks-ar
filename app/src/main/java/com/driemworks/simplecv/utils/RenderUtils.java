@@ -21,16 +21,37 @@ import javax.microedition.khronos.opengles.GL10;
  */
 public class RenderUtils {
 
+    /**
+     * Calculate the Euclidean distance along the x axis
+     * @param vec1 The first vector
+     * @param vec2 The second vector
+     * @return {@link float} The Euclidean distance between the vectors along the x axis
+     */
     public static float calcEuclideanDistanceX(SimpleVector vec1, SimpleVector vec2) {
         return (float)(Math.sqrt(Math.pow(Math.abs(vec1.x - vec2.x), 2)));
     }
 
+    /**
+     * Calculate the Euclidean distance (in 2 dimensions)
+     * @param vec1 The first vector
+     * @param vec2 The second vector
+     * @return {@link float} The Euclidean distance between vec1 and vec2
+     */
     public static float calcEuclideanDistance2D(SimpleVector vec1, SimpleVector vec2) {
         return (vec2.calcSub(new SimpleVector(0, 0, vec2.z))).calcSub(vec1.calcSub(
                 new SimpleVector(0, 0, vec1.z))).length();
     }
 
-    public static Object3D createCube(RGBColor color, float scale, float y, float x, float z) {
+    /**
+     * Create a cube
+     * @param color The RGBColor of the cube
+     * @param scale The scale of the cube
+     * @param x The x coordiante
+     * @param y The y coordinate
+     * @param z The z coordinate
+     * @return {@link Object3D} The cube
+     */
+    public static Object3D createCube(RGBColor color, float scale, float x, float y, float z) {
         Object3D cube = Primitives.getCube(scale);
         cube.setAdditionalColor(color);
         cube.setOrigin(new SimpleVector(x, y, z));
@@ -38,9 +59,25 @@ public class RenderUtils {
     }
 
     /**
-     *
-     * @param cam
-     * @param deltaRotation
+     * Create a sphere
+     * @param color The RGBColor of the sphere
+     * @param scale The scale of the sphere
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @param z The z coordinate
+     * @return {@link Object3D} The sphere
+     */
+    public static Object3D createSphere(RGBColor color, float scale, float x, float y, float z) {
+        Object3D sphere = Primitives.getSphere(scale);
+        sphere.setAdditionalColor(color);
+        sphere.setOrigin(new SimpleVector(x, y, z));
+        return sphere;
+    }
+
+    /**
+     * Update the camera rotation
+     * @param cam The camera
+     * @param deltaRotation The rotation
      */
     public static void updateRotation(Camera cam, float[] deltaRotation) {
         cam.rotateCameraY(-deltaRotation[0]);

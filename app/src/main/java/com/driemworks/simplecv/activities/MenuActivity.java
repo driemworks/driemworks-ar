@@ -7,9 +7,8 @@ import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.layout.impl.MenuActivityLayoutManager;
 
 /**
- * Created by Tony on 10/29/2017.
+ * @author Tony
  */
-
 public class MenuActivity extends Activity {
 
     private MenuActivityLayoutManager layoutManager;

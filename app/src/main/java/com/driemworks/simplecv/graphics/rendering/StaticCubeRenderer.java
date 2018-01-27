@@ -4,26 +4,26 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 
 import com.driemworks.common.utils.TagUtils;
-import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.sensor.utils.OrientationUtils;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.utils.RenderUtils;
 import com.threed.jpct.Camera;
 import com.threed.jpct.FrameBuffer;
 import com.threed.jpct.Light;
+import com.threed.jpct.Mesh;
 import com.threed.jpct.Object3D;
 import com.threed.jpct.RGBColor;
 import com.threed.jpct.SimpleVector;
 import com.threed.jpct.World;
 import com.threed.jpct.util.MemoryHelper;
 
-import org.opencv.core.Rect;
-import org.opencv.core.Scalar;
-
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
+ * Renderer for placing a single {@link Object3D} in a {@link World}
+ * and provides operations for manipulating the {@link Camera}
+ *
  * @author Tony
  */
 public class StaticCubeRenderer implements GLSurfaceView.Renderer {
@@ -128,7 +128,9 @@ public class StaticCubeRenderer implements GLSurfaceView.Renderer {
         world = new World();
         world.setAmbientLight(20, 30, 40);
 
-        cube = RenderUtils.createCube(RGBColor.WHITE, 20, 0, 0, 300);
+//        cube = RenderUtils.createCube(RGBColor.RED, 20, 0, 0, 300);
+        cube = RenderUtils.createSphere(RGBColor.BLUE, 20, 0,0,300);
+        cube.setAlphaWrites(true);
         cube.setVisibility(true);
         world.addObject(cube);
 
@@ -138,12 +140,10 @@ public class StaticCubeRenderer implements GLSurfaceView.Renderer {
         cam.lookAt(new SimpleVector(0,0,300));
 
         sun = new Light(world);
-        sun.setIntensity(255, 255, 255);
+        sun.setIntensity(255, 0, 0);
         SimpleVector sv = new SimpleVector();
         sv.set(cube.getTransformedCenter());
-        sv.y = 0;
-        sv.x = width / 2;
-        sv.z += 300;
+        sv.x += 50;
         sun.setPosition(sv);
         MemoryHelper.compact();
     }
@@ -167,27 +167,16 @@ public class StaticCubeRenderer implements GLSurfaceView.Renderer {
             cam.setPosition(new SimpleVector(x, y, z));
 
             if (isRotationEnabled && currentRotationVector != null) {
-                OrientationUtils.calcDeltaRotation(
-                        1.0f, currentRotationVector, previousRotationVector, deltaRotation);
-                updateRotation();
+                OrientationUtils.calcDeltaRotation(1.0f, currentRotationVector, previousRotationVector, deltaRotation);
+                RenderUtils.updateRotation(cam, deltaRotation);
                 OrientationUtils.copyVectors(currentRotationVector, previousRotationVector);
             } else {
                 currentRotationVector = null;
             }
 
-            Log.d(TAG, "camera direction: " + cam.getDirection());
             world.draw(fb);
             fb.display();
         }
-    }
-
-    /**
-     * Update the camera rotation based on the calculated delta rotation vector
-     */
-    private void updateRotation() {
-        cam.rotateCameraY(-deltaRotation[0]);
-        cam.rotateCameraX(deltaRotation[1]);
-        cam.rotateCameraZ(deltaRotation[2]);
     }
 
     /**
@@ -195,9 +184,9 @@ public class StaticCubeRenderer implements GLSurfaceView.Renderer {
      * @param coord The float array to set as the current coordainte
      */
     public void setCameraCoordinate(float[] coord) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this.x = coord[0];
+        this.y = coord[1];
+        this.z = coord[2];
     }
 
     /**

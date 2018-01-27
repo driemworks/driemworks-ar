@@ -12,7 +12,7 @@ public class TagUtils {
      * @return "className: ", The formatted tag
      */
     public static <T extends Object> String getTag(T obj) {
-        String className = obj.getClass().getName();
+        String className = obj.getClass().getSimpleName();
         if (className.length() > 21) {
             className = className.substring(0, 21);
         }

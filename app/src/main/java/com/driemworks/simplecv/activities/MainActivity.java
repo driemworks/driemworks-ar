@@ -17,6 +17,7 @@ import android.view.WindowManager;
 import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
+import com.driemworks.common.enums.Resolution;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.simplecv.enums.IntentIdentifer;
@@ -38,7 +39,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 /**
- *
+ * @author Tony
  */
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2,
         View.OnTouchListener, SensorEventListener {
@@ -98,8 +99,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         // register listeners
         customSurfaceView.setCvCameraViewListener(this);
         customSurfaceView.setMaxFrameSize(800, 480);
-        mLoaderCallback = BaseLoaderCallbackFactory
-                .getBaseLoaderCallback(this, customSurfaceView);
+        mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView, Resolution.RES_STANDARD);
 
         mainRenderer = new MainRenderer(this);
 

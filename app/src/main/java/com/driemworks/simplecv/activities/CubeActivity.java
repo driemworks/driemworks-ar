@@ -120,7 +120,7 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
         customSurfaceView.setCvCameraViewListener(this);
         customSurfaceView.setMaxFrameSize(Resolution.RES_STANDARD.getWidth(), Resolution.RES_STANDARD.getHeight());
 
-        baseLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView);
+        baseLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView, Resolution.RES_STANDARD);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         orientationService = new OrientationService(sensorManager);

@@ -119,7 +119,7 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
         layoutManager = LineGameActivityLayoutManager.getInstance(this);
         layoutManager.setActivity(this);
 
-        mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView);
+        mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView, Resolution.RES_STANDARD);
     }
 
 

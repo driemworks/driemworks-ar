@@ -132,7 +132,7 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
         layoutManager.setActivity(this);
         layoutManager.setup(ConfigurationLayoutManager.CONFIG_BUTTON, findViewById(R.id.mode_btn));
 
-        mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView);
+        mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView, Resolution.RES_STANDARD);
     }
 
 
