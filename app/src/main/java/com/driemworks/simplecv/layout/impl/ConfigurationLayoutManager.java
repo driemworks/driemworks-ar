@@ -8,6 +8,7 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.driemworks.common.dto.ConfigurationDTO;
+import com.driemworks.common.utils.TagUtils;
 import com.driemworks.simplecv.activities.ConfigurationActivity;
 import com.driemworks.simplecv.activities.CubeActivity;
 import com.driemworks.simplecv.enums.Constants;
@@ -19,12 +20,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by Tony on 5/6/2017.
+ * @author Tony
  */
 public class ConfigurationLayoutManager implements LayoutManager {
 
-    private static final String TAG = "ConfigLayoutManager: ";
-
+    private final String TAG = TagUtils.getTag(this);
     /** Android elements */
     private CustomSurfaceView customSurfaceView;
     public static Button setConfiguration = null;

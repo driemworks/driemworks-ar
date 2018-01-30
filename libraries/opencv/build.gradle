@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-
 buildscript {
     repositories {
         jcenter()
@@ -9,22 +8,18 @@ buildscript {
         classpath 'com.android.tools.build:gradle:3.0.1'
     }
 }
-
 android {
     compileSdkVersion 25
 //    buildToolsVersion "25.0.3"
-
     defaultConfig {
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 2480
         versionName "2.4.8"
     }
-
     dexOptions {
         javaMaxHeapSize "2g"
     }
-
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -34,7 +29,14 @@ android {
             aidl.srcDirs = ['src']
         }
     }
+    buildToolsVersion '26.0.2'
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 }
 repositories {
     google()
+}
+dependencies {
 }

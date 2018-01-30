@@ -1,6 +1,7 @@
 package com.driemworks.ar.dto;
 
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfKeyPoint;
 
 /**
  * This object is for transfering odometry data
@@ -18,6 +19,8 @@ public class OdometryDataDTO {
      * The (3x1) translation matrix
      */
     private Mat translationMatrix;
+
+    private MatOfKeyPoint currentKeypoints;
 
     /**
      * The default constructor

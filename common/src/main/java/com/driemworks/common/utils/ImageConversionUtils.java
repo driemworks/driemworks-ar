@@ -49,6 +49,17 @@ public class ImageConversionUtils {
     }
 
     /**
+     * Converts a {@link List<Point>} to {@link MatOfKeyPoint}
+     * @param points The List of Points
+     * @param size The size
+     * @param angle The angle
+     * @return {@link MatOfKeyPoint}
+     */
+    public static MatOfKeyPoint convertListOfPointsToMatOfKeypoint(List<Point> points, float size, float angle) {
+        return convertMatOf2fToKeyPoints(convertListToMatOfPoint2f(points), size, angle);
+    }
+
+    /**
      * Converts a MatOfKeyPoint object to a MatOfPoint2f object
      * @param mKeyPoint the input MatOfKeyPoint
      * @return the converted MatOfPoint2f

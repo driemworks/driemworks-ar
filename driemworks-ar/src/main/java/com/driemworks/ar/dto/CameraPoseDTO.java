@@ -7,6 +7,7 @@ import com.driemworks.ar.utils.CvUtils;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Scalar;
 
 /**
@@ -30,6 +31,11 @@ public class CameraPoseDTO {
     private Mat direction;
 
     /**
+     * The current keypoints
+     */
+    private MatOfKeyPoint keyPoints;
+
+    /**
      * The default constructor
      */
     public CameraPoseDTO() {
@@ -45,6 +51,18 @@ public class CameraPoseDTO {
     public CameraPoseDTO(Mat coordinate, Mat direction) {
         this.coordinate = coordinate;
         this.direction = direction;
+    }
+
+    /**
+     * Constructor for the CameraPoseDTO
+     * @param coordinate The coordinate
+     * @param direction The direction
+     * @param keyPoints The keypoints
+     */
+    public CameraPoseDTO(Mat coordinate, Mat direction, MatOfKeyPoint keyPoints) {
+        this.coordinate = coordinate;
+        this.direction = direction;
+        this.keyPoints = keyPoints;
     }
 
     /**
@@ -66,6 +84,7 @@ public class CameraPoseDTO {
     public void reset() {
         resetDirection();
         resetCoordinate();
+        keyPoints = new MatOfKeyPoint();
     }
 
     /**
@@ -125,5 +144,21 @@ public class CameraPoseDTO {
      */
     public void setDirection(Mat direction) {
         this.direction = direction;
+    }
+
+    /**
+     * Getter for the keypoints
+     * @return keypoints The keypoints
+     */
+    public MatOfKeyPoint getKeyPoints() {
+        return keyPoints;
+    }
+
+    /**
+     * Setter for the keypoints
+     * @param keyPoints The keypoints to set
+     */
+    public void setKeyPoints(MatOfKeyPoint keyPoints) {
+        this.keyPoints = keyPoints;
     }
 }
