@@ -142,17 +142,16 @@ public class MonocularVisualOdometryService {
                 Log.d(TAG, "tracked points are empty");
                 currentPoints = featureService.featureDetectionOnlyKeypoints(currentFrame);
             } else {
-
                 // convert the lists of points to MatOfPoint2f's
                 MatOfPoint2f currentPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(currentPoints);
                 MatOfPoint2f previousPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(previousPoints);
 
-                if (!currentPoints.empty() && currentPoints.checkVector(2) > 0) {
+                if (!currentPoints2f.empty() && currentPoints2f.checkVector(2) > 0) {
                     Mat mask = new Mat();
                     Log.d(TAG, "Calculating essential matrix.");
                     Mat essentialMat = null;
                     try {
-                        Calib3d.findEssentialMat(currentPoints2f, previousPoints2f,
+                        essentialMat = Calib3d.findEssentialMat(currentPoints2f, previousPoints2f,
                                 FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.0, mask);
                     } catch (Exception e) {
                         Log.e(TAG, "oh no");
@@ -172,6 +171,8 @@ public class MonocularVisualOdometryService {
                     mask.release();
                     essentialMat.release();
                 }
+                currentPoints2f.release();
+                previousPoints2f.release();
             }
         }
 

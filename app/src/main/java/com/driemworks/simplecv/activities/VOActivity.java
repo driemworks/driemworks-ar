@@ -371,7 +371,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     private Runnable runner = () -> {
         Log.d(TAG, "Called run");
         isRunning = true;
-        future = executor.calculateOdometry(output, previousFrameGray, gray, previousPoints);
+        future = executor.calculateOdometry(mRgba, previousFrameGray, gray, previousPoints);
 
         while (!future.isDone()) {
             Log.d(TAG, "future is not done");
