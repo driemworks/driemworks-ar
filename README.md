@@ -10,14 +10,6 @@ In progress features include:
 <li>Simple graphics rendering</li>
 </ul>
 
-Features to be implemented:
-
-<ul>
-<li>Performance Optimization</li>
-<li>Object recognition</li>
-<li>Sensor fusion via EKF -> Monocular Visual SLAM</li>
-</ul>
-
 <h2>Dependencies</h2>
 
 OpenCV4Android
