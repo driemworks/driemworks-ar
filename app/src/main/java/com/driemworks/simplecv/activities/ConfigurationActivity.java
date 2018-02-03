@@ -36,7 +36,7 @@ import com.driemworks.common.utils.DisplayUtils;
 import org.opencv.core.Size;
 
 /**
- *
+ * @author Tony
  */
 public class ConfigurationActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
 

@@ -4,9 +4,15 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 
 import android.app.Activity;
 import android.graphics.PixelFormat;
@@ -22,14 +28,18 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.driemworks.ar.dto.CameraPoseDTO;
+import com.driemworks.ar.imageProcessing.ColorBlobDetector;
+import com.driemworks.ar.services.SurfaceDetectionService;
+import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
+import com.driemworks.common.utils.DisplayUtils;
 import com.driemworks.common.utils.TagUtils;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.builders.CustomSurfaceViewBuilder;
 import com.driemworks.simplecv.builders.GLSurfaceViewBuilder;
-import com.driemworks.simplecv.executors.MonocularVisualOdometryExecutor;
+import com.driemworks.ar.executors.MonocularVisualOdometryExecutor;
 import com.driemworks.simplecv.graphics.rendering.StaticCubeRenderer;
 import com.driemworks.simplecv.services.PropertyReader;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
@@ -110,17 +120,40 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     private OrientationService orientationService;
 
     /**
+     * The surface detection service
+     */
+    private SurfaceDetectionService surfaceDetectionService;
+
+    /**
      * The is rotation enabled flag
      */
     private boolean isRotationEnabled;
 
-    private MonocularVisualOdometryExecutor executor = MonocularVisualOdometryExecutor.getInstance();
+    /**
+     * The Monocular Visual Odometry Executor
+     */
+    private MonocularVisualOdometryExecutor executor;
 
     /**
      * The future object
      */
     private Future<CameraPoseDTO> future;
 
+    /** The width of the device screen */
+    private int screenWidth;
+
+    /** The height of the device screen */
+    private int screenHeight;
+
+    private boolean mIsColorSelected = false;
+
+    private ColorBlobDetector mDetector;
+
+    /** The color spectrum */
+    private Mat mSpectrum;
+
+    /** The size of the spectrum */
+    private Size SPECTRUM_SIZE;
 
     /** The default constructor */
     public VOActivity() {
@@ -156,10 +189,21 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             e.printStackTrace();
         }
 
+        // get screen dimensions
+        android.graphics.Point size = DisplayUtils.getScreenSize(this);
+        screenWidth = size.x;
+        screenHeight = size.y;
+
         staticCubeRenderer = new StaticCubeRenderer(Resolution.RES_STANDARD, isRotationEnabled);
         // init services
         cameraPermissionService = new CameraPermissionServiceImpl(this);
         orientationService = new OrientationService((SensorManager) getSystemService(SENSOR_SERVICE));
+        surfaceDetectionService = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
+                new Scalar(222, 040, 255), new Mat(), new Size(200, 64), null);
+        executor = MonocularVisualOdometryExecutor.getInstance();
+        mDetector = new ColorBlobDetector();
+        mSpectrum = new Mat();
+        SPECTRUM_SIZE = new Size(200, 64);
 
         // build the views
         customSurfaceView = new CustomSurfaceViewBuilder(this, R.id.main_surface_view)
@@ -239,12 +283,12 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     }
 
     /**
-     *
+     * The runnable for running monocular visual odometry
      */
     private Runnable runner = () -> {
         Log.d(TAG, "Called run");
         isRunning = true;
-        future = executor.calculateOdometry(currentPose, mRgba, previousFrameGray, gray, previousPoints);
+        future = executor.calculateOdometry(currentPose, mRgba, previousFrameGray, gray);
 
         while (!future.isDone()) {
             Log.d(TAG, "future is not done");
@@ -254,11 +298,11 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             try {
                 Log.d(TAG, "Getting current pose.");
                 currentPose = future.get();
-                Log.d(TAG, "current pose: " + currentPose.toString());
-                Log.d(TAG, "z coordinate: " +  currentPose.getCoordinate().get(0, 0)[0]);
             } catch (InterruptedException | ExecutionException e) {
                 Log.e(TAG, e.getMessage());
             } finally {
+                Log.d(TAG, "current pose: " + currentPose.toString());
+                Log.d(TAG, "z coordinate: " +  currentPose.getCoordinate().get(0, 0)[0]);
                 previousPoints = currentPose.getKeyPoints();
                 isRunning = false;
             }
@@ -281,6 +325,11 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             if (!isRunning) {
                 runner.run();
             }
+        }
+
+        if (mIsColorSelected) {
+            SurfaceDataDTO surfaceData = surfaceDetectionService.detect(mRgba, 0, true);
+            output = surfaceData.getmRgba();
         }
         Log.d("###", "END - onCameraFrame - " + (System.currentTimeMillis() - startTime) + "ms");
         previousFrameGray = gray;
@@ -332,6 +381,43 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
             } else if (event.getAction() == MotionEvent.ACTION_UP) {
                 staticCubeRenderer.setRotationEnabled(true);
             }
+        } else {
+            // the value used to bound the size of the area to be sampled
+            int sizeThreshold = 10;
+
+            Point correctedCoordinate = DisplayUtils.correctCoordinate(event, screenWidth, screenHeight);
+            Rect touchedRect = new Rect((int)correctedCoordinate.x, (int)correctedCoordinate.y, sizeThreshold, sizeThreshold);
+            if (null == touchedRect) {
+                return false;
+            }
+
+            // get the rectangle around the point that was touched
+            Mat touchedRegionRgba = mRgba.submat(touchedRect);
+
+            // format to hsv
+            Mat touchedRegionHsv = new Mat();
+            Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+
+            // Calculate average color of touched region
+            Scalar mBlobColorHsv = Core.sumElems(touchedRegionHsv);
+            int pointCount = touchedRect.width * touchedRect.height;
+
+            for (int i = 0; i < mBlobColorHsv.val.length; i++) {
+                mBlobColorHsv.val[i] /= pointCount;
+            }
+
+            mDetector = surfaceDetectionService.getColorBlobDetector();
+            mDetector.setHsvColor(mBlobColorHsv);
+            surfaceDetectionService.setColorBlobDetector(mDetector);
+            Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+
+            mIsColorSelected = true;
+            Log.d(TAG, "color has been set");
+
+            touchedRegionRgba.release();
+            touchedRegionHsv.release();
+
+            return false;
         }
 
         return false;

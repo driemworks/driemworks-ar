@@ -15,12 +15,12 @@ import android.view.View;
 import android.view.WindowManager;
 
 import com.driemworks.ar.services.SurfaceDetectionService;
+import com.driemworks.common.cs.Constants;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
-import com.driemworks.simplecv.enums.IntentIdentifer;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.simplecv.graphics.rendering.MainRenderer;
 import com.driemworks.simplecv.layout.impl.MainActivityLayoutManager;
@@ -227,7 +227,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         Intent intent = getIntent();
         configurationDTO = (ConfigurationDTO) intent
-                .getSerializableExtra(IntentIdentifer.CONFIG_DTO.getValue());
+                .getSerializableExtra(Constants.CONFIG);
         // TODO move params to an enum somewhere, private vars
         surfaceDetector = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
                 new Scalar(222, 040, 255), new Mat(), new Size(200, 64), configurationDTO);

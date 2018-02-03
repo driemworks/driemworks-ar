@@ -1,11 +1,6 @@
-package com.driemworks.ar.MonocularVisualOdometry.services;
-
-import com.driemworks.ar.dto.FeatureWrapper;
-import com.driemworks.ar.dto.SequentialFrameFeatures;
+package com.driemworks.ar.services;
 
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfFloat;
 import org.opencv.core.MatOfKeyPoint;
 
 /**

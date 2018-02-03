@@ -11,4 +11,9 @@ public class Constants {
      */
     public static final float[] ZERO3D = {0,0,0};
 
+    /**
+     * The constant config
+     */
+    public static final String CONFIG = "config";
+
 }

@@ -1,15 +1,12 @@
-package com.driemworks.ar.MonocularVisualOdometry.services.impl;
+package com.driemworks.ar.services.impl;
 
 import android.util.Log;
 
-import com.driemworks.ar.MonocularVisualOdometry.services.FeatureService;
-import com.driemworks.ar.dto.FeatureWrapper;
-import com.driemworks.ar.dto.SequentialFrameFeatures;
+import com.driemworks.ar.services.FeatureService;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.common.utils.OpenCvUtils;
 import com.driemworks.common.utils.TagUtils;
 
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfFloat;

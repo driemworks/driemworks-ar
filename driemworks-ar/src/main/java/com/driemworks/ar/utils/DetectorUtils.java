@@ -16,9 +16,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Tony on 6/18/2017.
+ * @author Tony
  */
-
 public class DetectorUtils {
 
     private static final String TAG = Tags.DetectorUtils.getTag();

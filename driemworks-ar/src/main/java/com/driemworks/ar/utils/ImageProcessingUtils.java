@@ -2,6 +2,8 @@ package com.driemworks.ar.utils;
 
 import android.util.Log;
 
+import com.driemworks.common.utils.TagUtils;
+
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfInt4;
 import org.opencv.core.MatOfPoint;
@@ -19,12 +21,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by Tony on 4/23/2017.
+ * Image Processing utilities
+ * @author Tony
  */
-
 public class ImageProcessingUtils {
 
-    private static final String TAG = "ImageProcessingUtils: ";
+    /**
+     * The constant TAG
+     */
+    private static final String TAG = TagUtils.getTag(ImageProcessingUtils.class);
 
     /** The default constructor */
     private ImageProcessingUtils() {}
@@ -117,10 +122,6 @@ public class ImageProcessingUtils {
         a = boundRect.tl().y + a;
         return a;
     }
-
-    /**
-     * Sorting methods
-     */
 
     /**
      * Sort the list of points by maximum Y value

@@ -1,4 +1,4 @@
-package com.driemworks.ar.MonocularVisualOdometry.services.impl;
+package com.driemworks.ar.services.impl;
 
 import android.util.Log;
 
@@ -14,6 +14,7 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 
 /**
+ * The MonocularVisualOdometryService
  * @author Tony
  */
 public class MonocularVisualOdometryService {
@@ -59,16 +60,23 @@ public class MonocularVisualOdometryService {
     }
 
     /**
-     * This method performs feature detection and feature tracking on real time
+     ** This method performs feature detection and feature tracking on real time
      * camera input
+     *
+     * @param cameraPoseDTO The cameraPoseDTO
+     * @param currentFrame The current frame
+     * @param previousFrameGray The previous frame in grayscale
+     * @param currentFrameGray The current frame in grayscale
+     * @return the updated camera pose
      */
     public CameraPoseDTO monocularVisualOdometry(CameraPoseDTO cameraPoseDTO, Mat currentFrame,
-                                                 Mat previousFrameGray, Mat currentFrameGray,
-                                                 MatOfKeyPoint previousPoints) {
+                                                 Mat previousFrameGray, Mat currentFrameGray) {
         float startTime = System.currentTimeMillis();
         Log.d("###","START - monocularVisualOdometry");
 
         MatOfKeyPoint currentPoints;
+        MatOfKeyPoint previousPoints = cameraPoseDTO.getKeyPoints();
+
         if (previousPoints.empty()) {
             Log.d(TAG, "previous points are empty.");
             currentPoints = featureService.featureDetection(currentFrame);
@@ -100,7 +108,6 @@ public class MonocularVisualOdometryService {
                             Log.d(TAG, "updated camera pose: " + cameraPoseDTO.toString());
                         }
                     }
-
                     mask.release();
                     essentialMat.release();
                 }

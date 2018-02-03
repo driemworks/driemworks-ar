@@ -1,8 +1,8 @@
-package com.driemworks.simplecv.executors;
+package com.driemworks.ar.executors;
 
 import android.util.Log;
 
-import com.driemworks.ar.MonocularVisualOdometry.services.impl.MonocularVisualOdometryService;
+import com.driemworks.ar.services.impl.MonocularVisualOdometryService;
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.common.utils.TagUtils;
 
@@ -52,11 +52,11 @@ public class MonocularVisualOdometryExecutor {
      * @return the translation vector
      */
     public Future<CameraPoseDTO> calculateOdometry(
-            CameraPoseDTO cameraPoseDTO, Mat currentFrame,  Mat previousFrameGray, Mat currentFrameGray, MatOfKeyPoint previousPoints) {
+            CameraPoseDTO cameraPoseDTO, Mat currentFrame,  Mat previousFrameGray, Mat currentFrameGray) {
         Log.d(TAG,"START - calculateOdometry");
         return executorService.submit(() ->
                 monocularVisualOdometryService.monocularVisualOdometry(
-                cameraPoseDTO, currentFrame, previousFrameGray, currentFrameGray, previousPoints)
+                cameraPoseDTO, currentFrame, previousFrameGray, currentFrameGray)
         );
     }
 

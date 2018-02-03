@@ -7,12 +7,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.driemworks.common.cs.Constants;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.utils.TagUtils;
 import com.driemworks.simplecv.activities.ConfigurationActivity;
 import com.driemworks.simplecv.activities.CubeActivity;
-import com.driemworks.simplecv.enums.Constants;
-import com.driemworks.simplecv.enums.IntentIdentifer;
 import com.driemworks.simplecv.layout.LayoutManager;
 import com.driemworks.common.views.CustomSurfaceView;
 
@@ -87,10 +86,10 @@ public class ConfigurationLayoutManager implements LayoutManager {
                             Log.d(TAG, "created config dto -> beginning tracking");
                             Log.d(TAG, "creating intent to start game activity");
                             Map<String, ConfigurationDTO> configDTOMap = new HashMap<>();
-                            configDTOMap.put(IntentIdentifer.CONFIG_DTO.getValue(), configurationDTO);
+                            configDTOMap.put(Constants.CONFIG, configurationDTO);
                             Intent intent = new Intent(configurationActivity, CubeActivity.class);
 //                            Intent intent = new Intent(configurationActivity, MainActivity.class);
-                            intent.putExtra(Constants.CONFIG_DTO.getValue(), configurationDTO);
+                            intent.putExtra(Constants.CONFIG, configurationDTO);
                             configurationActivity.startActivity(intent);
                             configurationActivity.finish();
                         }

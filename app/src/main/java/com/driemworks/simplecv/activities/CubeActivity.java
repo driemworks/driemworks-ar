@@ -22,7 +22,6 @@ import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.factories.BaseLoaderCallbackFactory;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
-import com.driemworks.simplecv.enums.IntentIdentifer;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.layout.impl.CubeActivityLayoutManager;
@@ -222,7 +221,7 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
         Log.d(TAG, "camera view started");
         mRgba = new Mat();
         Intent intent = getIntent();
-        configurationDTO = (ConfigurationDTO) intent.getSerializableExtra(IntentIdentifer.CONFIG_DTO.getValue());
+        configurationDTO = (ConfigurationDTO) intent.getSerializableExtra(com.driemworks.common.cs.Constants.CONFIG);
         surfaceDetector = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
                 new Scalar(222, 040, 255), new Mat(), new Size(200, 64), configurationDTO);
     }

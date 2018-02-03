@@ -4,12 +4,12 @@ import android.opengl.GLSurfaceView;
 import android.util.Log;
 
 import com.driemworks.ar.utils.HandDetectionUtils;
+import com.driemworks.common.cs.Constants;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.sensor.utils.OrientationUtils;
 import com.driemworks.simplecv.activities.MainActivity;
 import com.driemworks.simplecv.enums.ColorsEnum;
-import com.driemworks.simplecv.enums.IntentIdentifer;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.graphics.EightCube;
 import com.driemworks.simplecv.utils.RandomUtils;
@@ -37,7 +37,7 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 /**
- * Created by Tony on 7/11/2017.
+ * @author Tony
  */
 public class MainRenderer extends AbstractRenderer implements GLSurfaceView.Renderer {
 
@@ -374,7 +374,7 @@ public class MainRenderer extends AbstractRenderer implements GLSurfaceView.Rend
                 if (doMoveCube2) {
                     // switch to the laser activity
                     Map<String, ConfigurationDTO> configMap = new HashMap<>();
-                    configMap.put(IntentIdentifer.CONFIG_DTO.getValue(), activity.getConfigurationDTO());
+                    configMap.put(Constants.CONFIG, activity.getConfigurationDTO());
                 } else {
                     if (!cube1.getVisibility() && !cube3.getVisibility()) {
                         updateVisibility(true, cube1, cube3);

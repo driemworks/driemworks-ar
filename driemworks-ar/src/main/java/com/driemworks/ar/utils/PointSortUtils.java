@@ -7,9 +7,8 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * Created by Tony on 6/18/2017.
+ * @author Tony
  */
-
 public class PointSortUtils {
 
     /**
