@@ -52,11 +52,11 @@ public class MonocularVisualOdometryExecutor {
      * @return the translation vector
      */
     public Future<CameraPoseDTO> calculateOdometry(
-            Mat currentFrame,  Mat previousFrameGray, Mat currentFrameGray, MatOfKeyPoint previousPoints) {
+            CameraPoseDTO cameraPoseDTO, Mat currentFrame,  Mat previousFrameGray, Mat currentFrameGray, MatOfKeyPoint previousPoints) {
         Log.d(TAG,"START - calculateOdometry");
         return executorService.submit(() ->
                 monocularVisualOdometryService.monocularVisualOdometry(
-                currentFrame, previousFrameGray, currentFrameGray, previousPoints)
+                cameraPoseDTO, currentFrame, previousFrameGray, currentFrameGray, previousPoints)
         );
     }
 

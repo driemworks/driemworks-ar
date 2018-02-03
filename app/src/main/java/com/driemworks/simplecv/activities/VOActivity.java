@@ -244,7 +244,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     private Runnable runner = () -> {
         Log.d(TAG, "Called run");
         isRunning = true;
-        future = executor.calculateOdometry(mRgba, previousFrameGray, gray, previousPoints);
+        future = executor.calculateOdometry(currentPose, mRgba, previousFrameGray, gray, previousPoints);
 
         while (!future.isDone()) {
             Log.d(TAG, "future is not done");
@@ -255,6 +255,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
                 Log.d(TAG, "Getting current pose.");
                 currentPose = future.get();
                 Log.d(TAG, "current pose: " + currentPose.toString());
+                Log.d(TAG, "z coordinate: " +  currentPose.getCoordinate().get(0, 0)[0]);
             } catch (InterruptedException | ExecutionException e) {
                 Log.e(TAG, e.getMessage());
             } finally {

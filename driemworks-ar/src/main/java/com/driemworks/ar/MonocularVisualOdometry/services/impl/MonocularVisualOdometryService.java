@@ -62,13 +62,11 @@ public class MonocularVisualOdometryService {
      * This method performs feature detection and feature tracking on real time
      * camera input
      */
-    public CameraPoseDTO monocularVisualOdometry(Mat currentFrame,
-                                                  Mat previousFrameGray, Mat currentFrameGray,
-                                                  MatOfKeyPoint previousPoints) {
+    public CameraPoseDTO monocularVisualOdometry(CameraPoseDTO cameraPoseDTO, Mat currentFrame,
+                                                 Mat previousFrameGray, Mat currentFrameGray,
+                                                 MatOfKeyPoint previousPoints) {
         float startTime = System.currentTimeMillis();
         Log.d("###","START - monocularVisualOdometry");
-
-        CameraPoseDTO cameraPoseDTO = new CameraPoseDTO();
 
         MatOfKeyPoint currentPoints;
         if (previousPoints.empty()) {
@@ -83,7 +81,7 @@ public class MonocularVisualOdometryService {
                 Log.d(TAG, "tracked points are empty");
                 currentPoints = featureService.featureDetection(currentFrame);
             } else {
-                // convert the lists of points to MatOfPoint2f's
+                // convert the lists of points to MatOfPoint2fs
                 MatOfPoint2f currentPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(currentPoints);
                 MatOfPoint2f previousPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(previousPoints);
 
