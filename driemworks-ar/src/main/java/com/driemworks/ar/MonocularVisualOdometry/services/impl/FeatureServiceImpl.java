@@ -108,20 +108,7 @@ public class FeatureServiceImpl implements FeatureService {
     /**
      * {@inheritDoc}
      */
-    @Override
-    public FeatureWrapper featureDetection(Mat frame) {
-        Log.d(TAG, "START - featureDetection");
-        long startTime = System.currentTimeMillis();
-        MatOfKeyPoint mKeyPoints = new MatOfKeyPoint();
-        Mat mIntermediateMat = new Mat();
-        Mat sharpenedFrame = OpenCvUtils.sharpenImage(frame);
-        detector.detect(sharpenedFrame, mKeyPoints);
-//        descriptorExtractor.compute(sharpenedFrame, mKeyPoints, mIntermediateMat);
-        Log.d(TAG, "END - featureDetection - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
-        return new FeatureWrapper("fast", "orb", frame, mIntermediateMat, mKeyPoints, null);
-    }
-
-    public MatOfKeyPoint featureDetectionOnlyKeypoints(Mat frame) {
+    public MatOfKeyPoint featureDetection(Mat frame) {
         Log.d(TAG, "START - featureDetection");
         long startTime = System.currentTimeMillis();
         MatOfKeyPoint mKeyPoints = new MatOfKeyPoint();
@@ -134,35 +121,7 @@ public class FeatureServiceImpl implements FeatureService {
     /**
      * {@inheritDoc}
      */
-    @Override
-    public SequentialFrameFeatures featureTracking(Mat previousFrameGray, Mat currentFrameGray, MatOfKeyPoint previousKeyPoints) {
-        Log.d(TAG, "START - featureTracking");
-        long startTime = System.currentTimeMillis();
-
-        MatOfByte status = new MatOfByte();
-        MatOfFloat err = new MatOfFloat();
-
-        // filter out points not tracked in current frame
-        MatOfPoint2f previousKeyPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(previousKeyPoints);
-        MatOfPoint2f previousKPConverted = new MatOfPoint2f();
-        previousKeyPoints2f.convertTo(previousKPConverted, CvType.CV_32FC2);
-        Log.d("previousKeyPoints2f ", "checkVector: " + previousKPConverted.checkVector(2));
-
-        MatOfPoint2f currentKeyPoints2f = new MatOfPoint2f();
-        // previous => current
-        Video.calcOpticalFlowPyrLK(previousFrameGray, currentFrameGray,
-                previousKeyPoints2f, currentKeyPoints2f,
-                status, err, size, MAX_LEVEL, termCriteria,
-                Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
-
-        Log.d(TAG, "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
-        SequentialFrameFeatures features = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), status.toArray());
-        status.release();
-        err.release();
-        return features;
-    }
-
-    public MatOfKeyPoint featureTrackingOnlyKeypoints(Mat previousFrameGray, Mat currentFrameGray, MatOfKeyPoint previousKeyPoints) {
+    public MatOfKeyPoint featureTracking(Mat previousFrameGray, Mat currentFrameGray, MatOfKeyPoint previousKeyPoints) {
         Log.d(TAG, "START - featureTracking");
         long startTime = System.currentTimeMillis();
 
@@ -182,36 +141,6 @@ public class FeatureServiceImpl implements FeatureService {
         status.release();
         err.release();
         return ImageConversionUtils.convertListOfPointsToMatOfKeypoint(featuresList, 0,0);
-    }
-
-
-    /**
-     * Filters out points which fail tracking, or which were tracked off screen
-     * @param previousKeypoints The list of keypoints in the previous image
-     * @param currentKeypoints The list of keypoints in the current image
-     * @param statusArray The status array
-     */
-    private SequentialFrameFeatures filterPoints(List<Point> previousKeypoints, List<Point> currentKeypoints, byte[] statusArray) {
-        int indexCorrection = 0;
-        // copy lists
-        LinkedList<Point> currentCopy = new LinkedList<>(currentKeypoints);
-        LinkedList<Point> previousCopy = new LinkedList<>(previousKeypoints);
-        for (int i = 0; i < currentKeypoints.size(); i++) {
-            Point pt = currentKeypoints.get(i - indexCorrection);
-            if (statusArray[i] == 0 || (pt.x == 0 || pt.y == 0)) {
-                // removes points which are tracked off screen
-                if (pt.x == 0 || pt.y == 0) {
-                    statusArray[i] = 0;
-                }
-
-                // remove points for which tracking has failed
-                currentCopy.remove(i - indexCorrection);
-                previousCopy.remove(i - indexCorrection);
-                indexCorrection++;
-            }
-        }
-
-        return new SequentialFrameFeatures(previousCopy, currentCopy);
     }
 
     /**

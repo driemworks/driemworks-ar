@@ -17,18 +17,18 @@ public interface FeatureService {
     /**
      * Detect features in the input image
      * @param frame The input image
-     * @return {@link FeatureWrapper}
+     * @return {@link MatOfKeyPoint}
      */
-    FeatureWrapper featureDetection(Mat frame);
+    MatOfKeyPoint featureDetection(Mat frame);
 
     /**
      * Track features extracted from the previous image into the next image
      * @param previousFrameGray The previous image in grayscale
      * @param currentFrameGray The current image in grayscale
      * @param previousKeyPoints The list of previously detected key points
-     * @return {@link SequentialFrameFeatures}
+     * @return {@link MatOfKeyPoint}
      */
-    SequentialFrameFeatures featureTracking(Mat previousFrameGray, Mat currentFrameGray,
+    MatOfKeyPoint featureTracking(Mat previousFrameGray, Mat currentFrameGray,
                                                    MatOfKeyPoint previousKeyPoints);
 
 }
