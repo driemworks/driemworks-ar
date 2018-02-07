@@ -86,6 +86,8 @@ public class MonocularVisualOdometryService {
                     previousFrameGray, currentFrameGray, previousPoints);
             if (currentPoints.empty()) {
                 Log.d(TAG, "tracked points are empty");
+                // for now, will reset the camera pose on redetect
+                cameraPoseDTO.reset();
                 currentPoints = featureService.featureDetection(currentFrame);
             } else {
                 // convert the lists of points to MatOfPoint2fs
@@ -93,10 +95,11 @@ public class MonocularVisualOdometryService {
                 MatOfPoint2f previousPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(previousPoints);
 
                 if (!currentPoints2f.empty() && currentPoints2f.checkVector(2) > 0) {
-                    Mat mask = new Mat();
                     Log.d(TAG, "Calculating essential matrix.");
                     Mat essentialMat = null;
                     try {
+                        Mat mask = new Mat();
+                        // calculate the essential matrix and recover the camera pose
                         essentialMat = Calib3d.findEssentialMat(currentPoints2f, previousPoints2f,
                                 FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.0, mask);
                         Log.d(TAG, "essential matrix is empty? = " + essentialMat.empty());
@@ -109,13 +112,10 @@ public class MonocularVisualOdometryService {
                                 Log.d(TAG, "updated camera pose: " + cameraPoseDTO.toString());
                             }
                         }
+                        mask.release();
+                        essentialMat.release();
                     } catch (Exception e) {
                         e.printStackTrace();
-                    }
-
-                    mask.release();
-                    if (essentialMat != null) {
-                        essentialMat.release();
                     }
                 } else {
                     Log.d(TAG, "previous points or current points empty or checkVector(2) <= 0");

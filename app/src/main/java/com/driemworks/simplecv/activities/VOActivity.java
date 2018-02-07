@@ -255,7 +255,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritDoc}d
      */
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
@@ -266,6 +266,8 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         output = mRgba.clone();
 
         currentPose = monocularVisualOdometryService.monocularVisualOdometry(currentPose, mRgba, previousFrameGray, gray);
+        Log.d(TAG, "z coordinate: " + currentPose.getCoordinate().get(0,0)[0]);
+        staticCubeRenderer.setZ(-(int)(20 * currentPose.getCoordinate().get(0,0)[0]));
         for (Point p : ImageConversionUtils.convertMatOfKeyPointsTo2f(currentPose.getKeyPoints()).toList()) {
             Imgproc.circle(output, p, 5, new Scalar(0,255,0));
         }
