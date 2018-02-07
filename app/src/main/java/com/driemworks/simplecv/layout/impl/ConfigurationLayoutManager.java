@@ -13,7 +13,7 @@ import com.driemworks.common.utils.TagUtils;
 import com.driemworks.simplecv.activities.ConfigurationActivity;
 import com.driemworks.simplecv.activities.CubeActivity;
 import com.driemworks.simplecv.layout.LayoutManager;
-import com.driemworks.common.views.CustomSurfaceView;
+import com.driemworks.simplecv.views.CustomSurfaceView;
 
 import java.util.HashMap;
 import java.util.Map;

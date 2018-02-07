@@ -7,7 +7,6 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
@@ -30,25 +29,24 @@ import android.view.WindowManager;
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.imageProcessing.ColorBlobDetector;
 import com.driemworks.ar.services.SurfaceDetectionService;
-import com.driemworks.common.dto.SurfaceDataDTO;
-import com.driemworks.common.factories.BaseLoaderCallbackFactory;
+import com.driemworks.ar.services.impl.MonocularVisualOdometryService;
+import com.driemworks.simplecv.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.DisplayUtils;
+import com.driemworks.common.utils.ImageConversionUtils;
+import com.driemworks.common.utils.OpenCvUtils;
 import com.driemworks.common.utils.TagUtils;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.builders.CustomSurfaceViewBuilder;
 import com.driemworks.simplecv.builders.GLSurfaceViewBuilder;
-import com.driemworks.ar.executors.MonocularVisualOdometryExecutor;
 import com.driemworks.simplecv.graphics.rendering.StaticCubeRenderer;
 import com.driemworks.simplecv.services.PropertyReader;
 import com.driemworks.simplecv.services.permission.impl.CameraPermissionServiceImpl;
-import com.driemworks.common.views.CustomSurfaceView;
+import com.driemworks.simplecv.views.CustomSurfaceView;
 
 import java.io.IOException;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * The Monocular Visual Odometry testing activity
@@ -60,11 +58,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
      * The camera pose dto - the current pose of the camera
      */
     private CameraPoseDTO currentPose;
-
-    /* load the opencv lib */
-    static {
-        System.loadLibrary("opencv_java3");
-    }
 
     /** The service to request permission to use camera at runtime */
     private CameraPermissionServiceImpl cameraPermissionService;
@@ -96,14 +89,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     /** The base loader callback */
     private BaseLoaderCallback mLoaderCallback;
 
-    /** The previously detected points */
-    private MatOfKeyPoint previousPoints;
-
-    /**
-     * The is running flag
-     */
-    private boolean isRunning = false;
-
     /**
      * The static cube renderer
      */
@@ -129,16 +114,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
      */
     private boolean isRotationEnabled;
 
-    /**
-     * The Monocular Visual Odometry Executor
-     */
-    private MonocularVisualOdometryExecutor executor;
-
-    /**
-     * The future object
-     */
-    private Future<CameraPoseDTO> future;
-
     /** The width of the device screen */
     private int screenWidth;
 
@@ -155,6 +130,8 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     /** The size of the spectrum */
     private Size SPECTRUM_SIZE;
 
+    private MonocularVisualOdometryService monocularVisualOdometryService;
+
     /** The default constructor */
     public VOActivity() {
         Log.i(TAG, "Instantiated new " + this.getClass());
@@ -168,18 +145,13 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
 
-        if (!OpenCVLoader.initDebug()) {
-            Log.e("OpvenCVLoader", "OvenCVLoader successful: false");
-        } else {
-            Log.d("OpenCVLoader", "OpenCVLoader successful");
-        }
+        OpenCvUtils.initOpenCV(true);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.vo_layout);
 
         // init the matrices
         currentPose = new CameraPoseDTO();
-        previousPoints = new MatOfKeyPoint();
 
         // load properties
         try {
@@ -199,8 +171,8 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         cameraPermissionService = new CameraPermissionServiceImpl(this);
         orientationService = new OrientationService((SensorManager) getSystemService(SENSOR_SERVICE));
         surfaceDetectionService = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
-                new Scalar(222, 040, 255), new Mat(), new Size(200, 64), null);
-        executor = MonocularVisualOdometryExecutor.getInstance();
+                new Scalar(222, 40, 255), new Mat(), new Size(200, 64), null);
+        monocularVisualOdometryService = new MonocularVisualOdometryService();
         mDetector = new ColorBlobDetector();
         mSpectrum = new Mat();
         SPECTRUM_SIZE = new Size(200, 64);
@@ -283,55 +255,26 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
     }
 
     /**
-     * The runnable for running monocular visual odometry
-     */
-    private Runnable runner = () -> {
-        Log.d(TAG, "Called run");
-        isRunning = true;
-        future = executor.calculateOdometry(currentPose, mRgba, previousFrameGray, gray);
-
-        while (!future.isDone()) {
-            Log.d(TAG, "future is not done");
-        }
-
-        if (future.isDone()) {
-            try {
-                Log.d(TAG, "Getting current pose.");
-                currentPose = future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                Log.e(TAG, e.getMessage());
-            } finally {
-                Log.d(TAG, "current pose: " + currentPose.toString());
-                Log.d(TAG, "z coordinate: " +  currentPose.getCoordinate().get(0, 0)[0]);
-                previousPoints = currentPose.getKeyPoints();
-                isRunning = false;
-            }
-        }
-    };
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-        float startTime = System.currentTimeMillis();
         Log.d("###", "START - onCameraFrame");
 
         mRgba = inputFrame.rgba();
         gray = inputFrame.gray();
         output = mRgba.clone();
 
-        if (previousFrameGray != null) {
-            if (!isRunning) {
-                runner.run();
-            }
+        currentPose = monocularVisualOdometryService.monocularVisualOdometry(currentPose, mRgba, previousFrameGray, gray);
+        for (Point p : ImageConversionUtils.convertMatOfKeyPointsTo2f(currentPose.getKeyPoints()).toList()) {
+            Imgproc.circle(output, p, 5, new Scalar(0,255,0));
         }
 
-        if (mIsColorSelected) {
-            SurfaceDataDTO surfaceData = surfaceDetectionService.detect(mRgba, 0, true);
-            output = surfaceData.getmRgba();
-        }
-        Log.d("###", "END - onCameraFrame - " + (System.currentTimeMillis() - startTime) + "ms");
+//        if (mIsColorSelected) {
+//            SurfaceDataDTO surfaceData = surfaceDetectionService.detect(mRgba, 0, true);
+//            output = surfaceData.getmRgba();
+//        }
+        Log.d("###", "END - onCameraFrame");
         previousFrameGray = gray;
         return output;
     }

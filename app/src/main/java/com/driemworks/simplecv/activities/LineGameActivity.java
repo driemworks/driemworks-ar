@@ -9,8 +9,8 @@ import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 
 import com.driemworks.ar.utils.ImageProcessingUtils;
-import com.driemworks.common.factories.BaseLoaderCallbackFactory;
-import com.driemworks.common.views.CustomSurfaceView;
+import com.driemworks.simplecv.factories.BaseLoaderCallbackFactory;
+import com.driemworks.simplecv.views.CustomSurfaceView;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.layout.impl.LineGameActivityLayoutManager;

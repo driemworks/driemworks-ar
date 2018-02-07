@@ -71,13 +71,12 @@ public class MonocularVisualOdometryService {
      */
     public CameraPoseDTO monocularVisualOdometry(CameraPoseDTO cameraPoseDTO, Mat currentFrame,
                                                  Mat previousFrameGray, Mat currentFrameGray) {
-        float startTime = System.currentTimeMillis();
-        Log.d("###","START - monocularVisualOdometry");
+        Log.d(TAG,"START - monocularVisualOdometry");
 
         MatOfKeyPoint currentPoints;
         MatOfKeyPoint previousPoints = cameraPoseDTO.getKeyPoints();
 
-        if (previousPoints.empty()) {
+        if (previousFrameGray == null || previousPoints.empty()) {
             Log.d(TAG, "previous points are empty.");
             currentPoints = featureService.featureDetection(currentFrame);
         } else {
@@ -96,27 +95,36 @@ public class MonocularVisualOdometryService {
                 if (!currentPoints2f.empty() && currentPoints2f.checkVector(2) > 0) {
                     Mat mask = new Mat();
                     Log.d(TAG, "Calculating essential matrix.");
-                    Mat essentialMat = Calib3d.findEssentialMat(currentPoints2f, previousPoints2f,
+                    Mat essentialMat = null;
+                    try {
+                        essentialMat = Calib3d.findEssentialMat(currentPoints2f, previousPoints2f,
                                 FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.99, 1.0, mask);
-                    Log.d(TAG, "essential matrix is empty? = " + essentialMat.empty());
-                    if (!essentialMat.empty() && essentialMat.rows() == 3 && essentialMat.cols() == 3 && essentialMat.isContinuous()) {
-                        Log.d(TAG, "Calculating rotation and translation");
-                        Calib3d.recoverPose(essentialMat, currentPoints2f,
-                                previousPoints2f, rotationMatrix, translationMatrix, FOCAL, PRINCIPAL_POINT, mask);
-                        if (!translationMatrix.empty() && !rotationMatrix.empty()) {
-                            cameraPoseDTO.update(translationMatrix, rotationMatrix);
-                            Log.d(TAG, "updated camera pose: " + cameraPoseDTO.toString());
+                        Log.d(TAG, "essential matrix is empty? = " + essentialMat.empty());
+                        if (!essentialMat.empty() && essentialMat.rows() == 3 && essentialMat.cols() == 3 && essentialMat.isContinuous()) {
+                            Log.d(TAG, "Calculating rotation and translation");
+                            Calib3d.recoverPose(essentialMat, currentPoints2f,
+                                    previousPoints2f, rotationMatrix, translationMatrix, FOCAL, PRINCIPAL_POINT, mask);
+                            if (!translationMatrix.empty() && !rotationMatrix.empty()) {
+                                cameraPoseDTO.update(translationMatrix, rotationMatrix);
+                                Log.d(TAG, "updated camera pose: " + cameraPoseDTO.toString());
+                            }
                         }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
+
                     mask.release();
-                    essentialMat.release();
+                    if (essentialMat != null) {
+                        essentialMat.release();
+                    }
+                } else {
+                    Log.d(TAG, "previous points or current points empty or checkVector(2) <= 0");
                 }
             }
         }
 
         cameraPoseDTO.setKeyPoints(currentPoints);
-        Log.d(TAG, "Setting current points");
-        Log.d("###","END - monocularVisualOdometry - " + (System.currentTimeMillis() - startTime) + " ms");
+        Log.d(TAG,"END - monocularVisualOdometry");
         return cameraPoseDTO;
     }
 }

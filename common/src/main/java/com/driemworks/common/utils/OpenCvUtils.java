@@ -1,5 +1,9 @@
 package com.driemworks.common.utils;
 
+import android.util.Log;
+import android.util.Pair;
+
+import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
@@ -25,6 +29,18 @@ public class OpenCvUtils {
         Imgproc.GaussianBlur(input, output, new Size(0,0), 3);
         Core.addWeighted(input, 1.7, output, -0.5, 0, output);
         return output;
+    }
+
+    /**
+     * Initialize OpenCV
+     * @param initCuda - if true then init cuda
+     */
+    public static void initOpenCV(boolean initCuda)  {
+        if (!OpenCVLoader.initDebug(initCuda)) {
+            Log.e("OpvenCVLoader", "OvenCVLoader successful: false");
+        } else {
+            Log.d("OpenCVLoader", "OpenCVLoader successful");
+        }
     }
 
 }

@@ -19,13 +19,13 @@ import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
-import com.driemworks.common.factories.BaseLoaderCallbackFactory;
+import com.driemworks.simplecv.factories.BaseLoaderCallbackFactory;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.simplecv.R;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.simplecv.graphics.rendering.GraphicsRenderer;
 import com.driemworks.simplecv.layout.impl.CubeActivityLayoutManager;
-import com.driemworks.common.views.CustomSurfaceView;
+import com.driemworks.simplecv.views.CustomSurfaceView;
 import com.driemworks.common.utils.DisplayUtils;
 
 import org.opencv.android.BaseLoaderCallback;

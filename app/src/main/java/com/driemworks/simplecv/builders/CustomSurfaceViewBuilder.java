@@ -3,7 +3,7 @@ package com.driemworks.simplecv.builders;
 import android.app.Activity;
 
 import com.driemworks.common.enums.Resolution;
-import com.driemworks.common.views.CustomSurfaceView;
+import com.driemworks.simplecv.views.CustomSurfaceView;
 
 import org.opencv.android.CameraBridgeViewBase;
 

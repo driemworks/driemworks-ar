@@ -1,9 +1,9 @@
-package com.driemworks.common.factories;
+package com.driemworks.simplecv.factories;
 
 import android.app.Activity;
 
 import com.driemworks.common.enums.Resolution;
-import com.driemworks.common.views.CustomSurfaceView;
+import com.driemworks.simplecv.views.CustomSurfaceView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;

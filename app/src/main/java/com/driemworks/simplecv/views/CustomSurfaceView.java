@@ -1,8 +1,4 @@
-package com.driemworks.common.views;
-
-/**
- * Created by Tony on 4/21/2017.
- */
+package com.driemworks.simplecv.views;
 
 import android.content.Context;
 import android.hardware.Camera;
@@ -13,6 +9,9 @@ import org.opencv.android.JavaCameraView;
 
 import java.util.List;
 
+/**
+ * @author Tony
+ */
 public class CustomSurfaceView extends JavaCameraView {
 
     private static final String TAG = "OpenCustomSufaceView";

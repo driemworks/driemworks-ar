@@ -15,11 +15,9 @@ android {
         minSdkVersion 21
         targetSdkVersion 25
         versionCode 2480
-        versionName "2.4.8"
+//        versionName "2.4.8"
     }
-    dexOptions {
-        javaMaxHeapSize "2g"
-    }
+
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'

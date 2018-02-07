@@ -15,8 +15,6 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
-import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.video.Video;
 
@@ -39,16 +37,6 @@ public class FeatureServiceImpl implements FeatureService {
      * The detector
      */
     private FeatureDetector detector;
-
-    /**
-     * The descriptor descriptorExtractor
-     */
-    private DescriptorExtractor descriptorExtractor;
-
-    /**
-     * The descriptorMatcher
-     */
-    private DescriptorMatcher descriptorMatcher;
 
     /**
      * The term criteria
@@ -83,23 +71,8 @@ public class FeatureServiceImpl implements FeatureService {
         // FAST feature detector
         detector = FeatureDetector.create(FeatureDetector.FAST);
         // ORB descriptor extraction
-        descriptorExtractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
-        // brute force hamming metric
-        descriptorMatcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
         size = new Size(29, 29);
         termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, MAX_COUNT, EPISILON);
-    }
-
-    /**
-     * Constructor for the FeatureServiceImpl
-     * @param detector The FeatureDetector
-     * @param descriptorExtractor The DescriptorExtractor
-     * @param descriptorMatcher The DescriptorMatcher
-     */
-    public FeatureServiceImpl(FeatureDetector detector, DescriptorExtractor descriptorExtractor, DescriptorMatcher descriptorMatcher) {
-        this.detector = detector;
-        this.descriptorExtractor = descriptorExtractor;
-        this.descriptorMatcher = descriptorMatcher;
     }
 
     /**
@@ -134,7 +107,7 @@ public class FeatureServiceImpl implements FeatureService {
                 Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
 
         Log.d(TAG, "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
-        List<Point> featuresList = filterPointsOnlyKeypoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), status.toArray());
+        List<Point> featuresList = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), status.toArray());
         status.release();
         err.release();
         return ImageConversionUtils.convertListOfPointsToMatOfKeypoint(featuresList, 0,0);
@@ -146,7 +119,7 @@ public class FeatureServiceImpl implements FeatureService {
      * @param currentKeypoints The list of keypoints in the current image
      * @param statusArray The status array
      */
-    private List<Point> filterPointsOnlyKeypoints(List<Point> previousKeypoints, List<Point> currentKeypoints, byte[] statusArray) {
+    private List<Point> filterPoints(List<Point> previousKeypoints, List<Point> currentKeypoints, byte[] statusArray) {
         int indexCorrection = 0;
         // copy lists
         LinkedList<Point> currentCopy = new LinkedList<>(currentKeypoints);
@@ -185,35 +158,4 @@ public class FeatureServiceImpl implements FeatureService {
         this.detector = detector;
     }
 
-    /**
-     * Getter for the DescriptorExtractor
-     * @return the descriptorExtractor
-     */
-    public DescriptorExtractor getDescriptorExtractor() {
-        return descriptorExtractor;
-    }
-
-    /**
-     * Setter for the setDescriptorExtractor
-     * @param descriptorExtractor The setDescriptorExtractor to set
-     */
-    public void setDescriptorExtractor(DescriptorExtractor descriptorExtractor) {
-        this.descriptorExtractor = descriptorExtractor;
-    }
-
-    /**
-     * Getter for the descriptorMatcher
-     * @return the descriptorMatcher
-     */
-    public DescriptorMatcher getDescriptorMatcher() {
-        return descriptorMatcher;
-    }
-
-    /**
-     * Setter for the descriptorMatcher
-     * @param descriptorMatcher The descriptorMatcher to set
-     */
-    public void setDescriptorMatcher(DescriptorMatcher descriptorMatcher) {
-        this.descriptorMatcher = descriptorMatcher;
-    }
 }

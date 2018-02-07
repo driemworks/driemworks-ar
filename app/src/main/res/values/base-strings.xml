@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright 2015 The Android Open Source Project
+ Copyright 2013 The Android Open Source Project
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -14,6 +14,17 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 -->
+
 <resources>
-    <color name="control_background">#cc4285f4</color>
+    <string name="app_name">Camera2Basic</string>
+    <string name="intro_message">
+        <![CDATA[
+        
+            
+            This sample demonstrates the basic use of Camera2 API. Check the source code to see how
+            you can display camera preview and take pictures.
+            
+        
+        ]]>
+    </string>
 </resources>

@@ -1,9 +1,9 @@
-package com.driemworks.common.utils;
+package com.driemworks.simplecv.utils;
 
 import android.util.Log;
 import android.view.MotionEvent;
 
-import com.driemworks.common.views.CustomSurfaceView;
+import com.driemworks.simplecv.views.CustomSurfaceView;
 
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -11,7 +11,6 @@ import org.opencv.core.Rect;
 /**
  * Created by Tony on 4/23/2017.
  */
-
 public class ColorCalibrationUtils {
 
     private static final String TAG = "ColorCalibrationUtils: ";
