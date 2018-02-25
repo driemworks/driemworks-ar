@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.driemworks.simplecv">
+    package="com.driemworks.app">
 
-    <uses-sdk android:minSdkVersion="8" />
+    <uses-sdk android:minSdkVersion="21" />
 
     <supports-screens
         android:anyDensity="true"
@@ -10,8 +10,6 @@
         android:normalScreens="true"
         android:resizeable="true"
         android:smallScreens="true" />
-
-    <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature
         android:name="android.hardware.camera"
@@ -26,7 +24,9 @@
         android:name="android.hardware.camera.front.autofocus"
         android:required="false" />
 
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"></uses-permission>
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -38,7 +38,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".activities.MenuActivity"
+            android:name="com.driemworks.app.activities.MenuActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:screenOrientation="landscape">
@@ -48,7 +48,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.LineGameActivity"
+            android:name="com.driemworks.app.activities.LineGameActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
             android:screenOrientation="landscape">
@@ -58,17 +58,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.ConfigurationActivity"
-            android:configChanges="keyboardHidden|orientation"
-            android:label="theDreadfort"
-            android:screenOrientation="landscape">
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.LAUNCHER" />-->
-            <!--</intent-filter>-->
-        </activity>
-        <activity
-            android:name=".activities.VOActivity"
+            android:name="com.driemworks.app.activities.ConfigurationActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">
@@ -78,7 +68,17 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.MainActivity"
+            android:name="com.driemworks.app.activities.VOActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:label="theDreadfort"
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.driemworks.app.activities.MainActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">
@@ -88,7 +88,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activities.CubeActivity"
+            android:name="com.driemworks.app.activities.CubeActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">
@@ -98,14 +98,14 @@
             </intent-filter>
         </activity>
         <!--<activity-->
-            <!--android:name=".activities.CameraActivity"-->
-            <!--android:configChanges="keyboardHidden|orientation"-->
-            <!--android:label="theDreadfort"-->
-            <!--android:screenOrientation="landscape">-->
-            <!--<intent-filter>-->
-                <!--<action android:name="android.intent.action.MAIN" />-->
-                <!--<category android:name="android.intent.category.DEFAULT" />-->
-            <!--</intent-filter>-->
+        <!--android:name=".activities.CameraActivity"-->
+        <!--android:configChanges="keyboardHidden|orientation"-->
+        <!--android:label="theDreadfort"-->
+        <!--android:screenOrientation="landscape">-->
+        <!--<intent-filter>-->
+        <!--<action android:name="android.intent.action.MAIN" />-->
+        <!--<category android:name="android.intent.category.DEFAULT" />-->
+        <!--</intent-filter>-->
         <!--</activity>-->
     </application>
 </manifest>

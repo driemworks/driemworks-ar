@@ -43,7 +43,7 @@ public class MonocularVisualOdometryExecutor {
      * Constructor for the {@link MonocularVisualOdometryExecutor}
      */
     private MonocularVisualOdometryExecutor() {
-        monocularVisualOdometryService = new MonocularVisualOdometryService();
+//        monocularVisualOdometryService = new MonocularVisualOdometryService();
         executorService = Executors.newSingleThreadExecutor();
     }
 

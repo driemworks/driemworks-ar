@@ -161,4 +161,29 @@ public class CameraPoseDTO {
     public void setKeyPoints(MatOfKeyPoint keyPoints) {
         this.keyPoints = keyPoints;
     }
+
+    /**
+     * Get the x coordinae
+     * @return The x coordinate
+     */
+    public double getX() {
+        return this.coordinate.get(0,0)[0];
+    }
+
+    /**
+     * Get the y coordinate
+     * @return The y coordinate
+     */
+    public double getY() {
+        return this.coordinate.get(1,0)[0];
+    }
+
+    /**
+     * Get the z coordinate
+     * @return The z coordinate
+     */
+    public double getZ() {
+        return this.coordinate.get(2,0)[0];
+    }
+
 }

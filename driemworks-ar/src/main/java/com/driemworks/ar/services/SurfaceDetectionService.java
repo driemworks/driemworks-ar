@@ -1,19 +1,15 @@
 package com.driemworks.ar.services;
 
-import android.icu.text.DateFormat;
 import android.util.Log;
-import android.view.Surface;
 
 import com.driemworks.ar.enums.FingerEnum;
 import com.driemworks.ar.enums.HandEnum;
-import com.driemworks.ar.enums.Tags;
 import com.driemworks.ar.imageProcessing.ColorBlobDetector;
 import com.driemworks.ar.utils.DetectorUtils;
 import com.driemworks.ar.utils.ImageProcessingUtils;
-import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
+import com.driemworks.common.utils.TagUtils;
 
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfInt4;
@@ -26,21 +22,19 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * The service for detecting surfaces based on color
+ * @author Tony
  */
 public class SurfaceDetectionService {
 
     /**
      * The tag used for logging
      */
-    private static final String TAG = Tags.SurfaceDetectionService.getTag();
+    private final String TAG = TagUtils.getTag(this);
 
     /**
      * The contour color used to draw box
@@ -70,54 +64,47 @@ public class SurfaceDetectionService {
     /**
      * Constructor for the SurfaceDetectionService
      *
-     * @param contourColorWhite
-     * @param contourColor
-     * @param mSpectrum
-     * @param spectrumSize
-     * @param configurationDTO
+     * @param contourColorWhite The primary color of the contour
+     * @param contourColor The color of the contours
+     * @param mSpectrum The spectrum,
+     * @param spectrumSize The size of the spectrum (to detect)
+     * @param hsvColor The hsv color
      */
     public SurfaceDetectionService(Scalar contourColorWhite, Scalar contourColor, Mat mSpectrum,
-                                   Size spectrumSize, ConfigurationDTO configurationDTO) {
+                                   Size spectrumSize, Scalar hsvColor) {
         this.contourColorWhite = contourColorWhite;
         this.contourColor = contourColor;
         this.mSpectrum = mSpectrum;
         this.spectrumRange = spectrumSize;
 
         colorBlobDetector = new ColorBlobDetector();
-        if (configurationDTO != null) {
-            colorBlobDetector.setHsvColor(configurationDTO.getColor());
-        }
+        colorBlobDetector.setHsvColor(hsvColor);
     }
 
     /**
-     * @param mRgba
-     * @param threshold
-     * @param doDraw
-     * @return
+     * Detect the surface
+     * @param mRgba The image (in rgba format)
+     * @param threshold The threshold value used for detecting defects
+     * @param doDraw The do draw flag - if true, will draw on image
+     * @return sufaceData The {@link SurfaceDataDTO}
      */
     public SurfaceDataDTO detect(Mat mRgba, double threshold, boolean doDraw) {
-        SurfaceDataDTO surfaceData = new SurfaceDataDTO();
-        surfaceData.setmRgba(mRgba);
-        detectSurface(mRgba, threshold, colorBlobDetector, surfaceData, doDraw);
-        return surfaceData;
+        return detectSurface(mRgba, threshold, doDraw);
     }
 
     /**
-     * @param mRgba
-     * @param threshold
-     * @param colorBlobDetector
-     * @param doDraw
-     * @return
+     * Detect the surface based on the hsv color set in the color blob detector
+     * @param mRgba The rgba image
+     * @param threshold The threshold
+     * @param doDraw The do draw flag
+     * @return surfaceData The detected surface
      */
-    private boolean detectSurface(Mat mRgba, double threshold, ColorBlobDetector colorBlobDetector, SurfaceDataDTO surfaceData, boolean doDraw) {
+    private SurfaceDataDTO detectSurface(Mat mRgba, double threshold, boolean doDraw) {
         // get contours and process the image
-        colorBlobDetector.process(mRgba);
-        List<MatOfPoint> contours = colorBlobDetector.getContours();
-
-        Log.d(TAG, "Contours count: " + contours.size());
-
+        SurfaceDataDTO surfaceData = new SurfaceDataDTO();
+        List<MatOfPoint> contours = colorBlobDetector.process(mRgba);
         if (contours.isEmpty()) {
-            return false;
+            return surfaceData;
         }
 
         RotatedRect rect = Imgproc.minAreaRect(new MatOfPoint2f(contours.get(0).toArray()));
@@ -128,16 +115,11 @@ public class SurfaceDetectionService {
 
         Log.w(TAG, "bound rect null? = " + (boundRect == null));
 
-        // draws the rectangle
         if (doDraw) {
             Imgproc.rectangle(mRgba, boundRect.tl(), boundRect.br(), contourColorWhite, 2, 8, 0);
         }
 
         double a = ImageProcessingUtils.calculateAlpha(boundRect);
-
-        Log.d(TAG, " Row start [" + (int) boundRect.tl().y + "] row end [" + (int) boundRect.br().y + "] Col start ["
-                + (int) boundRect.tl().x + "] Col end [" + (int) boundRect.br().x + "]");
-        Log.d(TAG, " A [" + a + "] br y - tl y = [" + (boundRect.br().y - boundRect.tl().y) + "]");
 
         if (doDraw) {
              Imgproc.rectangle(mRgba, boundRect.tl(), new Point(boundRect.br().x, a), contourColor, 2, 8, 0);
@@ -153,7 +135,7 @@ public class SurfaceDetectionService {
 
         // ensure that there are at least three points, since we must have a convex polygon
         if (hull.toArray().length <= 3) {
-            return false;
+            return surfaceData;
         }
 
         Imgproc.convexityDefects(new MatOfPoint(contours.get(boundPos).toArray()), hull, convexDefect);
@@ -163,23 +145,8 @@ public class SurfaceDetectionService {
 
         List<Point> defectPointsList = ImageProcessingUtils.getDefectPoints(contours, convexDefect, boundPos, threshold, a);
         List<MatOfPoint> defectPoints = ImageProcessingUtils.getMatOfPointFromPoints(contours, defectPointsList);
-
         Imgproc.resize(colorBlobDetector.getSpectrum(), mSpectrum, spectrumRange);
 
-        Log.d(TAG, "hull: " + hull.toList());
-        Log.d(TAG, "defects: " + convexDefect.toList());
-        int defectsTotal = (int) convexDefect.total();
-        Log.d(TAG, "Defect total " + defectsTotal);
-
-        surfaceData.setContours(contours);
-        surfaceData.setDefectPoints(defectPointsList);
-        surfaceData.setConvexDefect(convexDefect);
-        surfaceData.setAlpha(a);
-        surfaceData.setHull(hull);
-        surfaceData.setHullPoints(listPo);
-        surfaceData.setmDefectPoints(defectPoints);
-        surfaceData.setmHullPoints(hullPoints);
-        surfaceData.setBoundRect(boundRect);
 
         if (doDraw) {
             Imgproc.drawContours(mRgba, hullPoints, -1, contourColor, 3);
@@ -190,8 +157,21 @@ public class SurfaceDetectionService {
             }
         }
 
+        surfaceData.setContours(contours);
+        surfaceData.setDefectPoints(defectPointsList);
+        surfaceData.setConvexDefect(convexDefect);
+        surfaceData.setAlpha(a);
+        surfaceData.setHull(hull);
+        surfaceData.setHullPoints(listPo);
+        surfaceData.setmDefectPoints(defectPoints);
+        surfaceData.setmHullPoints(hullPoints);
+        surfaceData.setBoundRect(boundRect);
         surfaceData.setmRgba(mRgba);
-        return true;
+        return surfaceData;
+    }
+
+    public void setHsvColor(Scalar hsvColor) {
+        this.colorBlobDetector.setHsvColor(hsvColor);
     }
 
     public ColorBlobDetector getColorBlobDetector() {

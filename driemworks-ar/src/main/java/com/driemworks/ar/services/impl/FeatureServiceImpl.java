@@ -4,7 +4,6 @@ import android.util.Log;
 
 import com.driemworks.ar.services.FeatureService;
 import com.driemworks.common.utils.ImageConversionUtils;
-import com.driemworks.common.utils.OpenCvUtils;
 import com.driemworks.common.utils.TagUtils;
 
 import org.opencv.core.Mat;
@@ -57,21 +56,19 @@ public class FeatureServiceImpl implements FeatureService {
     /**
      * The maximum count
      */
-    private static final int MAX_COUNT = 10;
+    private static final int MAX_COUNT = 15;
 
     /**
      * The epsilon
      */
-    private static final double EPISILON = 0.01;
+    private static final double EPISILON = 0.001;
 
     /**
      * Constructor for the FeatureServiceImpl with default params (FAST/ORB/HAMMING)
      */
     public FeatureServiceImpl() {
-        // FAST feature detector
         detector = FeatureDetector.create(FeatureDetector.FAST);
-        // ORB descriptor extraction
-        size = new Size(29, 29);
+        size = new Size(21, 21);
         termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, MAX_COUNT, EPISILON);
     }
 
@@ -80,11 +77,10 @@ public class FeatureServiceImpl implements FeatureService {
      */
     public MatOfKeyPoint featureDetection(Mat frame) {
         Log.d(TAG, "START - featureDetection");
-        long startTime = System.currentTimeMillis();
         MatOfKeyPoint mKeyPoints = new MatOfKeyPoint();
-        Mat sharpenedFrame = OpenCvUtils.sharpenImage(frame);
-        detector.detect(sharpenedFrame, mKeyPoints);
-        Log.d(TAG, "END - featureDetection - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
+//        Mat sharpenedFrame = OpenCvUtils.sharpenImage(frame);
+        detector.detect(frame, mKeyPoints);
+        Log.d(TAG, "END - featureDetection");
         return mKeyPoints;
     }
 
@@ -93,7 +89,6 @@ public class FeatureServiceImpl implements FeatureService {
      */
     public MatOfKeyPoint featureTracking(Mat previousFrameGray, Mat currentFrameGray, MatOfKeyPoint previousKeyPoints) {
         Log.d(TAG, "START - featureTracking");
-        long startTime = System.currentTimeMillis();
 
         MatOfByte status = new MatOfByte();
         MatOfFloat err = new MatOfFloat();
@@ -106,11 +101,12 @@ public class FeatureServiceImpl implements FeatureService {
                 status, err, size, MAX_LEVEL, termCriteria,
                 Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
 
-        Log.d(TAG, "END - featureTracking - time elapsed: " + (System.currentTimeMillis() - startTime) + " ms");
         List<Point> featuresList = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), status.toArray());
         status.release();
         err.release();
-        return ImageConversionUtils.convertListOfPointsToMatOfKeypoint(featuresList, 0,0);
+        Log.d(TAG, "END - featureTracking");
+        return ImageConversionUtils.convertListOfPointsToMatOfKeypoint(featuresList, 1, 1);
+//        return ImageConversionUtils.convertListOfPointsToMatOfKeypoint(currentKeyPoints2f.toList(), 0, 0);
     }
 
     /**

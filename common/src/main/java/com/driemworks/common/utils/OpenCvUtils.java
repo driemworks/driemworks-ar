@@ -26,8 +26,8 @@ public class OpenCvUtils {
      */
     public static Mat sharpenImage(Mat input) {
         Mat output = input.clone();
-        Imgproc.GaussianBlur(input, output, new Size(0,0), 3);
-        Core.addWeighted(input, 1.7, output, -0.5, 0, output);
+        Imgproc.GaussianBlur(input, output, new Size(3,3), 3);
+        Core.addWeighted(input, 1.7, output, -0.3, 1.0, output);
         return output;
     }
 

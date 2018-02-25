@@ -31,6 +31,17 @@ public enum Resolution {
     }
 
     /**
+     * Determine if the coordinate (x, y) is a valid point in a screen with the given resolution
+     * @param x The x coordinate
+     * @param y The y coordinate
+     * @param resolution The resolution
+     * @return true if (x, y) in resolution, false otherwise
+     */
+    public static boolean isInResolution(int x, int y, Resolution resolution) {
+        return 0 < x && resolution.getWidth() > x && 0 < y && resolution.getHeight() > y;
+    }
+
+    /**
      * Getter for the width
      * @return width The width
      */

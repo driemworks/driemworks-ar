@@ -30,17 +30,35 @@ public class ColorBlobDetector {
     private Mat mSpectrum = new Mat();
     private List<MatOfPoint> mContours = new ArrayList<>();
 
-    // Cache
-    Mat mPyrDownMat = new Mat();
-    Mat mHsvMat = new Mat();
-    Mat mMask = new Mat();
-    Mat mDilatedMask = new Mat();
-    Mat mHierarchy = new Mat();
 
-    public void setColorRadius(Scalar radius) {
-        mColorRadius = radius;
+    private int threshold = 150;
+
+    private Mat mCanny = new Mat();
+
+
+    // Cache
+    Mat mPyrDownMat;
+    Mat mHsvMat;
+    Mat mMask;
+    Mat mDilatedMask;
+    Mat mHierarchy;
+
+    /**
+     * Constructor for the ColorBlobDetector`
+     */
+    public ColorBlobDetector() {
+        mPyrDownMat = new Mat();
+        mHsvMat = new Mat();
+        mMask = new Mat();
+        mDilatedMask = new Mat();
+        mHierarchy = new Mat();
     }
 
+    /**
+     * Determine the upper and lower bounds for detection color range based on the
+     * hsv color
+     * @param hsvColor The hsv color
+     */
     public void setHsvColor(Scalar hsvColor) {
         double minH = (hsvColor.val[0] >= mColorRadius.val[0]) ? hsvColor.val[0]-mColorRadius.val[0] : 0;
         double maxH = (hsvColor.val[0]+mColorRadius.val[0] <= 255) ? hsvColor.val[0]+mColorRadius.val[0] : 255;
@@ -67,19 +85,11 @@ public class ColorBlobDetector {
         Imgproc.cvtColor(spectrumHsv, mSpectrum, Imgproc.COLOR_HSV2RGB_FULL, 4);
     }
 
-    public Mat getSpectrum() {
-        return mSpectrum;
-    }
-
-    public void setMinContourArea(double area) {
-        mMinContourArea = area;
-    }
-
-    private int threshold = 150;
-
-    private Mat mCanny = new Mat();
-
-    public void process(Mat rgbaImage) {
+    /**
+     * Finds and filters contours in the image
+     * @param rgbaImage The image
+     */
+    public List<MatOfPoint> process(Mat rgbaImage) {
         Imgproc.GaussianBlur(rgbaImage, rgbaImage, new Size(3, 3), 0);
 
         Imgproc.pyrDown(rgbaImage, mPyrDownMat);
@@ -98,6 +108,7 @@ public class ColorBlobDetector {
         // Filter contours by area and resize to fit the original image size
         mContours.clear();
         filterContours(contours, maxArea);
+        return mContours;
     }
 
     /**
@@ -116,9 +127,9 @@ public class ColorBlobDetector {
     }
 
     /**
-     *
-     * @param contours
-     * @return
+     * Find the maximum area of the MatOfPoint with the list contours
+     * @param contours The list of MatOfPoint
+     * @return maxArea the Maximum Area
      */
     private double findMaxContourArea(List<MatOfPoint> contours) {
         double maxArea = 0;
@@ -131,6 +142,11 @@ public class ColorBlobDetector {
         }
 
         return maxArea;
+    }
+
+
+    public Mat getSpectrum() {
+        return mSpectrum;
     }
 
     public List<MatOfPoint> getContours() {

@@ -90,13 +90,13 @@ public class ImageProcessingUtils {
     }
 
     /**
-     *
-     * @param contours
-     * @param convexDefect
-     * @param boundPos
-     * @param iThreshold
-     * @param a
-     * @return
+     * Get the defect points
+     * @param contours The contours
+     * @param convexDefect The convex defect
+     * @param boundPos The positive bound
+     * @param iThreshold The threshold
+     * @param a The alpha value
+     * @return The list of defect points
      */
     public static List<Point> getDefectPoints(List<MatOfPoint> contours, MatOfInt4 convexDefect, int boundPos, double iThreshold, double a) {
         List<Point> listPoDefect = new LinkedList<Point>();
@@ -112,49 +112,15 @@ public class ImageProcessingUtils {
     }
 
     /**
-     *
-     * @param boundRect
-     * @return
+     * Calculate the alpha value, with multipler 0.7
+     * @param boundRect The bound rectabnle
+     * @return The alpha value
      */
     public static double calculateAlpha(Rect boundRect) {
         double a = boundRect.br().y - boundRect.tl().y;
         a = a * 0.7;
         a = boundRect.tl().y + a;
         return a;
-    }
-
-    /**
-     * Sort the list of points by maximum Y value
-     * @param points
-     * @return
-     */
-    public static List<Point> sortByMaxY(List<Point> points) {
-        Collections.sort(points, new Comparator<Point>() {
-            @Override
-            public int compare(Point o1, Point o2) {
-                if (o1.y > o2.y) return 1;
-                else if (o1.y < o2.y) return - 1;
-                else return 0;
-            }
-        });
-        return points;
-    }
-
-    /**
-     * Sort the list of points by minimum x value
-     * @param points
-     * @return
-     */
-    public static List<Point> sortByMinX(List<Point> points) {
-        Collections.sort(points, new Comparator<Point>() {
-            @Override
-            public int compare(Point o1, Point o2) {
-                if (o1.x < o2.x) return 1;
-                if (o1.x == o2.x) return 0;
-                else return -1;
-            }
-        });
-        return points;
     }
 
 }
