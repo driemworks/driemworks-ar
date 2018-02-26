@@ -230,7 +230,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 .getSerializableExtra(Constants.CONFIG);
         // TODO move params to an enum somewhere, private vars
         surfaceDetector = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
-                new Scalar(222, 040, 255), new Mat(), new Size(200, 64), configurationDTO);
+                new Scalar(222, 040, 255), new Mat(), new Size(200, 64), configurationDTO.getColor());
     }
 
     /**

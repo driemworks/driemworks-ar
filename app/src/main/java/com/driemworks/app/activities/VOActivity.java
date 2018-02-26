@@ -335,6 +335,7 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
 //                    Log.d(TAG, "bound rect center: (" + boundRect.x + " ," + boundRect.y + ")");
 
                 Log.d(TAG, "Setting rect at (" + touchedRect.x + " , " + touchedRect.y + ")");
+                staticCubeRenderer.setScale((float)(staticCubeRenderer.getScale() * currentPose.getZ()));
 //                staticCubeRenderer.setZ((int)(25.50 * currentPose.getZ()));
             }
 
@@ -386,7 +387,6 @@ public class VOActivity extends Activity implements CvCameraViewListener2, View.
         touchedRect = null;
         // the value used to bound the size of the area to be sampled
         int sizeThreshold = 10;
-//            isRectSet = false;
 
         Point correctedCoordinate = DisplayUtils.correctCoordinate(event, screenWidth, screenHeight);
         Rect touchedRect = new Rect((int) correctedCoordinate.x, (int) correctedCoordinate.y, sizeThreshold, sizeThreshold);

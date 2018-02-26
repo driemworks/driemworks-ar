@@ -223,7 +223,7 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
         Intent intent = getIntent();
         configurationDTO = (ConfigurationDTO) intent.getSerializableExtra(com.driemworks.common.cs.Constants.CONFIG);
         surfaceDetector = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
-                new Scalar(222, 040, 255), new Mat(), new Size(200, 64), configurationDTO);
+                new Scalar(222, 040, 255), new Mat(), new Size(200, 64), configurationDTO.getColor());
     }
 
     /**

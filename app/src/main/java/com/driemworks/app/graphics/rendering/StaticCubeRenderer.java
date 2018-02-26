@@ -182,6 +182,14 @@ public class StaticCubeRenderer implements GLSurfaceView.Renderer {
         }
     }
 
+    public void setScale(float scale) {
+        cube.setScale(scale);
+    }
+
+    public float getScale() {
+        return cube.getScale();
+    }
+
     /**
      * Set the camera coordinate
      * @param coord The float array to set as the current coordainte
