@@ -35,10 +35,10 @@ dependencies {
     compile project(':common')
     compile project(':driemworks-ar')
     compile project(':sensor-admin')
+    compile 'com.github.KalebKE:FSensor:v1.1.3'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
     compile 'com.google.android.gms:play-services:11.0.2'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'com.github.smart-fun:smartGL:1.1.4'
     testCompile 'junit:junit:4.12'
 }

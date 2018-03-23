@@ -5,8 +5,8 @@ import android.util.Log;
 import com.driemworks.ar.enums.ExtremesEnum;
 import com.driemworks.ar.enums.FingerEnum;
 import com.driemworks.ar.enums.HandEnum;
-import com.driemworks.ar.enums.Tags;
 import com.driemworks.common.enums.Coordinates;
+import com.driemworks.common.utils.TagUtils;
 
 import org.opencv.core.Point;
 
@@ -20,7 +20,7 @@ import java.util.Map;
  */
 public class DetectorUtils {
 
-    private static final String TAG = Tags.DetectorUtils.getTag();
+    private static final String TAG = "DetectorUtils";
 
     /**
      *

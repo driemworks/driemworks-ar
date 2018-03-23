@@ -78,7 +78,9 @@ public class SurfaceDetectionService {
         this.spectrumRange = spectrumSize;
 
         colorBlobDetector = new ColorBlobDetector();
-        colorBlobDetector.setHsvColor(hsvColor);
+        if (hsvColor != null) {
+            colorBlobDetector.setHsvColor(hsvColor);
+        }
     }
 
     /**

@@ -35,13 +35,12 @@ public class ColorBlobDetector {
 
     private Mat mCanny = new Mat();
 
-
     // Cache
-    Mat mPyrDownMat;
-    Mat mHsvMat;
-    Mat mMask;
-    Mat mDilatedMask;
-    Mat mHierarchy;
+    private Mat mPyrDownMat;
+    private Mat mHsvMat;
+    private Mat mMask;
+    private Mat mDilatedMask;
+    private Mat mHierarchy;
 
     /**
      * Constructor for the ColorBlobDetector`
