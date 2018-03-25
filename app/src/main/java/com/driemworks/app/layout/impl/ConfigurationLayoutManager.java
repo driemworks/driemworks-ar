@@ -13,7 +13,7 @@ import com.driemworks.common.utils.TagUtils;
 import com.driemworks.app.activities.ConfigurationActivity;
 import com.driemworks.app.activities.CubeActivity;
 import com.driemworks.app.layout.LayoutManager;
-import com.driemworks.app.views.CustomSurfaceView;
+import com.driemworks.app.views.OpenCVSurfaceView;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class ConfigurationLayoutManager implements LayoutManager {
 
     private final String TAG = TagUtils.getTag(this);
     /** Android elements */
-    private CustomSurfaceView customSurfaceView;
+    private OpenCVSurfaceView customSurfaceView;
     public static Button setConfiguration = null;
 
     public static TextView xRotation = null;

@@ -25,7 +25,7 @@ import com.driemworks.app.R;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.app.graphics.rendering.GraphicsRenderer;
 import com.driemworks.app.layout.impl.CubeActivityLayoutManager;
-import com.driemworks.app.views.CustomSurfaceView;
+import com.driemworks.app.views.OpenCVSurfaceView;
 import com.driemworks.common.utils.DisplayUtils;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -46,7 +46,7 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
     private static final String TAG = "CubeActivity: ";
 
     /** //////////////   OPEN CV    /////////////////////// */
-    private CustomSurfaceView customSurfaceView;
+    private OpenCVSurfaceView customSurfaceView;
     private ConfigurationDTO configurationDTO;
     private SurfaceDetectionService surfaceDetector;
     private SurfaceDataDTO surfaceData;
@@ -115,7 +115,7 @@ public class CubeActivity extends Activity implements CameraBridgeViewBase.CvCam
         setContentView(R.layout.game_layout);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
+        customSurfaceView = (OpenCVSurfaceView) findViewById(R.id.main_surface_view);
         customSurfaceView.setCvCameraViewListener(this);
         customSurfaceView.setMaxFrameSize(Resolution.RES_STANDARD.getWidth(), Resolution.RES_STANDARD.getHeight());
 

@@ -17,7 +17,7 @@
             android:orientation="vertical">
 
             <!--  <org.opencv.android_mtl.JavaCameraView-->
-            <com.driemworks.app.views.CustomSurfaceView
+            <com.driemworks.app.views.OpenCVSurfaceView
                 android:id="@+id/main_surface_view"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"

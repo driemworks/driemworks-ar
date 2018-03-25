@@ -26,7 +26,7 @@
                 android:layout_height="match_parent"
                 />
         </ViewSwitcher>
-        <com.driemworks.app.views.CustomSurfaceView
+        <com.driemworks.app.views.OpenCVSurfaceView
             xmlns:opencv="http://schemas.android.com/apk/res-auto"
             android:id="@+id/main_surface_view"
             android:layout_width="fill_parent"

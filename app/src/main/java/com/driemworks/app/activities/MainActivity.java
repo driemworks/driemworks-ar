@@ -18,14 +18,13 @@ import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.common.cs.Constants;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
-import com.driemworks.common.enums.Resolution;
 import com.driemworks.sensor.services.OrientationService;
 import com.driemworks.app.R;
 import com.driemworks.app.factories.BaseLoaderCallbackFactory;
 import com.driemworks.app.graphics.rendering.MainRenderer;
 import com.driemworks.app.layout.impl.MainActivityLayoutManager;
 import com.driemworks.app.utils.RenderUtils;
-import com.driemworks.app.views.CustomSurfaceView;
+import com.driemworks.app.views.OpenCVSurfaceView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -47,7 +46,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private static final String TAG = "MainActivity: ";
 
     /** //////////////   OPEN CV    /////////////////////// */
-    private CustomSurfaceView customSurfaceView;
+    private OpenCVSurfaceView customSurfaceView;
     private ConfigurationDTO configurationDTO;
     private SurfaceDetectionService surfaceDetector;
     private SurfaceDataDTO surfaceData;
@@ -95,7 +94,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         setContentView(R.layout.main_layout);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
+        customSurfaceView = (OpenCVSurfaceView) findViewById(R.id.main_surface_view);
         // register listeners
         customSurfaceView.setCvCameraViewListener(this);
         customSurfaceView.setMaxFrameSize(800, 480);

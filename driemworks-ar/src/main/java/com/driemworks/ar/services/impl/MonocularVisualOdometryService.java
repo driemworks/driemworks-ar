@@ -49,7 +49,7 @@ public class MonocularVisualOdometryService {
     /**
      * The feature service
      */
-    private FeatureServiceImpl featureService;
+    private OpticalFlowFeatureServiceImpl featureService;
 
     /**
      * The default constructor
@@ -58,7 +58,7 @@ public class MonocularVisualOdometryService {
         super();
         rotationMatrix = new Mat(3, 3, CvType.CV_64FC1);
         translationMatrix = new Mat(3, 1, CvType.CV_64FC1);
-        featureService = new FeatureServiceImpl();
+        featureService = new OpticalFlowFeatureServiceImpl();
     }
 
     /**

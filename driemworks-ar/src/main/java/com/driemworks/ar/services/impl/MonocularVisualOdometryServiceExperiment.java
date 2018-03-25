@@ -60,7 +60,7 @@ public class MonocularVisualOdometryServiceExperiment {
     /**
      * The feature service
      */
-    private FeatureServiceImpl featureService;
+    private OpticalFlowFeatureServiceImpl featureService;
 
     /**
      * The touched rectangle
@@ -86,7 +86,7 @@ public class MonocularVisualOdometryServiceExperiment {
         super();
         rotationMatrix = new Mat(3, 3, CvType.CV_64FC1);
         translationMatrix = new Mat(3, 1, CvType.CV_64FC1);
-        featureService = new FeatureServiceImpl();
+        featureService = new OpticalFlowFeatureServiceImpl();
         touchedRect = null;
         this.resolution = resolution;
         this.isSubmatMode = isSubmatMode;

@@ -1,6 +1,5 @@
 package com.driemworks.app.activities;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -9,19 +8,14 @@ import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 
 import com.driemworks.ar.utils.ImageProcessingUtils;
-import com.driemworks.app.factories.BaseLoaderCallbackFactory;
-import com.driemworks.app.views.CustomSurfaceView;
 import com.driemworks.app.R;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.app.layout.impl.LineGameActivityLayoutManager;
 import com.driemworks.app.services.permission.impl.CameraPermissionServiceImpl;
-import com.driemworks.app.services.permission.impl.LocationPermissionServiceImpl;
 import com.driemworks.common.utils.DisplayUtils;
 
-import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfInt;
@@ -38,41 +32,26 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * @author Tony
  */
-public class LineGameActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
-
-    /** load the opencv lib */
-    static {
-        System.loadLibrary("opencv_java3");
-    }
+public class LineGameActivity extends AbstractOpenCVActivity implements OnTouchListener, CvCameraViewListener2 {
 
     /** The service to request permission to use camera at runtime */
     private CameraPermissionServiceImpl cameraPermissionService;
 
-    /** The service to request permission to get location data at runtime */
-    private LocationPermissionServiceImpl locationPermissionService;
-
     /** The layout manager for this activity */
     private LineGameActivityLayoutManager layoutManager;
 
+    private static final Resolution resolution = Resolution.RES_STANDARD;
+
     /** The tag used for logging */
     private static final String TAG = "LineGameActivity";
-
-    /** The input camera frame in RGBA format */
-    private Mat mRgba;
-
-    /** The customSurfaceView surface view */
-    private CustomSurfaceView customSurfaceView;
 
     /** The width of the device screen */
     private int screenWidth;
 
     /** The height of the device screen */
     private int screenHeight;
-
-    /** The base loader callback */
-    private BaseLoaderCallback mLoaderCallback;
 
     private int currentPositionX = 100;
     private int currentPositionY = 100;
@@ -87,6 +66,7 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
 
     /** The default constructor */
     public LineGameActivity() {
+        super(R.layout.opencv_layout, R.id.main_surface_view, resolution, true);
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
@@ -106,62 +86,47 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         cameraPermissionService = new CameraPermissionServiceImpl(this);
-
-        locationPermissionService = new LocationPermissionServiceImpl(this);
-
-        setContentView(R.layout.main_surface_view);
-
-        customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
-        customSurfaceView.setCvCameraViewListener(this);
-        customSurfaceView.setOnTouchListener(LineGameActivity.this);
-        customSurfaceView.setMaxFrameSize(800, 480);
-
         layoutManager = LineGameActivityLayoutManager.getInstance(this);
         layoutManager.setActivity(this);
-
-        mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView);
     }
 
-
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onPause() {
         Log.d(TAG, "Called onPause");
         super.onPause();
-        if (customSurfaceView != null) {
-            customSurfaceView.disableView();
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mLoaderCallback);
-        customSurfaceView.setMaxFrameSize(Resolution.RES_STANDARD.getWidth(), Resolution.RES_STANDARD.getHeight());
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
-        customSurfaceView.disableView();
-    }
-
-    public void onCameraViewStarted(int width, int height) {
-        Log.d(TAG, "camera view started");
-        mRgba = new Mat();
-        initFields(width, height);
     }
 
     /**
-     * @param width
-     * @param height
+     * {@inheritDoc}
      */
-    private void initFields(int width, int height) {
-        mRgba = new Mat(height, width, CvType.CV_8UC4);
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onCameraViewStarted(int width, int height) {
+        Log.d(TAG, "camera view started");
+        super.onCameraViewStarted(width, height);
     }
 
     public void onCameraViewStopped() {
         Log.d(TAG, "camera view stopped");
-        mRgba.release();
+        super.onCameraViewStopped();
     }
 
     /**
@@ -176,10 +141,7 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
     }
 
     /**
-     * The onTouch method -> samples the color of the touch region
-     * @param v
-     * @param event
-     * @return
+     * {@inheritDoc}
      */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -189,25 +151,24 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
     }
 
     /**
-     *
-     * @param inputFrame
-     * @return
+     * {@inheritDoc}
      */
+    @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         // get the images from the input frame
-        mRgba = inputFrame.rgba();
+        super.setmRgba(inputFrame.rgba());
         // circle to serve as a reference point for moving the piece
-        Imgproc.circle(mRgba, refPt, 50, new Scalar(0, 0, 255));
-        updatePositionBasedOnTouch();
+        Imgproc.circle(super.getmRgba(), refPt, 50, new Scalar(0, 0, 255));
+        updatePositionBasedOnTouch(super.getmRgba());
 
-        return detectCannyEdges(mRgba);
+        return detectCannyEdges(super.getmRgba());
 
     }
 
     /**
      * Update the position of the playing piece using the user input touch
      */
-    private void updatePositionBasedOnTouch() {
+    private void updatePositionBasedOnTouch(Mat mRgba) {
         if (touchedX > 0 || touchedY > 0) {
             Imgproc.circle(mRgba, new Point(touchedX, touchedY), 10, new Scalar(255, 255, 255));
             // set the position of the concentric circles
@@ -244,8 +205,6 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
         }
     }
 
-    Mat solidRect;
-
     /**
      *
      * @param image
@@ -276,17 +235,15 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
         Map<Integer, Rect> rectMap = ImageProcessingUtils.getBoundedRect(rect, contours);
         int boundPos = (int) rectMap.keySet().toArray()[0];
         Rect boundRect = rectMap.get(boundPos);
-        if (boundRect != null) {
-
-            solidRect = new Mat(boundRect.size(), CvType.CV_8UC4);
-        }
+//        if (boundRect != null) {
+//            Mat solidRect = new Mat(boundRect.size(), CvType.CV_8UC4);
+//        }
 
         MatOfPoint2f pointMat = new MatOfPoint2f();
         Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(boundPos).toArray()), pointMat, 1.7, true);
         contours.set(boundPos, new MatOfPoint(pointMat.toArray()));
 
         MatOfInt hull = new MatOfInt();
-//        MatOfInt4 convexDefect = new MatOfInt4();
         Imgproc.convexHull(new MatOfPoint(contours.get(boundPos).toArray()), hull);
 
         // ensure that there are at least three points, since we must have a convex polygon
@@ -294,24 +251,21 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
             return image;
         }
 
-        ///////////////////////
-
         if (contours.size() >= 2) {
             RotatedRect rect1 = Imgproc.minAreaRect(new MatOfPoint2f(contours.get(1).toArray()));
 
             Map<Integer, Rect> rectMap1 = ImageProcessingUtils.getBoundedRect(rect1, contours);
             int boundPos1 = (int) rectMap.keySet().toArray()[0];
             Rect boundRect1 = rectMap.get(boundPos1);
-            if (boundRect1 != null) {
+//            if (boundRect1 != null) {
 //            solidRect = new Mat(boundRect1.size(), CvType.CV_8UC4);
-            }
+//            }
 
             MatOfPoint2f pointMat1 = new MatOfPoint2f();
             Imgproc.approxPolyDP(new MatOfPoint2f(contours.get(boundPos).toArray()), pointMat1, 1.7, true);
             contours.set(boundPos1, new MatOfPoint(pointMat1.toArray()));
 
             MatOfInt hull1 = new MatOfInt();
-//        MatOfInt4 convexDefect = new MatOfInt4();
             Imgproc.convexHull(new MatOfPoint(contours.get(boundPos1).toArray()), hull1);
 
             // ensure that there are at least three points, since we must have a convex polygon
@@ -327,22 +281,7 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
         Imgproc.circle(image, new Point(currentPositionX, currentPositionY), 10, new Scalar(0, 0, 255));
         Imgproc.circle(image, new Point(currentPositionX, currentPositionY), 5, new Scalar(0, 255, 0));
 
-//        Imgproc.convexityDefects(new MatOfPoint(contours.get(boundPos).toArray()), hull, convexDefect);
-
-//        List<Point> listPo = ImageProcessingUtils.getListOfPoints(contours, hull, boundPos);
-//
-//        for (Point p : listPo) {
-//            Imgproc.circle(image, p, 6, new Scalar(255, 200, 255));
-//        }
-
         Log.w(TAG, "bound rect null? = " + (boundRect == null));
-//        Imgproc.rectangle(image, boundRect.tl(), boundRect.br(), new Scalar(0, 255, 0), 2, 8, 0);
-
-
-//        solidRect.setTo(new Scalar(0, 255, 0));
-//        Mat submat = image.submat(boundRect);
-//        solidRect.copyTo(submat);
-
         return image ;
     }
 
@@ -382,18 +321,12 @@ public class LineGameActivity extends Activity implements OnTouchListener, CvCam
     }
 
     /**
-     * Handle the results of a permissions request
-     *
-     * @param requestCode
-     * @param permissions
-     * @param grantResults
+     * {@inheritDoc}
      */
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == CameraPermissionServiceImpl.REQUEST_CODE) {
             cameraPermissionService.handleResponse(requestCode, permissions, grantResults);
-        } else if (requestCode == LocationPermissionServiceImpl.REQUEST_CODE) {
-            locationPermissionService.handleResponse(requestCode, permissions, grantResults);
         }
     }
 

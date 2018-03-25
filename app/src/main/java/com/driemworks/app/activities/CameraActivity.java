@@ -1,6 +1,8 @@
 package com.driemworks.app.activities;
 
 import android.os.Bundle;
+import android.view.MotionEvent;
+import android.view.View;
 
 import com.driemworks.app.R;
 import com.driemworks.ar.dto.CameraPoseDTO;
@@ -18,7 +20,7 @@ import org.opencv.imgproc.Imgproc;
 /**
  * @author Tony
  */
-public class CameraActivity extends OpenCVActivity {
+public class CameraActivity extends AbstractOpenCVActivity {
 
     /** The monocular visual odometry service */
     private MonocularVisualOdometryService monocularVisualOdometryService;
@@ -39,7 +41,7 @@ public class CameraActivity extends OpenCVActivity {
      * The constructor for the CameraActivity
      */
     public CameraActivity() {
-        super(R.layout.opencv_layout, resolution);
+        super(R.layout.opencv_layout, R.id.main_surface_view, resolution, false);
         monocularVisualOdometryService = new MonocularVisualOdometryService();
         cameraPoseDTO = new CameraPoseDTO();
     }
@@ -99,5 +101,13 @@ public class CameraActivity extends OpenCVActivity {
      */
     private void afterCameraFrame() {
         previousFrameGray = super.getmGray();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        return false;
     }
 }

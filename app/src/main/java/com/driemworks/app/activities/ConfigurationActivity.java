@@ -1,36 +1,36 @@
 package com.driemworks.app.activities;
 
-import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
-import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Core;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
-import android.view.WindowManager;
+import android.widget.Button;
 
 import com.driemworks.ar.imageProcessing.ColorBlobDetector;
+import com.driemworks.ar.services.FeatureService;
 import com.driemworks.ar.services.SurfaceDetectionService;
+import com.driemworks.ar.services.impl.FeatureServiceImpl;
+import com.driemworks.ar.services.impl.OpticalFlowFeatureServiceImpl;
+import com.driemworks.common.dto.FeatureDataDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
-import com.driemworks.app.factories.BaseLoaderCallbackFactory;
 import com.driemworks.common.utils.TagUtils;
 import com.driemworks.app.R;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.app.layout.impl.ConfigurationLayoutManager;
-import com.driemworks.app.services.permission.impl.LocationPermissionServiceImpl;
 import com.driemworks.app.services.permission.impl.CameraPermissionServiceImpl;
-import com.driemworks.app.views.CustomSurfaceView;
 import com.driemworks.common.utils.DisplayUtils;
 
 import org.opencv.core.Size;
@@ -38,30 +38,16 @@ import org.opencv.core.Size;
 /**
  * @author Tony
  */
-public class ConfigurationActivity extends Activity implements OnTouchListener, CvCameraViewListener2 {
-
-    /** load the opencv lib */
-    static {
-        System.loadLibrary("opencv_java3");
-    }
+public class ConfigurationActivity extends AbstractOpenCVActivity implements CvCameraViewListener2 {
 
     /** The service to request permission to use camera at runtime */
     private CameraPermissionServiceImpl cameraPermissionService;
-
-    /** The service to request permission to get location data at runtime */
-    private LocationPermissionServiceImpl locationPermissionService;
 
     /** The layout manager for this activity */
     private ConfigurationLayoutManager layoutManager;
 
     /** The tag used for logging */
     private final String TAG = TagUtils.getTag(this.getClass());
-
-    /** The input camera frame in RGBA format */
-    private Mat mRgba;
-
-    /** The customSurfaceView surface view */
-    private CustomSurfaceView customSurfaceView;
 
     /** The color of the detected blob in HSV format */
     private Scalar mBlobColorHsv;
@@ -87,107 +73,119 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     /** The height of the device screen */
     private int screenHeight;
 
-    /** The base loader callback */
-    private BaseLoaderCallback mLoaderCallback;
+    private static final Resolution resolution = Resolution.RES_STANDARD;
+
+    private Button modeButton;
+
+    private Mat referenceImage;
+
+    private FeatureServiceImpl featureService;
+
+    private SurfaceDataDTO surfaceDataDTO;
+
+    private FeatureDataDTO referenceData = null;
+
+    private FeatureDataDTO currentFeatureData;
 
     /** The default constructor */
     public ConfigurationActivity() {
+        super(R.layout.main_surface_view, R.id.main_surface_view, resolution, true);
         Log.i(TAG, "Instantiated new " + this.getClass());
+        referenceImage = null;
+        featureService = new FeatureServiceImpl();
     }
 
 
     /**
-     * Called when the activity is first created.
+     * {@inheritDoc}
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
 
+        modeButton = (Button) findViewById(R.id.mode_btn);
+        // on click, if surface data is detected, set the reference data
+        modeButton.setOnClickListener(v -> {
+            if (surfaceDataDTO != null && surfaceDataDTO.getBoundRect() != null) {
+                referenceImage = super.getmRgba().submat(surfaceDataDTO.getBoundRect());
+                referenceData = new FeatureDataDTO(referenceImage);
+                featureService.featureDetection(referenceData);
+                Log.d(TAG, "reference data kp are empty: " + (referenceData.getKeyPoints().empty()));
+            }
+        });
+
         // get screen dimensions
         android.graphics.Point size = DisplayUtils.getScreenSize(this);
         screenWidth = size.x;
         screenHeight = size.y;
 
-        if (!OpenCVLoader.initDebug()) {
-            Log.e("OpvenCVLoader", "OvenCVLoader successful: false");
-        } else {
-            Log.d("OpenCVLoader", "OpenCVLoader successful");
-        }
-
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         cameraPermissionService = new CameraPermissionServiceImpl(this);
 
-        locationPermissionService = new LocationPermissionServiceImpl(this);
-
-        setContentView(R.layout.main_surface_view);
-
-        customSurfaceView = (CustomSurfaceView) findViewById(R.id.main_surface_view);
-        customSurfaceView.setCvCameraViewListener(this);
-        customSurfaceView.setOnTouchListener(ConfigurationActivity.this);
-        customSurfaceView.setMaxFrameSize(800, 480);
-
-        layoutManager = ConfigurationLayoutManager.getInstance();
-        layoutManager.setActivity(this);
-        layoutManager.setup(ConfigurationLayoutManager.CONFIG_BUTTON, findViewById(R.id.mode_btn));
-
-        mLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(this, customSurfaceView);
+//        layoutManager = ConfigurationLayoutManager.getInstance();
+//        layoutManager.setActivity(this);
+//        layoutManager.setup(ConfigurationLayoutManager.CONFIG_BUTTON, findViewById(R.id.mode_btn));
     }
 
-
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onPause() {
         Log.d(TAG, "Called onPause");
         super.onPause();
-        if (customSurfaceView != null) {
-            customSurfaceView.disableView();
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mLoaderCallback);
-        customSurfaceView.setMaxFrameSize(Resolution.RES_STANDARD.getWidth(), Resolution.RES_STANDARD.getHeight());
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
-        customSurfaceView.disableView();
-    }
-
-    public void onCameraViewStarted(int width, int height) {
-        Log.d(TAG, "camera view started");
-        mRgba = new Mat();
-        initFields(width, height);
     }
 
     /**
-     * @param width
-     * @param height
+     * {@inheritDoc}
+     */
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onCameraViewStarted(int width, int height) {
+        Log.d(TAG, "camera view started");
+        super.onCameraViewStarted(width, height);
+        initFields(width, height);
+    }
+
+    /** Initialize the detector and detector params
+     * @param width The widhth of the display
+     * @param height The height of the display
      */
     private void initFields(int width, int height) {
         surfaceDetector = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
                 new Scalar(222, 040, 255), new Mat(), new Size(200, 64), null);
-        mRgba = new Mat(height, width, CvType.CV_8UC4);
         mDetector = new ColorBlobDetector();
         mSpectrum = new Mat();
         mBlobColorHsv = new Scalar(255);
         SPECTRUM_SIZE = new Size(200, 64);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void onCameraViewStopped() {
         Log.d(TAG, "camera view stopped");
-        mRgba.release();
+        super.onCameraViewStopped();
     }
 
     /**
-     * The onTouch method -> samples the color of the touch region
-     * @param v
-     * @param event
-     * @return
+     * {@inheritDoc}
      */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
@@ -201,7 +199,7 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
         }
 
         // get the rectangle around the point that was touched
-        Mat touchedRegionRgba = mRgba.submat(touchedRect);
+        Mat touchedRegionRgba = super.getmRgba().submat(touchedRect);
 
         // format to hsv
         Mat touchedRegionHsv = new Mat();
@@ -229,22 +227,52 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
         return false;
     }
 
+    private MatOfDMatch matches;
+
     /**
      * {@inheritDoc}
      */
     @Override
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         // get the images from the input frame
-        mRgba = inputFrame.rgba();
-            // do nothing if no color has been selected
-            if (!mIsColorSelected) {
-                Log.d(TAG, "No color selected, return input image");
-                return mRgba;
+        super.setmRgba(inputFrame.rgba());
+        Log.d(TAG, "Called onCameraFrame");
+        // do nothing if no color has been selected
+        if (!mIsColorSelected) {
+            Log.d(TAG, "No color selected, return input image");
+            return super.getmRgba();
+        }
+
+        if (referenceData == null) {
+            surfaceDataDTO = surfaceDetector.detect(super.getmRgba(), 0, true);
+            Log.d(TAG, "return mRgba from surface data - reference data is null.");
+            return surfaceDataDTO.getmRgba();
+        } else {
+            currentFeatureData = new FeatureDataDTO(super.getmRgba());
+            featureService.featureDetection(currentFeatureData);
+            // will reach this block if we have set the reference data
+            matches = featureService.featureTracking(referenceData, currentFeatureData);
+            Log.d(TAG, "reference kp empty: " + (referenceData.getKeyPoints().empty()));
+            Log.d(TAG, "current kp empty: " + (currentFeatureData.getKeyPoints().empty()));
+
+            if (!referenceData.getKeyPoints().empty() && !currentFeatureData.getKeyPoints().empty()) {
+                Log.d(TAG, "reference data size: " + referenceData.getKeyPoints().size());
+                Log.d(TAG, "current data size: " + currentFeatureData.getKeyPoints().size());
+//                MatOfByte drawnMatches = new MatOfByte();
+//                Features2d.drawMatches(referenceData.getImage(), referenceData.getKeyPoints(),
+//                        currentFeatureData.getImage(), currentFeatureData.getKeyPoints(),
+//                        matches, out);
+//                        new Scalar(255, 0, 0),
+//                        new Scalar(0, 255, 0), drawnMatches, Features2d.DRAW_OVER_OUTIMG);
+                Log.d(TAG, "return output");
+//                return out;
+                return super.getmRgba();
+            } else {
+
+                Log.d(TAG, "return mRgba");
+                return super.getmRgba();
             }
-
-            SurfaceDataDTO surfaceData = surfaceDetector.detect(mRgba, 0, true);
-            return surfaceData.getmRgba();
-
+        }
     }
 
     /**
@@ -254,8 +282,6 @@ public class ConfigurationActivity extends Activity implements OnTouchListener, 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (requestCode == CameraPermissionServiceImpl.REQUEST_CODE) {
             cameraPermissionService.handleResponse(requestCode, permissions, grantResults);
-        } else if (requestCode == LocationPermissionServiceImpl.REQUEST_CODE) {
-            locationPermissionService.handleResponse(requestCode, permissions, grantResults);
         }
     }
 

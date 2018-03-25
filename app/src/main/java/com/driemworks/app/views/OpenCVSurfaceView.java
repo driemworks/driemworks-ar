@@ -12,11 +12,11 @@ import java.util.List;
 /**
  * @author Tony
  */
-public class CustomSurfaceView extends JavaCameraView {
+public class OpenCVSurfaceView extends JavaCameraView {
 
     private static final String TAG = "OpenCustomSufaceView";
     
-    public CustomSurfaceView(Context context, AttributeSet attrs) {
+    public OpenCVSurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
 

@@ -1,8 +1,10 @@
 package com.driemworks.common.utils;
 
 import org.opencv.core.CvType;
+import org.opencv.core.DMatch;
 import org.opencv.core.KeyPoint;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -93,6 +95,17 @@ public class ImageConversionUtils {
         }
         matOfKeyPoint.fromList(keypoints);
         return matOfKeyPoint;
+    }
+
+    public static MatOfPoint2f convertMatOfDMatchToMatOfPoint2f(MatOfDMatch matches) {
+        DMatch[] matchesArray = matches.toArray();
+        List<Point> points = new ArrayList<>();
+
+        for (DMatch match : matchesArray) {
+
+        }
+
+        return null;
     }
 
     /**

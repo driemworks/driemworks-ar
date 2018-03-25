@@ -2,12 +2,12 @@ package com.driemworks.app.activities;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.view.View;
 import android.view.WindowManager;
 
-import com.driemworks.app.R;
-import com.driemworks.app.builders.CustomSurfaceViewBuilder;
+import com.driemworks.app.builders.OpenCVSurfaceViewBuilder;
 import com.driemworks.app.factories.BaseLoaderCallbackFactory;
-import com.driemworks.app.views.CustomSurfaceView;
+import com.driemworks.app.views.OpenCVSurfaceView;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.common.utils.OpenCvUtils;
 
@@ -18,9 +18,15 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 /**
+ * The abstract AbstractOpenCVActivity handles calls to opencv to get
+ * the current camera frame as a {@link Mat}
+ *
+ * This class loads OpenCV libs and sets up the
+ * BaseLoaderCallback and the OpenCVSurfaceView
+ *
  * @author Tony
  */
-public abstract class OpenCVActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public abstract class AbstractOpenCVActivity extends Activity implements View.OnTouchListener, CameraBridgeViewBase.CvCameraViewListener2 {
 
     /** load the opencv lib */
     static {
@@ -30,11 +36,14 @@ public abstract class OpenCVActivity extends Activity implements CameraBridgeVie
     /** The id of the layout */
     private final int layoutResId;
 
+    /** The id of the OpenCVSurfaceView */
+    private int openCVSurfaceViewId;
+
     /** The Resolution of the screen */
     private final Resolution resolution;
 
     /** The custom surface view */
-    private CustomSurfaceView customSurfaceView;
+    private OpenCVSurfaceView customSurfaceView;
 
     /** The base loader callback */
     private BaseLoaderCallback baseLoaderCallback;
@@ -53,15 +62,19 @@ public abstract class OpenCVActivity extends Activity implements CameraBridgeVie
      * The output image
      */
     private Mat output;
-    
+
+    private boolean implementOnTouch;
+
     /**
      * The constructor for the OpenCV activity
      * @param layoutResId The layout id
      * @param resolution The resolution
      */
-    public OpenCVActivity(int layoutResId, Resolution resolution) {
+    public AbstractOpenCVActivity(int layoutResId, int openCVSurfaceViewId, Resolution resolution, boolean implementOnTouch) {
         this.layoutResId = layoutResId;
+        this.openCVSurfaceViewId = openCVSurfaceViewId;
         this.resolution = resolution;
+        this.implementOnTouch = implementOnTouch;
     }
 
     /**
@@ -74,8 +87,9 @@ public abstract class OpenCVActivity extends Activity implements CameraBridgeVie
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(layoutResId);
 
+        View.OnTouchListener listener = implementOnTouch ? this : null;
         // build the views and init callbacks
-        customSurfaceView = new CustomSurfaceViewBuilder(this, R.id.main_surface_view)
+        customSurfaceView = new OpenCVSurfaceViewBuilder(this, openCVSurfaceViewId, listener)
                 .setCvCameraViewListener(this)
                 .setMaxFrameSize(resolution)
                 .build();

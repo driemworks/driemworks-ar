@@ -2,8 +2,7 @@ package com.driemworks.app.factories;
 
 import android.app.Activity;
 
-import com.driemworks.common.enums.Resolution;
-import com.driemworks.app.views.CustomSurfaceView;
+import com.driemworks.app.views.OpenCVSurfaceView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.LoaderCallbackInterface;
@@ -17,10 +16,10 @@ public class BaseLoaderCallbackFactory {
     /**
      *
      * @param activity The {@link Activity}
-     * @param customSurfaceView The {@link CustomSurfaceView}
+     * @param customSurfaceView The {@link OpenCVSurfaceView}
      * @return the BaseLoaderCallback
      */
-    public static BaseLoaderCallback getBaseLoaderCallback(final Activity activity, final CustomSurfaceView customSurfaceView) {
+    public static BaseLoaderCallback getBaseLoaderCallback(final Activity activity, final OpenCVSurfaceView customSurfaceView) {
         return new BaseLoaderCallback(activity) {
             @Override
             public void onManagerConnected(int status) {

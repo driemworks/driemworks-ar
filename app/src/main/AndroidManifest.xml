@@ -98,7 +98,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.driemworks.app.activities.OpenCVActivity"
+            android:name="com.driemworks.app.activities.AbstractOpenCVActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">
