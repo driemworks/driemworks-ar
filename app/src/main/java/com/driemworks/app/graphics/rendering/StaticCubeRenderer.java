@@ -128,7 +128,7 @@ public class StaticCubeRenderer implements GLSurfaceView.Renderer {
         world.setAmbientLight(20, 30, 40);
 
 //        cube = RenderUtils.createCube(RGBColor.RED, 20, 0, 0, 300);
-        cube = RenderUtils.createSphere(RGBColor.BLUE, 20, 0,0,300);
+        cube = RenderUtils.createCube(RGBColor.BLUE, 20, 0,0,300);
         cube.setAlphaWrites(true);
         cube.setVisibility(true);
         world.addObject(cube);

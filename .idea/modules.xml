@@ -10,6 +10,7 @@
       <module fileurl="file://$PROJECT_DIR$/openCVLibrary310/openCVLibrary310.iml" filepath="$PROJECT_DIR$/openCVLibrary310/openCVLibrary310.iml" />
       <module fileurl="file://$PROJECT_DIR$/libraries/opencv/opencv.iml" filepath="$PROJECT_DIR$/libraries/opencv/opencv.iml" />
       <module fileurl="file://$PROJECT_DIR$/sensor-admin/sensor-admin.iml" filepath="$PROJECT_DIR$/sensor-admin/sensor-admin.iml" />
+      <module fileurl="file://$PROJECT_DIR$/the-dreadfort.iml" filepath="$PROJECT_DIR$/the-dreadfort.iml" />
     </modules>
   </component>
 </project>

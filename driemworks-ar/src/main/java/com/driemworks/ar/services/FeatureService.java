@@ -1,5 +1,7 @@
 package com.driemworks.ar.services;
 
+import com.driemworks.common.dto.FeatureDataDTO;
+
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfKeyPoint;
 
@@ -7,23 +9,20 @@ import org.opencv.core.MatOfKeyPoint;
  * Interface for feature services, which should be capable of detecting features and tracking them
  * @author Tony
  */
-public interface FeatureService {
+public interface FeatureService<T> {
 
     /**
      * Detect features in the input image
-     * @param frame The input image
-     * @return {@link MatOfKeyPoint}
+     * @param featureDataDTO The FeatureDataDTO
      */
-    MatOfKeyPoint featureDetection(Mat frame);
+    void featureDetection(FeatureDataDTO featureDataDTO);
 
     /**
      * Track features extracted from the previous image into the next image
-     * @param previousFrameGray The previous image in grayscale
-     * @param currentFrameGray The current image in grayscale
-     * @param previousKeyPoints The list of previously detected key points
-     * @return {@link MatOfKeyPoint}
+     * @param referenceData The reference FeatureDataDTO
+     * @param  currentFeatureData The current FeatureDataDTO
+     * @return  T
      */
-    MatOfKeyPoint featureTracking(Mat previousFrameGray, Mat currentFrameGray,
-                                                   MatOfKeyPoint previousKeyPoints);
+    T featureTracking(FeatureDataDTO referenceData, FeatureDataDTO currentFeatureData);
 
 }

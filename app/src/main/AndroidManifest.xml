@@ -58,7 +58,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.driemworks.app.activities.ConfigurationActivity"
+            android:name="com.driemworks.app.activities.ObjectTrackingActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">
@@ -98,7 +98,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.driemworks.app.activities.AbstractOpenCVActivity"
+            android:name="com.driemworks.app.activities.GameActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">

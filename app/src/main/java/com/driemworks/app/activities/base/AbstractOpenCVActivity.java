@@ -1,4 +1,4 @@
-package com.driemworks.app.activities;
+package com.driemworks.app.activities.base;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -63,6 +63,10 @@ public abstract class AbstractOpenCVActivity extends Activity implements View.On
      */
     private Mat output;
 
+    /**
+     * The implement on touch flag
+     *
+     */
     private boolean implementOnTouch;
 
     /**

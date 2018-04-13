@@ -4,32 +4,28 @@ import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
-import org.opencv.features2d.Features2d;
 import org.opencv.imgproc.Imgproc;
 
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnTouchListener;
 import android.widget.Button;
 
-import com.driemworks.ar.imageProcessing.ColorBlobDetector;
-import com.driemworks.ar.services.FeatureService;
+import com.driemworks.app.activities.base.AbstractOpenCVActivity;
 import com.driemworks.ar.services.SurfaceDetectionService;
 import com.driemworks.ar.services.impl.FeatureServiceImpl;
-import com.driemworks.ar.services.impl.OpticalFlowFeatureServiceImpl;
 import com.driemworks.common.dto.FeatureDataDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
+import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.common.utils.TagUtils;
 import com.driemworks.app.R;
 import com.driemworks.common.enums.Resolution;
-import com.driemworks.app.layout.impl.ConfigurationLayoutManager;
 import com.driemworks.app.services.permission.impl.CameraPermissionServiceImpl;
 import com.driemworks.common.utils.DisplayUtils;
 
@@ -38,22 +34,13 @@ import org.opencv.core.Size;
 /**
  * @author Tony
  */
-public class ConfigurationActivity extends AbstractOpenCVActivity implements CvCameraViewListener2 {
-
-    /** The service to request permission to use camera at runtime */
-    private CameraPermissionServiceImpl cameraPermissionService;
-
-    /** The layout manager for this activity */
-    private ConfigurationLayoutManager layoutManager;
+public class ObjectTrackingActivity extends AbstractOpenCVActivity implements CvCameraViewListener2 {
 
     /** The tag used for logging */
     private final String TAG = TagUtils.getTag(this.getClass());
 
     /** The color of the detected blob in HSV format */
     private Scalar mBlobColorHsv;
-
-    /** The color blob detector */
-    private ColorBlobDetector mDetector;
 
     /** The color spectrum */
     private Mat mSpectrum;
@@ -67,31 +54,40 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
     /** The surface Detection service */
     private SurfaceDetectionService surfaceDetector;
 
+    /** The feature service */
+    private FeatureServiceImpl featureService;
+
+    /** The service to request permission to use camera at runtime */
+    private CameraPermissionServiceImpl cameraPermissionService;
+
     /** The width of the device screen */
     private int screenWidth;
 
     /** The height of the device screen */
     private int screenHeight;
 
+    /** The resolution of the screen */
     private static final Resolution resolution = Resolution.RES_STANDARD;
 
+    /** The mode button */
     private Button modeButton;
 
-    private Mat referenceImage;
-
-    private FeatureServiceImpl featureService;
-
+    /** The surface data */
     private SurfaceDataDTO surfaceDataDTO;
 
+    /** The reference data */
     private FeatureDataDTO referenceData = null;
 
+    /** The placeholder for the current frame's feature data */
     private FeatureDataDTO currentFeatureData;
 
+    /** The matches features between images */
+    private MatOfDMatch matches;
+
     /** The default constructor */
-    public ConfigurationActivity() {
+    public ObjectTrackingActivity() {
         super(R.layout.main_surface_view, R.id.main_surface_view, resolution, true);
         Log.i(TAG, "Instantiated new " + this.getClass());
-        referenceImage = null;
         featureService = new FeatureServiceImpl();
     }
 
@@ -108,7 +104,8 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
         // on click, if surface data is detected, set the reference data
         modeButton.setOnClickListener(v -> {
             if (surfaceDataDTO != null && surfaceDataDTO.getBoundRect() != null) {
-                referenceImage = super.getmRgba().submat(surfaceDataDTO.getBoundRect());
+                Mat referenceImage = super.getmRgba().submat(surfaceDataDTO.getBoundRect());
+                Imgproc.resize(referenceImage, referenceImage, new Size(resolution.getWidth(), resolution.getHeight()));
                 referenceData = new FeatureDataDTO(referenceImage);
                 featureService.featureDetection(referenceData);
                 Log.d(TAG, "reference data kp are empty: " + (referenceData.getKeyPoints().empty()));
@@ -119,12 +116,7 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
         android.graphics.Point size = DisplayUtils.getScreenSize(this);
         screenWidth = size.x;
         screenHeight = size.y;
-
         cameraPermissionService = new CameraPermissionServiceImpl(this);
-
-//        layoutManager = ConfigurationLayoutManager.getInstance();
-//        layoutManager.setActivity(this);
-//        layoutManager.setup(ConfigurationLayoutManager.CONFIG_BUTTON, findViewById(R.id.mode_btn));
     }
 
     /**
@@ -159,17 +151,15 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
     public void onCameraViewStarted(int width, int height) {
         Log.d(TAG, "camera view started");
         super.onCameraViewStarted(width, height);
-        initFields(width, height);
+        initFields();
     }
 
-    /** Initialize the detector and detector params
-     * @param width The widhth of the display
-     * @param height The height of the display
+    /**
+     * Initialize the detector and detector params
      */
-    private void initFields(int width, int height) {
+    private void initFields() {
         surfaceDetector = new SurfaceDetectionService(new Scalar(255, 255, 255, 255),
                 new Scalar(222, 040, 255), new Mat(), new Size(200, 64), null);
-        mDetector = new ColorBlobDetector();
         mSpectrum = new Mat();
         mBlobColorHsv = new Scalar(255);
         SPECTRUM_SIZE = new Size(200, 64);
@@ -213,10 +203,8 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
             mBlobColorHsv.val[i] /= pointCount;
         }
 
-        mDetector = surfaceDetector.getColorBlobDetector();
-        mDetector.setHsvColor(mBlobColorHsv);
-        surfaceDetector.setColorBlobDetector(mDetector);
-        Imgproc.resize(mDetector.getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+        surfaceDetector.getColorBlobDetector().setHsvColor(mBlobColorHsv);
+        Imgproc.resize(surfaceDetector.getColorBlobDetector().getSpectrum(), mSpectrum, SPECTRUM_SIZE);
 
         mIsColorSelected = true;
         Log.d(TAG, "color has been set");
@@ -227,8 +215,6 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
         return false;
     }
 
-    private MatOfDMatch matches;
-
     /**
      * {@inheritDoc}
      */
@@ -236,6 +222,8 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
     public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
         // get the images from the input frame
         super.setmRgba(inputFrame.rgba());
+        super.setOutput(super.getmRgba());
+        Log.d(TAG, "size of input: " + super.getmRgba().size());
         Log.d(TAG, "Called onCameraFrame");
         // do nothing if no color has been selected
         if (!mIsColorSelected) {
@@ -250,25 +238,20 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
         } else {
             currentFeatureData = new FeatureDataDTO(super.getmRgba());
             featureService.featureDetection(currentFeatureData);
-            // will reach this block if we have set the reference data
-            matches = featureService.featureTracking(referenceData, currentFeatureData);
-            Log.d(TAG, "reference kp empty: " + (referenceData.getKeyPoints().empty()));
-            Log.d(TAG, "current kp empty: " + (currentFeatureData.getKeyPoints().empty()));
-
-            if (!referenceData.getKeyPoints().empty() && !currentFeatureData.getKeyPoints().empty()) {
-                Log.d(TAG, "reference data size: " + referenceData.getKeyPoints().size());
-                Log.d(TAG, "current data size: " + currentFeatureData.getKeyPoints().size());
-//                MatOfByte drawnMatches = new MatOfByte();
-//                Features2d.drawMatches(referenceData.getImage(), referenceData.getKeyPoints(),
-//                        currentFeatureData.getImage(), currentFeatureData.getKeyPoints(),
-//                        matches, out);
-//                        new Scalar(255, 0, 0),
-//                        new Scalar(0, 255, 0), drawnMatches, Features2d.DRAW_OVER_OUTIMG);
-                Log.d(TAG, "return output");
-//                return out;
+            // find matches
+            if (currentFeatureData.isEmpty()) {
                 return super.getmRgba();
+            }
+            matches = featureService.featureTracking(referenceData, currentFeatureData);
+            if (!referenceData.getKeyPoints().empty() && !currentFeatureData.getKeyPoints().empty()) {
+                // draw rect around matches
+                RotatedRect minBoundingBox = Imgproc.minAreaRect(ImageConversionUtils
+                        .convertTrainMatOfDMatchToMatOfPoint2f(matches, currentFeatureData.getKeyPoints()));
+                Rect rect = new Rect((int)minBoundingBox.center.x, (int)minBoundingBox.center.y, 100, 100);
+                Imgproc.rectangle(super.getOutput(), rect.tl(), rect.br(), new Scalar(0, 255, 0), 8);
+                Log.d(TAG, "return output");
+                return super.getOutput();
             } else {
-
                 Log.d(TAG, "return mRgba");
                 return super.getmRgba();
             }
@@ -283,14 +266,6 @@ public class ConfigurationActivity extends AbstractOpenCVActivity implements CvC
         if (requestCode == CameraPermissionServiceImpl.REQUEST_CODE) {
             cameraPermissionService.handleResponse(requestCode, permissions, grantResults);
         }
-    }
-
-    /**
-     * Getter for the blob color
-     * @return
-     */
-    public Scalar getmBlobColorHsv()  {
-        return mBlobColorHsv;
     }
 
 }

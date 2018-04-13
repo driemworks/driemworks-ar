@@ -5,6 +5,7 @@ import android.view.MotionEvent;
 import android.view.View;
 
 import com.driemworks.app.R;
+import com.driemworks.app.activities.base.AbstractOpenCVActivity;
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.services.impl.MonocularVisualOdometryService;
 import com.driemworks.common.enums.Resolution;

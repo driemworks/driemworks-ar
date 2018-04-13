@@ -1,4 +1,4 @@
-package com.driemworks.app.activities;
+package com.driemworks.app.activities.base;
 
 import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
@@ -35,8 +35,8 @@ public abstract class AbstractVRActivity extends AbstractOpenCVActivity implemen
      * @param resolution The resolution
      */
     public AbstractVRActivity(int layoutResId, int openCVSurfaceViewId, int glSurfaceViewId,
-                              GLSurfaceView.Renderer renderer, Resolution resolution) {
-        super(layoutResId, openCVSurfaceViewId, resolution, false);
+                              GLSurfaceView.Renderer renderer, Resolution resolution, boolean implementOnTouch) {
+        super(layoutResId, openCVSurfaceViewId, resolution, implementOnTouch);
         this.glSurfaceViewId = glSurfaceViewId;
         this.renderer = renderer;
     }

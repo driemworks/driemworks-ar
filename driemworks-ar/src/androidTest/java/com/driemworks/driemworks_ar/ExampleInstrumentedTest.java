@@ -5,7 +5,9 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.driemworks.ar.utils.CvUtils;
+import com.driemworks.common.utils.OpenCvUtils;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.opencv.core.CvType;
@@ -22,15 +24,12 @@ import static org.junit.Assert.*;
 public class ExampleInstrumentedTest {
 
     static {
-        System.loadLibrary("opencv_java3");
+//        System.loadLibrary("opencv_java3");
     }
 
-    @Test
-    public void useAppContext() throws Exception {
-        // Context of the app under test.
-        Context appContext = InstrumentationRegistry.getTargetContext();
-
-        assertEquals("com.driemworks.driemworks_ar.test", appContext.getPackageName());
+    @Before
+    public void setup() {
+        OpenCvUtils.initOpenCV(true);
     }
 
     @Test
@@ -45,4 +44,6 @@ public class ExampleInstrumentedTest {
         Mat m3 = CvUtils.add(m1, m2);
         assertEquals(0, m3.get(0,0)[0], 0.0001);
     }
+
+
 }

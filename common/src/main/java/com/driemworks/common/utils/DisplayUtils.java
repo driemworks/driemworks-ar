@@ -1,14 +1,9 @@
 package com.driemworks.common.utils;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Point;
 import android.view.Display;
 import android.view.MotionEvent;
-
-import com.driemworks.common.enums.Resolution;
-
-import org.opencv.core.Rect;
 
 /**
  * Utility class for correcting coordinates for display purposes

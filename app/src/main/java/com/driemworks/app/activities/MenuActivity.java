@@ -11,17 +11,19 @@ import com.driemworks.app.layout.impl.MenuActivityLayoutManager;
  */
 public class MenuActivity extends Activity {
 
+    /** The layout manager */
     private MenuActivityLayoutManager layoutManager;
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setContentView(R.layout.menu);
-
-        layoutManager = MenuActivityLayoutManager.getInstance(this);
-        layoutManager.setup(MenuActivityLayoutManager.CONFIG_ACT_BTN, findViewById(R.id.config_activity_btn));
-        layoutManager.setup(MenuActivityLayoutManager.LINE_ACT_BTN, findViewById(R.id.line_activity_btn));
-
+//        this.setContentView(R.layout.menu);
+//
+//        layoutManager = MenuActivityLayoutManager.getInstance(this);
+//        layoutManager.setup(MenuActivityLayoutManager.PLAY_BTN, findViewById(R.id.play_btn));
     }
 
 }

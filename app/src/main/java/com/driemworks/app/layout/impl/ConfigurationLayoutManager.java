@@ -10,7 +10,7 @@ import android.widget.TextView;
 import com.driemworks.common.cs.Constants;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.utils.TagUtils;
-import com.driemworks.app.activities.ConfigurationActivity;
+import com.driemworks.app.activities.ObjectTrackingActivity;
 import com.driemworks.app.activities.CubeActivity;
 import com.driemworks.app.layout.LayoutManager;
 import com.driemworks.app.views.OpenCVSurfaceView;
@@ -40,7 +40,7 @@ public class ConfigurationLayoutManager implements LayoutManager {
     public static final String Z_VIEW = "z textview";
 
     /** The main activity */
-    private static ConfigurationActivity configurationActivity = null;
+    private static ObjectTrackingActivity configurationActivity = null;
     private static ConfigurationLayoutManager configurationLayoutManager = null;
 
     /**
@@ -78,22 +78,22 @@ public class ConfigurationLayoutManager implements LayoutManager {
             setConfiguration.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    if (null != configurationActivity) {
-                        if (null != configurationActivity.getmBlobColorHsv()) {
-                            ConfigurationDTO configurationDTO = new ConfigurationDTO(
-                                    0, configurationActivity.getmBlobColorHsv()
-                            );
-                            Log.d(TAG, "created config dto -> beginning tracking");
-                            Log.d(TAG, "creating intent to start game activity");
-                            Map<String, ConfigurationDTO> configDTOMap = new HashMap<>();
-                            configDTOMap.put(Constants.CONFIG, configurationDTO);
-                            Intent intent = new Intent(configurationActivity, CubeActivity.class);
-//                            Intent intent = new Intent(configurationActivity, MainActivity.class);
-                            intent.putExtra(Constants.CONFIG, configurationDTO);
-                            configurationActivity.startActivity(intent);
-                            configurationActivity.finish();
-                        }
-                    }
+//                    if (null != configurationActivity) {
+//                        if (null != configurationActivity.getmBlobColorHsv()) {
+//                            ConfigurationDTO configurationDTO = new ConfigurationDTO(
+//                                    0, configurationActivity.getmBlobColorHsv()
+//                            );
+//                            Log.d(TAG, "created config dto -> beginning tracking");
+//                            Log.d(TAG, "creating intent to start game activity");
+//                            Map<String, ConfigurationDTO> configDTOMap = new HashMap<>();
+//                            configDTOMap.put(Constants.CONFIG, configurationDTO);
+//                            Intent intent = new Intent(configurationActivity, CubeActivity.class);
+////                            Intent intent = new Intent(configurationActivity, MainActivity.class);
+//                            intent.putExtra(Constants.CONFIG, configurationDTO);
+//                            configurationActivity.startActivity(intent);
+//                            configurationActivity.finish();
+//                        }
+//                    }
                     return false;
                 }
             });
@@ -111,7 +111,7 @@ public class ConfigurationLayoutManager implements LayoutManager {
         return configurationLayoutManager;
     }
 
-    public void setActivity(ConfigurationActivity configurationActivity) {
+    public void setActivity(ObjectTrackingActivity configurationActivity) {
         this.configurationActivity = configurationActivity;
     }
 

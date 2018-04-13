@@ -7,7 +7,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
-import com.driemworks.app.activities.ConfigurationActivity;
+import com.driemworks.app.activities.ObjectTrackingActivity;
 import com.driemworks.app.activities.CubeActivity;
 import com.driemworks.app.graphics.rendering.GraphicsRenderer;
 import com.driemworks.app.layout.LayoutManager;
@@ -79,7 +79,7 @@ public class CubeActivityLayoutManager implements LayoutManager {
             reconfigureButton.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    Intent intent = new Intent(activity.getApplicationContext(), ConfigurationActivity.class);
+                    Intent intent = new Intent(activity.getApplicationContext(), ObjectTrackingActivity.class);
                     activity.startActivity(intent);
                     activity.finish();
                     return false;

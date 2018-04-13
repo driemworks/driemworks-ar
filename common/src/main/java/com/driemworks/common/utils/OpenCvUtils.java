@@ -8,6 +8,7 @@ import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.RotatedRect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
@@ -32,6 +33,19 @@ public class OpenCvUtils {
         Imgproc.GaussianBlur(input, output, new Size(3,3), 3);
         Core.addWeighted(input, 1.7, output, -0.3, 1.0, output);
         return output;
+    }
+
+    /**
+     * Draw a rotated rect on the image
+     * @param rect The rotated rect
+     * @param image The image
+     */
+    public static void drawRotatedRect(RotatedRect rect, Mat image) {
+        Point points[] = new Point[4];
+        rect.points(points);
+        for(int i=0; i<4; ++i){
+            Imgproc.line(image, points[i], points[(i+1)%4], new Scalar(255,255,255));
+        }
     }
 
     /**

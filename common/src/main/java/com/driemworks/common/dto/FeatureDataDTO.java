@@ -32,6 +32,10 @@ public class FeatureDataDTO {
         this.descriptors = new Mat();
     }
 
+    public boolean isEmpty() {
+        return this.image.empty() || this.descriptors.empty() || this.keyPoints.empty();
+    }
+
     public MatOfKeyPoint getKeyPoints() {
         return keyPoints;
     }

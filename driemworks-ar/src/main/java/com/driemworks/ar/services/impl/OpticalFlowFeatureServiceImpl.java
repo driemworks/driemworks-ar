@@ -3,6 +3,7 @@ package com.driemworks.ar.services.impl;
 import android.util.Log;
 
 import com.driemworks.ar.services.FeatureService;
+import com.driemworks.ar.services.OpticalFlowFeatureService;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.common.utils.TagUtils;
 
@@ -25,7 +26,7 @@ import java.util.List;
  * By Default, it uses FAST/ORB/Brute force Hamming distance
  * @author Tony
  */
-public class OpticalFlowFeatureServiceImpl implements FeatureService {
+public class OpticalFlowFeatureServiceImpl implements OpticalFlowFeatureService {
 
     /**
      * The tag used for logging

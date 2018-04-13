@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager;
 
+import com.driemworks.app.activities.base.AbstractOpenCVActivity;
 import com.driemworks.ar.utils.ImageProcessingUtils;
 import com.driemworks.app.R;
 import com.driemworks.common.enums.Resolution;

@@ -62,6 +62,17 @@ public class SurfaceDetectionService {
     private ColorBlobDetector colorBlobDetector;
 
     /**
+     * The default constructor
+     */
+    public SurfaceDetectionService() {
+        this.contourColorWhite = new Scalar(255, 255, 255, 255);
+        this.contourColor = new Scalar(222, 040, 255);
+        this.mSpectrum = new Mat();
+        this.spectrumRange = new Size(200, 64);
+        colorBlobDetector = new ColorBlobDetector();
+    }
+
+    /**
      * Constructor for the SurfaceDetectionService
      *
      * @param contourColorWhite The primary color of the contour

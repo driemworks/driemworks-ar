@@ -6,9 +6,13 @@ import com.driemworks.ar.enums.ExtremesEnum;
 import com.driemworks.ar.enums.FingerEnum;
 import com.driemworks.ar.enums.HandEnum;
 import com.driemworks.common.enums.Coordinates;
-import com.driemworks.common.utils.TagUtils;
 
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
+import org.opencv.core.Scalar;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -146,5 +150,36 @@ public class DetectorUtils {
         return null;
     }
 
+    public static boolean selectColor(Point correctedCoordinate, Mat rgba) {
+        // the value used to bound the size of the area to be sampled
+        int sizeThreshold = 8;
+
+        Rect touchedRect = new Rect((int)correctedCoordinate.x, (int)correctedCoordinate.y, sizeThreshold, sizeThreshold);
+        if (null == touchedRect) {
+            return false;
+        }
+
+        // get the rectangle around the point that was touched
+        Mat touchedRegionRgba = rgba.submat(touchedRect);
+
+        // format to hsv
+        Mat touchedRegionHsv = new Mat();
+        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+
+        // Calculate average color of touched region
+        Scalar mBlobColorHsv = Core.sumElems(touchedRegionHsv);
+        int pointCount = touchedRect.width * touchedRect.height;
+
+        for (int i = 0; i < mBlobColorHsv.val.length; i++) {
+            mBlobColorHsv.val[i] /= pointCount;
+        }
+
+        Log.d(TAG, "color has been set");
+
+        touchedRegionRgba.release();
+        touchedRegionHsv.release();
+
+        return true;
+    }
 
 }

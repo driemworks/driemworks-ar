@@ -5,7 +5,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
-import com.driemworks.app.activities.ConfigurationActivity;
+import com.driemworks.app.activities.ObjectTrackingActivity;
 import com.driemworks.app.activities.MainActivity;
 import com.driemworks.app.layout.LayoutManager;
 
@@ -46,7 +46,7 @@ public class MainActivityLayoutManager implements LayoutManager {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     if (isMenu) {
-                        Intent intent = new Intent(mainActivity, ConfigurationActivity.class);
+                        Intent intent = new Intent(mainActivity, ObjectTrackingActivity.class);
                         mainActivity.startActivity(intent);
                         mainActivity.finish();
                         return false;

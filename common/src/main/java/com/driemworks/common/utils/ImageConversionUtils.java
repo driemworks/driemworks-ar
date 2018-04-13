@@ -97,15 +97,17 @@ public class ImageConversionUtils {
         return matOfKeyPoint;
     }
 
-    public static MatOfPoint2f convertMatOfDMatchToMatOfPoint2f(MatOfDMatch matches) {
-        DMatch[] matchesArray = matches.toArray();
+    public static MatOfPoint2f convertTrainMatOfDMatchToMatOfPoint2f(MatOfDMatch matches, MatOfKeyPoint currentKeypoints) {
         List<Point> points = new ArrayList<>();
-
-        for (DMatch match : matchesArray) {
-
+        DMatch[] dMatches = matches.toArray();
+        KeyPoint[] keyPoints = currentKeypoints.toArray();
+        for (DMatch dMatch : dMatches) {
+            points.add(keyPoints[dMatch.trainIdx].pt);
         }
 
-        return null;
+        MatOfPoint2f points2f = new MatOfPoint2f();
+        points2f.fromList(points);
+        return points2f;
     }
 
     /**

@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * @author Tony
  */
-public class FeatureServiceImpl {
+public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
 
     /** The feature detector */
     private FeatureDetector detector;
@@ -31,14 +31,6 @@ public class FeatureServiceImpl {
     /** The descriptor matcher */
     private DescriptorMatcher matcher;
 
-    private MatOfKeyPoint keyPoint;
-
-    private Mat descriptors;
-
-    private double maxDistance;
-    private double minDistance;
-
-
     /**
      * The constructor for the FeatureServiceImpl
      */
@@ -46,15 +38,23 @@ public class FeatureServiceImpl {
         detector = FeatureDetector.create(FeatureDetector.ORB);
         extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
         matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
-        keyPoint = new MatOfKeyPoint();
-        descriptors = new Mat();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void featureDetection(FeatureDataDTO dto) {
         featureDetection(dto.getImage(), dto.getKeyPoints(), dto.getDescriptors());
     }
 
-    public void featureDetection(Mat frame, MatOfKeyPoint keyPoints, Mat descriptors) {
+    /**
+     * Detect the features
+     * @param frame The frame
+     * @param keyPoints The key points
+     * @param descriptors The descriptors
+     */
+    private void featureDetection(Mat frame, MatOfKeyPoint keyPoints, Mat descriptors) {
         // convert input image to gray
         Mat gray = new Mat();
         Imgproc.cvtColor(frame, gray, Imgproc.COLOR_RGBA2GRAY);
@@ -64,6 +64,10 @@ public class FeatureServiceImpl {
         extractor.compute(gray, keyPoints, descriptors);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public MatOfDMatch featureTracking(FeatureDataDTO referenceData, FeatureDataDTO currentFeatureData) {
         Log.d("featureTracking: ", "current kp empty? = " + currentFeatureData.getKeyPoints().empty());
         MatOfDMatch matches = new MatOfDMatch();
@@ -74,8 +78,8 @@ public class FeatureServiceImpl {
             return null;
         }
 
-        minDistance = 100.0;
-        maxDistance = 0.0;
+        double minDistance = 100.0;
+        double maxDistance = 0.0;
 
         List<DMatch> matchesList = matches.toList();
         double dist;
