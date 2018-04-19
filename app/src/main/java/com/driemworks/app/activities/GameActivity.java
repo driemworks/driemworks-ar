@@ -2,19 +2,13 @@ package com.driemworks.app.activities;
 
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
 import com.driemworks.app.R;
-import com.driemworks.app.activities.base.AbstractOpenCVActivity;
 import com.driemworks.app.activities.base.AbstractVRActivity;
-import com.driemworks.app.enums.ColorsEnum;
-import com.driemworks.app.graphics.rendering.GraphicsRenderer;
-import com.driemworks.app.graphics.rendering.StaticCubeRenderer;
 import com.driemworks.app.opengl.renderer.MyGLRenderer;
 import com.driemworks.ar.services.SurfaceDetectionService;
-import com.driemworks.ar.utils.DetectorUtils;
 import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.common.utils.DisplayUtils;

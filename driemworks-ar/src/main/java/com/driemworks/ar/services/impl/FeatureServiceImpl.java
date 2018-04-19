@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.driemworks.ar.services.FeatureService;
 import com.driemworks.common.dto.FeatureDataDTO;
+import com.driemworks.common.utils.OpenCvUtils;
 
 import org.opencv.core.DMatch;
 import org.opencv.core.Mat;
@@ -31,8 +32,12 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
     /** The descriptor matcher */
     private DescriptorMatcher matcher;
 
+    /** The multiplier used to find good matches */
+    private static final float MULTIPLIER = 4.25f;
+
     /**
      * The constructor for the FeatureServiceImpl
+     * ORB Detector/ORB extractor, Bruteforce Hamming matcher
      */
     public FeatureServiceImpl() {
         detector = FeatureDetector.create(FeatureDetector.ORB);
@@ -57,10 +62,16 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
     private void featureDetection(Mat frame, MatOfKeyPoint keyPoints, Mat descriptors) {
         // convert input image to gray
         Mat gray = new Mat();
+        Mat mDilatedMask = new Mat();
         Imgproc.cvtColor(frame, gray, Imgproc.COLOR_RGBA2GRAY);
-        // detect keypoints
+        OpenCvUtils.sharpenImage(gray);
         detector.detect(gray, keyPoints);
+//        Imgproc.dilate(gray, mDilatedMask, new Mat());
+//        OpenCvUtils.sharpenImage(mDilatedMask);
+//        // detect keypoints
+//        detector.detect(mDilatedMask, keyPoints);
         // extract  descriptors
+//        extractor.compute(mDilatedMask, keyPoints, descriptors);
         extractor.compute(gray, keyPoints, descriptors);
     }
 
@@ -78,8 +89,9 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
             return null;
         }
 
-        double minDistance = 100.0;
-        double maxDistance = 0.0;
+        // where do these values come from??
+        double minDistance = 50.0;
+        double maxDistance = 20.0;
 
         List<DMatch> matchesList = matches.toList();
         double dist;
@@ -94,8 +106,7 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
 
         LinkedList<DMatch> good_matches = new LinkedList<>();
         for (DMatch match : matchesList) {
-            // 1.5????
-            if (match.distance <= (1.5 * minDistance)) {
+            if (match.distance <= (MULTIPLIER * minDistance)) {
                 good_matches.addLast(match);
             }
         }

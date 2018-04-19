@@ -23,6 +23,7 @@ import com.driemworks.ar.services.impl.FeatureServiceImpl;
 import com.driemworks.common.dto.FeatureDataDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.utils.ImageConversionUtils;
+import com.driemworks.common.utils.OpenCvUtils;
 import com.driemworks.common.utils.TagUtils;
 import com.driemworks.app.R;
 import com.driemworks.common.enums.Resolution;
@@ -46,7 +47,7 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
     private Mat mSpectrum;
 
     /** Boolean flag to tell if the color is or isn't selected in the detector */
-    private boolean mIsColorSelected = false;
+    private boolean isColorSelected = false;
 
     /** The size of the spectrum */
     private Size SPECTRUM_SIZE;
@@ -99,15 +100,21 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
     public void onCreate(Bundle savedInstanceState) {
         Log.i(TAG, "called onCreate");
         super.onCreate(savedInstanceState);
-
         modeButton = (Button) findViewById(R.id.mode_btn);
         // on click, if surface data is detected, set the reference data
         modeButton.setOnClickListener(v -> {
+            if (referenceData != null) {
+                surfaceDataDTO = null;
+                referenceData = null;
+                isColorSelected = false;
+            }
+
             if (surfaceDataDTO != null && surfaceDataDTO.getBoundRect() != null) {
                 Mat referenceImage = super.getmRgba().submat(surfaceDataDTO.getBoundRect());
                 Imgproc.resize(referenceImage, referenceImage, new Size(resolution.getWidth(), resolution.getHeight()));
                 referenceData = new FeatureDataDTO(referenceImage);
                 featureService.featureDetection(referenceData);
+                referenceImage.release();
                 Log.d(TAG, "reference data kp are empty: " + (referenceData.getKeyPoints().empty()));
             }
         });
@@ -116,6 +123,7 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
         android.graphics.Point size = DisplayUtils.getScreenSize(this);
         screenWidth = size.x;
         screenHeight = size.y;
+        // init camera permission service
         cameraPermissionService = new CameraPermissionServiceImpl(this);
     }
 
@@ -206,7 +214,7 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
         surfaceDetector.getColorBlobDetector().setHsvColor(mBlobColorHsv);
         Imgproc.resize(surfaceDetector.getColorBlobDetector().getSpectrum(), mSpectrum, SPECTRUM_SIZE);
 
-        mIsColorSelected = true;
+        isColorSelected = true;
         Log.d(TAG, "color has been set");
 
         touchedRegionRgba.release();
@@ -223,30 +231,47 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
         // get the images from the input frame
         super.setmRgba(inputFrame.rgba());
         super.setOutput(super.getmRgba());
-        Log.d(TAG, "size of input: " + super.getmRgba().size());
         Log.d(TAG, "Called onCameraFrame");
         // do nothing if no color has been selected
-        if (!mIsColorSelected) {
+        if (!isColorSelected) {
             Log.d(TAG, "No color selected, return input image");
             return super.getmRgba();
         }
 
+        // if the reference data is null (meaning no surface has been detected)
+        // then detect a surface
+        // will only reach this point if a color has been selected
         if (referenceData == null) {
             surfaceDataDTO = surfaceDetector.detect(super.getmRgba(), 0, true);
             Log.d(TAG, "return mRgba from surface data - reference data is null.");
             return surfaceDataDTO.getmRgba();
         } else {
             currentFeatureData = new FeatureDataDTO(super.getmRgba());
+            // detect features in the current frame
             featureService.featureDetection(currentFeatureData);
             // find matches
+            // no matches found then return the rgba image
             if (currentFeatureData.isEmpty()) {
                 return super.getmRgba();
             }
+            // match reference data features with current image features
             matches = featureService.featureTracking(referenceData, currentFeatureData);
             if (!referenceData.getKeyPoints().empty() && !currentFeatureData.getKeyPoints().empty()) {
-                // draw rect around matches
+                // draw reference points
+               if (true) {
+                   for (Point p : ImageConversionUtils.convertMatOfKeyPointsTo2f(referenceData.getKeyPoints()).toList()) {
+                       Imgproc.circle(super.getOutput(), p, 5, new Scalar(255, 0, 0));
+                   }
+//                   // draw keypoints
+//                   for (Point p : ImageConversionUtils.convertMatOfKeyPointsTo2f(currentFeatureData.getKeyPoints()).toList()) {
+//                       Imgproc.circle(super.getOutput(), p, 5, new Scalar(0, 255, 0));
+//                   }
+               }
+                // draw rotated rect
                 RotatedRect minBoundingBox = Imgproc.minAreaRect(ImageConversionUtils
                         .convertTrainMatOfDMatchToMatOfPoint2f(matches, currentFeatureData.getKeyPoints()));
+                OpenCvUtils.drawRotatedRect(minBoundingBox, super.getOutput(), new Scalar(255, 255, 255));
+                // draw processed rect
                 Rect rect = new Rect((int)minBoundingBox.center.x, (int)minBoundingBox.center.y, 100, 100);
                 Imgproc.rectangle(super.getOutput(), rect.tl(), rect.br(), new Scalar(0, 255, 0), 8);
                 Log.d(TAG, "return output");
