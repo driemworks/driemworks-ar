@@ -38,16 +38,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name="com.driemworks.app.activities.MenuActivity"
-            android:configChanges="keyboardHidden|orientation"
-            android:label="@string/app_name"
-            android:screenOrientation="landscape">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
             android:name="com.driemworks.app.activities.LineGameActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/app_name"
@@ -69,16 +59,6 @@
         </activity>
         <activity
             android:name="com.driemworks.app.activities.MainActivity"
-            android:configChanges="keyboardHidden|orientation"
-            android:label="theDreadfort"
-            android:screenOrientation="landscape">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="com.driemworks.app.activities.CubeActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="theDreadfort"
             android:screenOrientation="landscape">

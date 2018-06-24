@@ -8,7 +8,7 @@ import android.view.View;
 import com.driemworks.app.R;
 import com.driemworks.app.activities.base.AbstractVRActivity;
 import com.driemworks.app.opengl.renderer.MyGLRenderer;
-import com.driemworks.ar.services.SurfaceDetectionService;
+import com.driemworks.ar.services.impl.SurfaceDetectionService;
 import com.driemworks.common.dto.SurfaceDataDTO;
 import com.driemworks.common.enums.Resolution;
 import com.driemworks.common.utils.DisplayUtils;
@@ -56,7 +56,6 @@ public class GameActivity extends AbstractVRActivity implements View.OnTouchList
      */
     private static GLSurfaceView.Renderer renderer;
     static {
-//        renderer = new StaticCubeRenderer(Resolution.RES_STANDARD, false);
         renderer = new MyGLRenderer();
     }
 

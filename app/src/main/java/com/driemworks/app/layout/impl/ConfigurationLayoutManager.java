@@ -1,22 +1,14 @@
 package com.driemworks.app.layout.impl;
 
-import android.content.Intent;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.driemworks.common.cs.Constants;
-import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.utils.TagUtils;
 import com.driemworks.app.activities.ObjectTrackingActivity;
-import com.driemworks.app.activities.CubeActivity;
 import com.driemworks.app.layout.LayoutManager;
 import com.driemworks.app.views.OpenCVSurfaceView;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Tony

@@ -9,6 +9,7 @@ import com.driemworks.app.builders.OpenCVSurfaceViewBuilder;
 import com.driemworks.app.factories.BaseLoaderCallbackFactory;
 import com.driemworks.app.views.OpenCVSurfaceView;
 import com.driemworks.common.enums.Resolution;
+import com.driemworks.common.utils.DisplayUtils;
 import com.driemworks.common.utils.OpenCvUtils;
 
 import org.opencv.android.BaseLoaderCallback;
@@ -48,26 +49,23 @@ public abstract class AbstractOpenCVActivity extends Activity implements View.On
     /** The base loader callback */
     private BaseLoaderCallback baseLoaderCallback;
 
-    /**
-     * The current image (rgba)
-     */
+    /** The current image (rgba) */
     private Mat mRgba;
 
-    /**
-     * The current image (gray)
-     */
+    /** The current image (gray) */
     private Mat mGray;
 
-    /**
-     * The output image
-     */
+    /** The output image */
     private Mat output;
 
-    /**
-     * The implement on touch flag
-     *
-     */
+    /** The implement on touch flag */
     private boolean implementOnTouch;
+
+    /** The width of the device screen */
+    private int screenWidth;
+
+    /** The height of the device screen */
+    private int screenHeight;
 
     /**
      * The constructor for the OpenCV activity
@@ -90,6 +88,11 @@ public abstract class AbstractOpenCVActivity extends Activity implements View.On
         OpenCvUtils.initOpenCV(true);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(layoutResId);
+
+        // get screen dimensions
+        android.graphics.Point size = DisplayUtils.getScreenSize(this);
+        screenWidth = size.x;
+        screenHeight = size.y;
 
         View.OnTouchListener listener = implementOnTouch ? this : null;
         // build the views and init callbacks
@@ -158,7 +161,9 @@ public abstract class AbstractOpenCVActivity extends Activity implements View.On
     /**
      * {@inheritDoc}
      */
-    public abstract Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame frame);
+    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame frame) {
+        return frame.rgba();
+    }
 
     /**
      * Update the rgba, gray, and output mats with the input frame
@@ -216,5 +221,42 @@ public abstract class AbstractOpenCVActivity extends Activity implements View.On
      */
     public void setOutput(Mat output) {
         this.output = output;
+    }
+
+    public Resolution getResolution() {
+        return resolution;
+    }
+
+
+    /**
+     * Getter for the screen width
+     * @return The screen width
+     */
+    public int getScreenWidth() {
+        return screenWidth;
+    }
+
+    /**
+     * Setter for the screen width
+     * @param screenWidth The screen width to set
+     */
+    public void setScreenWidth(int screenWidth) {
+        this.screenWidth = screenWidth;
+    }
+
+    /**
+     * Getter for the screen height
+     * @return The screen height
+     */
+    public int getScreenHeight() {
+        return screenHeight;
+    }
+
+    /**
+     * Setter for the screen height
+     * @param screenHeight The screen height to set
+     */
+    public void setScreenHeight(int screenHeight) {
+        this.screenHeight = screenHeight;
     }
 }

@@ -6,7 +6,6 @@ import android.view.View;
 import android.widget.Button;
 
 import com.driemworks.app.activities.LineGameActivity;
-import com.driemworks.app.activities.MenuActivity;
 import com.driemworks.app.layout.LayoutManager;
 
 /**
@@ -45,9 +44,9 @@ public class LineGameActivityLayoutManager implements LayoutManager {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     if (null != lineGameActivity) {
-                        Intent intent = new Intent(lineGameActivity, MenuActivity.class);
-                        lineGameActivity.startActivity(intent);
-                        lineGameActivity.finish();
+//                        Intent intent = new Intent(lineGameActivity, MenuActivity.class);
+//                        lineGameActivity.startActivity(intent);
+//                        lineGameActivity.finish();
                     }
                     return false;
                 }

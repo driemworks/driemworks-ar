@@ -6,7 +6,6 @@ import android.util.Log;
 
 import com.driemworks.common.utils.TagUtils;
 import com.driemworks.sensor.utils.OrientationUtils;
-import com.driemworks.app.activities.CubeActivity;
 import com.driemworks.common.enums.Resolution;
 import com.threed.jpct.Camera;
 import com.threed.jpct.FrameBuffer;
@@ -52,7 +51,7 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
 
     private Camera cam;
 
-    private CubeActivity master = null;
+//    private CubeActivity master = null;
 
     /** //////////////////////// Location and Orientation /////////////////////////// */
     private float[] previousRotationVector = new float[3];
@@ -106,9 +105,9 @@ public class GraphicsRenderer extends AbstractRenderer implements GLSurfaceView.
         }
 
         fb = new FrameBuffer(g1, w, h);
-        if (master == null) {
-            initWorld();
-        }
+//        if (master == null) {
+//            initWorld();
+//        }
     }
 
     private void initWorld() {

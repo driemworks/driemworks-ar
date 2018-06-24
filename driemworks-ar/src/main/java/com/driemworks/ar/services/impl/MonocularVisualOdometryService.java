@@ -39,12 +39,12 @@ public class MonocularVisualOdometryService {
     /**
      * The FOCAL length
      */
-    private static final float FOCAL = 718.8560f;
+    private static final float FOCAL = 695.54f;
 
     /**
      * The principal point
      */
-    private static final Point PRINCIPAL_POINT = new Point(100, 100);
+    private static final Point PRINCIPAL_POINT = new Point(200, 200);
 
     /**
      * The feature service
@@ -100,7 +100,7 @@ public class MonocularVisualOdometryService {
                     Mat essentialMat = null;
                     try {
                         essentialMat = Calib3d.findEssentialMat(currentPoints2f, previousPoints2f,
-                                FOCAL, PRINCIPAL_POINT, Calib3d.LMEDS, 0.75, 2.5, mask);
+                                FOCAL, PRINCIPAL_POINT, Calib3d.RANSAC, 0.99, 2.5, mask);
                         Log.d(TAG, "essential matrix is empty? = " + essentialMat.empty());
                         if (!essentialMat.empty() && essentialMat.rows() == 3 && essentialMat.cols() == 3 && essentialMat.isContinuous()) {
                             Log.d(TAG, "Calculating rotation and translation");
@@ -112,7 +112,7 @@ public class MonocularVisualOdometryService {
                             }
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "An exception occured while calculating the new camera pose.", e);
                     }
 
                     mask.release();

@@ -18,7 +18,7 @@ import android.view.View;
 import android.widget.Button;
 
 import com.driemworks.app.activities.base.AbstractOpenCVActivity;
-import com.driemworks.ar.services.SurfaceDetectionService;
+import com.driemworks.ar.services.impl.SurfaceDetectionService;
 import com.driemworks.ar.services.impl.FeatureServiceImpl;
 import com.driemworks.common.dto.FeatureDataDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
@@ -60,12 +60,6 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
 
     /** The service to request permission to use camera at runtime */
     private CameraPermissionServiceImpl cameraPermissionService;
-
-    /** The width of the device screen */
-    private int screenWidth;
-
-    /** The height of the device screen */
-    private int screenHeight;
 
     /** The resolution of the screen */
     private static final Resolution resolution = Resolution.RES_STANDARD;
@@ -119,10 +113,6 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
             }
         });
 
-        // get screen dimensions
-        android.graphics.Point size = DisplayUtils.getScreenSize(this);
-        screenWidth = size.x;
-        screenHeight = size.y;
         // init camera permission service
         cameraPermissionService = new CameraPermissionServiceImpl(this);
     }
@@ -182,45 +172,68 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
         super.onCameraViewStopped();
     }
 
+    private boolean isRectSet = false;
+    private Point topLeft = null;
+    private Point bottomRight = null;
+
+
     /**
      * {@inheritDoc}
      */
     @Override
     public boolean onTouch(View v, MotionEvent event) {
-        // the value used to bound the size of the area to be sampled
-        int sizeThreshold = 8;
 
-        Point correctedCoordinate = DisplayUtils.correctCoordinate(event, screenWidth, screenHeight);
-        Rect touchedRect = new Rect((int)correctedCoordinate.x, (int)correctedCoordinate.y, sizeThreshold, sizeThreshold);
-        if (null == touchedRect) {
+        if (true) {
+            if (!isRectSet) {
+                // first time going through, setting the top left coordinate
+                if (topLeft == null) {
+                    topLeft = DisplayUtils.correctCoordinate(event, this.getScreenWidth(), this.getScreenHeight());
+                } else {
+                    bottomRight = DisplayUtils.correctCoordinate(event, this.getScreenWidth(), this.getScreenHeight());
+                }
+
+
+                return true;
+            }
+
+            return false;
+        } else {
+
+            // the value used to bound the size of the area to be sampled
+            int sizeThreshold = 8;
+
+            Point correctedCoordinate = DisplayUtils.correctCoordinate(event, this.getScreenWidth(), this.getScreenHeight());
+            Rect touchedRect = new Rect((int) correctedCoordinate.x, (int) correctedCoordinate.y, sizeThreshold, sizeThreshold);
+            if (null == touchedRect) {
+                return false;
+            }
+
+            // get the rectangle around the point that was touched
+            Mat touchedRegionRgba = super.getmRgba().submat(touchedRect);
+
+            // format to hsv
+            Mat touchedRegionHsv = new Mat();
+            Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
+
+            // Calculate average color of touched region
+            mBlobColorHsv = Core.sumElems(touchedRegionHsv);
+            int pointCount = touchedRect.width * touchedRect.height;
+
+            for (int i = 0; i < mBlobColorHsv.val.length; i++) {
+                mBlobColorHsv.val[i] /= pointCount;
+            }
+
+            surfaceDetector.getColorBlobDetector().setHsvColor(mBlobColorHsv);
+            Imgproc.resize(surfaceDetector.getColorBlobDetector().getSpectrum(), mSpectrum, SPECTRUM_SIZE);
+
+            isColorSelected = true;
+            Log.d(TAG, "color has been set");
+
+            touchedRegionRgba.release();
+            touchedRegionHsv.release();
+
             return false;
         }
-
-        // get the rectangle around the point that was touched
-        Mat touchedRegionRgba = super.getmRgba().submat(touchedRect);
-
-        // format to hsv
-        Mat touchedRegionHsv = new Mat();
-        Imgproc.cvtColor(touchedRegionRgba, touchedRegionHsv, Imgproc.COLOR_RGB2HSV_FULL);
-
-        // Calculate average color of touched region
-        mBlobColorHsv = Core.sumElems(touchedRegionHsv);
-        int pointCount = touchedRect.width * touchedRect.height;
-
-        for (int i = 0; i < mBlobColorHsv.val.length; i++) {
-            mBlobColorHsv.val[i] /= pointCount;
-        }
-
-        surfaceDetector.getColorBlobDetector().setHsvColor(mBlobColorHsv);
-        Imgproc.resize(surfaceDetector.getColorBlobDetector().getSpectrum(), mSpectrum, SPECTRUM_SIZE);
-
-        isColorSelected = true;
-        Log.d(TAG, "color has been set");
-
-        touchedRegionRgba.release();
-        touchedRegionHsv.release();
-
-        return false;
     }
 
     /**
@@ -233,52 +246,60 @@ public class ObjectTrackingActivity extends AbstractOpenCVActivity implements Cv
         super.setOutput(super.getmRgba());
         Log.d(TAG, "Called onCameraFrame");
         // do nothing if no color has been selected
-        if (!isColorSelected) {
-            Log.d(TAG, "No color selected, return input image");
+        if (true) {
+            if (bottomRight != null) {
+                Imgproc.rectangle(super.getmRgba(), topLeft, bottomRight, new Scalar(255, 137, 8), 5);
+            }
             return super.getmRgba();
-        }
-
-        // if the reference data is null (meaning no surface has been detected)
-        // then detect a surface
-        // will only reach this point if a color has been selected
-        if (referenceData == null) {
-            surfaceDataDTO = surfaceDetector.detect(super.getmRgba(), 0, true);
-            Log.d(TAG, "return mRgba from surface data - reference data is null.");
-            return surfaceDataDTO.getmRgba();
         } else {
-            currentFeatureData = new FeatureDataDTO(super.getmRgba());
-            // detect features in the current frame
-            featureService.featureDetection(currentFeatureData);
-            // find matches
-            // no matches found then return the rgba image
-            if (currentFeatureData.isEmpty()) {
+            if (!isColorSelected) {
+                Log.d(TAG, "No color selected, return input image");
                 return super.getmRgba();
             }
-            // match reference data features with current image features
-            matches = featureService.featureTracking(referenceData, currentFeatureData);
-            if (!referenceData.getKeyPoints().empty() && !currentFeatureData.getKeyPoints().empty()) {
-                // draw reference points
-               if (true) {
-                   for (Point p : ImageConversionUtils.convertMatOfKeyPointsTo2f(referenceData.getKeyPoints()).toList()) {
-                       Imgproc.circle(super.getOutput(), p, 5, new Scalar(255, 0, 0));
-                   }
-//                   // draw keypoints
-//                   for (Point p : ImageConversionUtils.convertMatOfKeyPointsTo2f(currentFeatureData.getKeyPoints()).toList()) {
-//                       Imgproc.circle(super.getOutput(), p, 5, new Scalar(0, 255, 0));
-//                   }
-               }
-                // draw rotated rect
-                RotatedRect minBoundingBox = Imgproc.minAreaRect(ImageConversionUtils
-                        .convertTrainMatOfDMatchToMatOfPoint2f(matches, currentFeatureData.getKeyPoints()));
-                OpenCvUtils.drawRotatedRect(minBoundingBox, super.getOutput(), new Scalar(255, 255, 255));
-                // draw processed rect
-                Rect rect = new Rect((int)minBoundingBox.center.x, (int)minBoundingBox.center.y, 100, 100);
-                Imgproc.rectangle(super.getOutput(), rect.tl(), rect.br(), new Scalar(0, 255, 0), 8);
-                Log.d(TAG, "return output");
-                return super.getOutput();
+
+            // if the reference data is null (meaning no surface has been detected)
+            // then detect a surface
+            // will only reach this point if a color has been selected
+            if (referenceData == null) {
+                surfaceDataDTO = surfaceDetector.detect(super.getmRgba(), 0, true);
+                Log.d(TAG, "return mRgba from surface data - reference data is null.");
+                return surfaceDataDTO.getmRgba();
             } else {
-                Log.d(TAG, "return mRgba");
-                return super.getmRgba();
+                currentFeatureData = new FeatureDataDTO(super.getmRgba());
+                // detect features in the current frame
+                featureService.featureDetection(currentFeatureData);
+                // find matches
+                // no matches found then return the rgba image
+                if (currentFeatureData.isEmpty()) {
+                    return super.getmRgba();
+                }
+                // match reference data features with current image features
+                matches = featureService.featureTracking(referenceData, currentFeatureData);
+                if (!referenceData.getKeyPoints().empty() && !currentFeatureData.getKeyPoints().empty()) {
+                    // draw reference points
+                    if (true) {
+                        // draw reference points
+                        for (Point p : ImageConversionUtils.convertMatOfKeyPointsTo2f(referenceData.getKeyPoints()).toList()) {
+                            Imgproc.circle(super.getOutput(), p, 5, new Scalar(255, 0, 0));
+                        }
+//                   // draw keypoints
+                        for (Point p : ImageConversionUtils.convertMatOfKeyPointsTo2f(currentFeatureData.getKeyPoints()).toList()) {
+                            Imgproc.circle(super.getOutput(), p, 5, new Scalar(0, 255, 0));
+                        }
+                    }
+                    // draw rotated rect
+                    RotatedRect minBoundingBox = Imgproc.minAreaRect(ImageConversionUtils
+                            .convertTrainMatOfDMatchToMatOfPoint2f(matches, currentFeatureData.getKeyPoints()));
+                    OpenCvUtils.drawRotatedRect(minBoundingBox, super.getOutput(), new Scalar(255, 255, 255));
+                    // draw processed rect
+                    Rect rect = new Rect((int) minBoundingBox.center.x, (int) minBoundingBox.center.y, 100, 100);
+                    Imgproc.rectangle(super.getOutput(), rect.tl(), rect.br(), new Scalar(0, 255, 0), 8);
+                    Log.d(TAG, "return output");
+                    return super.getOutput();
+                } else {
+                    Log.d(TAG, "return mRgba");
+                    return super.getmRgba();
+                }
             }
         }
     }

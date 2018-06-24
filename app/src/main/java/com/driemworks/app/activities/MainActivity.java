@@ -14,7 +14,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
-import com.driemworks.ar.services.SurfaceDetectionService;
+import com.driemworks.ar.services.impl.SurfaceDetectionService;
 import com.driemworks.common.cs.Constants;
 import com.driemworks.common.dto.ConfigurationDTO;
 import com.driemworks.common.dto.SurfaceDataDTO;
@@ -55,7 +55,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     /** /////////////    JPCT    /////////////////////// */
     // Used to handle pause and resume...
-    private static CubeActivity master = null;
+//    private static CubeActivity master = null;
 
     /** ///////////////     ANDROID    ///////////////// */
     public MainActivityLayoutManager layoutManager;
@@ -80,9 +80,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
-        if (master != null) {
-            RenderUtils.copy(this, master);
-        }
+//        if (master != null) {
+//            RenderUtils.copy(this, master);
+//        }
 
         if (!OpenCVLoader.initDebug()) {
             Log.e("OpvenCVLoader", "OvenCVLoader successful: false");

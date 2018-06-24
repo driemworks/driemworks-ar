@@ -40,7 +40,7 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
      * ORB Detector/ORB extractor, Bruteforce Hamming matcher
      */
     public FeatureServiceImpl() {
-        detector = FeatureDetector.create(FeatureDetector.ORB);
+        detector = FeatureDetector.create(FeatureDetector.PYRAMID_ORB);
         extractor = DescriptorExtractor.create(DescriptorExtractor.ORB);
         matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
     }
@@ -80,39 +80,42 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
      */
     @Override
     public MatOfDMatch featureTracking(FeatureDataDTO referenceData, FeatureDataDTO currentFeatureData) {
-        Log.d("featureTracking: ", "current kp empty? = " + currentFeatureData.getKeyPoints().empty());
-        MatOfDMatch matches = new MatOfDMatch();
+        Log.d("featureTracking", "START");
+//        MatOfDMatch matches = new MatOfDMatch();
         Mat referenceImage = referenceData.getImage();
         if (referenceImage.type() == currentFeatureData.getImage().type()) {
+            MatOfDMatch matches = new MatOfDMatch();
             matcher.match(referenceData.getDescriptors(), currentFeatureData.getDescriptors(), matches);
+            return matches;
         } else {
             return null;
         }
 
         // where do these values come from??
-        double minDistance = 50.0;
-        double maxDistance = 20.0;
-
-        List<DMatch> matchesList = matches.toList();
-        double dist;
-        for (DMatch match : matchesList) {
-            dist = match.distance;
-            if (dist < minDistance) {
-                minDistance = dist;
-            } else if (dist > maxDistance) {
-                maxDistance = dist;
-            }
-        }
-
-        LinkedList<DMatch> good_matches = new LinkedList<>();
-        for (DMatch match : matchesList) {
-            if (match.distance <= (MULTIPLIER * minDistance)) {
-                good_matches.addLast(match);
-            }
-        }
-
-        MatOfDMatch goodMatches = new MatOfDMatch();
-        goodMatches.fromList(good_matches);
-        return goodMatches;
+//        double minDistance = 55.0;
+//        double maxDistance = 15.0;
+//
+//        List<DMatch> matchesList = matches.toList();
+//        double dist;
+//        for (DMatch match : matchesList) {
+//            dist = match.distance;
+//            if (dist < minDistance) {
+//                minDistance = dist;
+//            } else if (dist > maxDistance) {
+//                maxDistance = dist;
+//            }
+//        }
+//
+//        LinkedList<DMatch> good_matches = new LinkedList<>();
+//        for (DMatch match : matchesList) {
+//            if (match.distance <= (MULTIPLIER * minDistance)) {
+//                good_matches.addLast(match);
+//            }
+//        }
+//
+//        MatOfDMatch goodMatches = new MatOfDMatch();
+//        goodMatches.fromList(good_matches);
+//        Log.d("featureTracking", "END");
+//        return goodMatches;
     }
 }

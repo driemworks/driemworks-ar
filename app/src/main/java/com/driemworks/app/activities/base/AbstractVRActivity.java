@@ -9,7 +9,7 @@ import com.driemworks.app.builders.GLSurfaceViewBuilder;
 import com.driemworks.common.enums.Resolution;
 
 /**
- * This class implements the AbstractOpenCVActivity
+ * This class extends the AbstractOpenCVActivity
  * and sets up the GLSurface view that will be used to
  *  1) register the on touch listener
  *  2) visualize 3d graphics over the current camera frame
