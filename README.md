@@ -7,6 +7,15 @@ Driemworks is an open source markerless augmented reality platform for Android p
 
 ## Getting Started
 
+
+The project has four major components:
+* app - the module that contains code for all activities, as well as the openGL renderers (open GL portion to be moved to it's own component in the future)
+* common - the module that contains common dto's, enums, etc that are shared between modules
+* driemworks-ar - the module that provides computer vision features (i.e. those outlined above)
+* sensor-admin - the module that provides access to a device's onboard sensors
+
+
+
 To create your own activity (MyCameraActivity) that has support for capturing camera frames via the onCameraFrameMethod, simply extend the AbstractOpenCVActivity.
 Override the onCameraFrameMethod to add your own logic for what occurs when a new frame is available.
 
