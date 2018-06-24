@@ -26,7 +26,7 @@ to implement the onTouchListener or not.
 
 
 ```
-public class GameActivity extends AbstractVRActivity implements View.OnTouchListener {
+public class MyActivity extends AbstractARActivity implements View.OnTouchListener {
 	public MyActivity() {
         super(R.layout.my_layout, R.id.opencv_surface_view, R.id.gl_surface_view, renderer, Resolution.RES_STANDARD, true);
 	}
