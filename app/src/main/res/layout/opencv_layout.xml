@@ -12,7 +12,7 @@
 
         <com.driemworks.app.views.OpenCVSurfaceView
             xmlns:opencv="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/main_surface_view"
+            android:id="@+id/opencv_surface_view"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             opencv:camera_id="any"

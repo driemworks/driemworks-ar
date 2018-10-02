@@ -1,12 +1,14 @@
 package com.driemworks.driemworks_ar;
 
 import com.driemworks.ar.utils.CvUtils;
-import com.driemworks.common.utils.OpenCvUtils;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.opencv.android.OpenCVLoader;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test suite for the CameraPoseDTO
@@ -15,8 +17,7 @@ public class CvUtilsTest {
 
     /** load the opencv lib */
     static {
-        System.out.println(System.getProperty("java.library.path"));
-        System.loadLibrary("../opencv_java3");
+        assertTrue(OpenCVLoader.initDebug(true));
     }
 
     @Before

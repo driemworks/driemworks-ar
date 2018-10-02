@@ -3,7 +3,7 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="distributionType" value="LOCAL" />
+        <option name="distributionType" value="DEFAULT_WRAPPED" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleHome" value="C:/Gradle/gradle-4.0.0" />
         <option name="modules">
@@ -15,7 +15,6 @@
             <option value="$PROJECT_DIR$/libraries" />
             <option value="$PROJECT_DIR$/libraries/opencv" />
             <option value="$PROJECT_DIR$/openCVLibrary310" />
-            <option value="$PROJECT_DIR$/sensor-admin" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

@@ -2,6 +2,7 @@ package com.driemworks.ar.dto;
 
 import android.util.Log;
 
+import com.driemworks.ar.services.MonocularVisualOdometryService;
 import com.driemworks.ar.utils.CvUtils;
 
 import org.opencv.core.Core;
@@ -34,6 +35,8 @@ public class CameraPoseDTO {
      * The current keypoints
      */
     private MatOfKeyPoint keyPoints;
+
+    private FeatureData featureData;
 
     /**
      * The default constructor
@@ -75,7 +78,8 @@ public class CameraPoseDTO {
         Log.d("translation: ", "" + translation);
         Log.d("translation z: ", "" + translation.get(2, 0)[0]);
         this.direction = CvUtils.mult(this.direction, rotation);
-        this.coordinate = CvUtils.add(this.coordinate, CvUtils.mult(this.direction, translation));
+//        this.coordinate = CvUtils.add(this.coordinate, CvUtils.mult(this.direction, translation));
+        this.coordinate = CvUtils.add(this.coordinate, translation);
     }
 
     /**
@@ -190,4 +194,11 @@ public class CameraPoseDTO {
         return this.coordinate.get(2,0)[0];
     }
 
+    public FeatureData getFeatureData() {
+        return featureData;
+    }
+
+    public void setFeatureData(FeatureData featureData) {
+        this.featureData = featureData;
+    }
 }

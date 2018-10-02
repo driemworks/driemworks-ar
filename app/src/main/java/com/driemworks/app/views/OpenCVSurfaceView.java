@@ -10,6 +10,8 @@ import org.opencv.android.JavaCameraView;
 import java.util.List;
 
 /**
+ *
+ * This class is a possible bottleneck
  * @author Tony
  */
 public class OpenCVSurfaceView extends JavaCameraView {

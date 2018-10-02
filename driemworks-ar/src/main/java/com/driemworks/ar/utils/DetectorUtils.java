@@ -2,11 +2,6 @@ package com.driemworks.ar.utils;
 
 import android.util.Log;
 
-import com.driemworks.ar.enums.ExtremesEnum;
-import com.driemworks.ar.enums.FingerEnum;
-import com.driemworks.ar.enums.HandEnum;
-import com.driemworks.common.enums.Coordinates;
-
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -34,18 +29,6 @@ public class DetectorUtils {
     public static List<Point> filterFingerTips(List<Point> rawPointData, float epsilon) {
         List<Point> filteredPoints = smoothSimilarPoints(rawPointData, epsilon);
         return filteredPoints;
-    }
-
-
-    public static Point getFinger(FingerEnum finger, HandEnum hand, List<Point> points) {
-        if (hand.getValue().equals(HandEnum.LEFT.getValue())) {
-            if (finger.getIndexLeft() == FingerEnum.THUMB.getIndexLeft()){
-                return getPoint(ExtremesEnum.MAX.getValue(), Coordinates.X.getValue(), points);
-            } else if (finger.getIndexLeft() == FingerEnum.PINKY.getIndexLeft()) {
-
-            }
-        }
-        return null;
     }
 
     /**
@@ -128,26 +111,6 @@ public class DetectorUtils {
      */
     private static boolean isInNeighborhood(Point p1, Point p2, float epsilon)  {
         return  (Math.abs(p1.x - p2.x) < epsilon && Math.abs(p1.y - p2.y) < epsilon);
-    }
-
-    /**
-     *
-     * @param extreme
-     * @param coordinate
-     * @param points
-     * @return
-     */
-    private static Point getPoint(String extreme, String coordinate, List<Point> points) {
-        if (extreme.equals(ExtremesEnum.MAX.getValue())) {
-            if (coordinate.equals(Coordinates.X.getValue())) {
-                return PointSortUtils.sortByMaxX(points).get(1);
-            }
-        } else if (extreme.equals(ExtremesEnum.MIN.getValue())) {
-            if (coordinate.equals(Coordinates.X.getValue())) {
-
-            }
-        }
-        return null;
     }
 
     public static boolean selectColor(Point correctedCoordinate, Mat rgba) {

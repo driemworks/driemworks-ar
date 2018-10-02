@@ -1,2 +1,2 @@
-include ':app', ':common', ':driemworks-ar', ':sensor-admin', ':openCVLibrary310'
+include ':app', ':common', ':driemworks-ar', ':openCVLibrary310'
 include ':libraries:opencv'

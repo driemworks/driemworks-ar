@@ -62,16 +62,9 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
     private void featureDetection(Mat frame, MatOfKeyPoint keyPoints, Mat descriptors) {
         // convert input image to gray
         Mat gray = new Mat();
-        Mat mDilatedMask = new Mat();
         Imgproc.cvtColor(frame, gray, Imgproc.COLOR_RGBA2GRAY);
         OpenCvUtils.sharpenImage(gray);
         detector.detect(gray, keyPoints);
-//        Imgproc.dilate(gray, mDilatedMask, new Mat());
-//        OpenCvUtils.sharpenImage(mDilatedMask);
-//        // detect keypoints
-//        detector.detect(mDilatedMask, keyPoints);
-        // extract  descriptors
-//        extractor.compute(mDilatedMask, keyPoints, descriptors);
         extractor.compute(gray, keyPoints, descriptors);
     }
 
@@ -80,7 +73,7 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
      */
     @Override
     public MatOfDMatch featureTracking(FeatureDataDTO referenceData, FeatureDataDTO currentFeatureData) {
-        Log.d("featureTracking", "START");
+        Log.d("trackKeyPoints", "START");
 //        MatOfDMatch matches = new MatOfDMatch();
         Mat referenceImage = referenceData.getImage();
         if (referenceImage.type() == currentFeatureData.getImage().type()) {
@@ -115,7 +108,7 @@ public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
 //
 //        MatOfDMatch goodMatches = new MatOfDMatch();
 //        goodMatches.fromList(good_matches);
-//        Log.d("featureTracking", "END");
+//        Log.d("trackKeyPoints", "END");
 //        return goodMatches;
     }
 }

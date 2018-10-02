@@ -17,7 +17,7 @@ public class OpenCVSurfaceViewBuilder {
     /**
      * The custom surface view
      */
-    private OpenCVSurfaceView customSurfaceView;
+    private OpenCVSurfaceView openCVSurfaceView;
 
     /**
      * Constructor for the OpenCVSurfaceViewBuilder
@@ -25,11 +25,11 @@ public class OpenCVSurfaceViewBuilder {
      * @param id The view id in the activity
      */
     public OpenCVSurfaceViewBuilder(Activity activity, int id) {
-        customSurfaceView = (OpenCVSurfaceView) activity.findViewById(id);
+        openCVSurfaceView = (OpenCVSurfaceView) activity.findViewById(id);
     }
 
     public OpenCVSurfaceViewBuilder(Activity activity, int id, View.OnTouchListener onTouchListener) {
-        customSurfaceView = (OpenCVSurfaceView) activity.findViewById(id);
+        openCVSurfaceView = (OpenCVSurfaceView) activity.findViewById(id);
         if (onTouchListener != null) {
             setOnTouchListener(onTouchListener);
         }
@@ -42,7 +42,7 @@ public class OpenCVSurfaceViewBuilder {
      */
     public OpenCVSurfaceViewBuilder setCvCameraViewListener(
             CameraBridgeViewBase.CvCameraViewListener2 cameraViewListener) {
-        customSurfaceView.setCvCameraViewListener(cameraViewListener);
+        openCVSurfaceView.setCvCameraViewListener(cameraViewListener);
         return this;
     }
 
@@ -52,7 +52,7 @@ public class OpenCVSurfaceViewBuilder {
      * @return {@link OpenCVSurfaceViewBuilder}
      */
     public OpenCVSurfaceViewBuilder setMaxFrameSize(Resolution resolution) {
-        customSurfaceView.setMaxFrameSize(resolution.getWidth(), resolution.getHeight());
+        openCVSurfaceView.setMaxFrameSize(resolution.getWidth(), resolution.getHeight());
         return this;
     }
 
@@ -62,7 +62,7 @@ public class OpenCVSurfaceViewBuilder {
      * @return {@link OpenCVSurfaceViewBuilder}
      */
     public OpenCVSurfaceViewBuilder setOnTouchListener(View.OnTouchListener listener) {
-        customSurfaceView.setOnTouchListener(listener);
+        openCVSurfaceView.setOnTouchListener(listener);
         return this;
     }
 
@@ -71,7 +71,7 @@ public class OpenCVSurfaceViewBuilder {
      * @return {@link OpenCVSurfaceView}
      */
     public OpenCVSurfaceView build() {
-        return customSurfaceView;
+        return openCVSurfaceView;
     }
 
 }
