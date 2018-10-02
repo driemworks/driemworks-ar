@@ -1,58 +1,32 @@
-# Driemworks
+# OpenAR
+OpenCV is an open source augmented reality platform powered by OpenCV and OpenGL. 
 
-Driemworks is an open source markerless augmented reality platform for Android powered by OpenCV and OpenGL. 
-* Monocular Visual Odometry
-* Color based blob detection
-* Feature based object tracking
-
-## Getting Started
-
-
-The project has four major components:
-* app - the module that contains code for all activities, as well as the openGL renderers (open GL portion to be moved to it's own component in the future)
-* common - the module that contains common dto's, enums, etc that are shared between modules
-* driemworks-ar - the module that provides computer vision features (i.e. those outlined above)
-* sensor-admin - the module that provides access to a device's onboard sensors
-
-
-
-To create your own activity (MyCameraActivity) that has support for capturing camera frames via the onCameraFrameMethod, simply extend the AbstractOpenCVActivity.
-Override the onCameraFrameMethod to add your own logic for what occurs when a new frame is available.
-
+### OpenCV
+OpenCV support is supplied by `OpenCVFragment`.
+OpenGL support is supplied by the `OpenGLFragment`.
+To add support for OpenCV to your activity, implement CameraBridgeViewBase.CvCameraViewListener2 and use the FragmentTransaction object to add the OpenCVFragment and commit the transaction.
 
 ```
-public class MyActivity extends AbstractOpenCVActivity {
+public class MyActivity extends FragmentActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        ...
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        // add opengl fragment
+        transaction.add(new OpenGLFragment(), "OpenGLGFragment");
+        // add opencv fragment
+        transaction.add(new OpenCVFragment(), "OpenCVFragment");
+        transaction.commit();
+        ...
+    }
+
 	@Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-		// your logic here
+		// your opencv logic here
 	}
 }
-```
-
-To create your own activity (MyActivity) that has support for rendering graphics (via Open GL) on the current camera frame, extend the AbstractARActivity
-and pass the id of your layout, the id of the opencv surface view, the id of the gl surface view, the renderer, the screen resolution, and a boolean flag
-to implement the onTouchListener or not.
-
-
-```
-public class MyActivity extends AbstractARActivity implements View.OnTouchListener {
-	public MyActivity() {
-        super(R.layout.my_layout, R.id.opencv_surface_view, R.id.gl_surface_view, renderer, Resolution.RES_STANDARD, true);
-	}
-}
-
 ```
 
 ### Prerequisites
-
 Follow the guide (https://opencv.org/platforms/android/) on getting started with OpenCV4Androicd
-
-To run on a device, install the appropriate OpenCV Manager.
-* For a physical device install via the Google Play Store. 
-* For an emulator, install the appropriate apk for your system architecture here:       https://sourceforge.net/projects/opencvlibrary/files/opencv-win/
-
-## Built With
-
-* [OpenCV4Android](https://opencv.org/platforms/android/) - Open Source Computer Vision Library
-* [OpenGL](https://rometools.github.io/rome/) - Open source graphics library
-* [Gradle](https://gradle.org/) - Dependency Management
