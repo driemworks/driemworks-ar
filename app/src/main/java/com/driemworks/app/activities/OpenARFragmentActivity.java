@@ -98,31 +98,29 @@ public class OpenARFragmentActivity extends AbstractARActivity implements Camera
             Pair<MatOfKeyPoint, MatOfKeyPoint> matchingKeypoints = featureDetectorService.trackKeyPoints(previousFrameGray, mGray, previousKeyPoints);
 //            featureData.setKeyPoint(featureDetectorService.trackKeyPoints(previousFrameGray, mGray, featureData.getKeyPoint()).second);
             MatOfPoint2f previous2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(matchingKeypoints.first);
-
-            Imgproc.GaussianBlur(mRgba, mRgba, new Size(3, 3), 0);
-
-            Mat mPyrDownMat = new Mat();
-            Imgproc.pyrDown(mRgba, mPyrDownMat);
-            Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
-
-            Mat mHsvMat = new Mat();
-            Mat mMask = new Mat();
-            Mat mCanny = new Mat();
-            Mat mDilatedMask = new Mat();
-
-            // Lower and Upper bounds for range checking in HSV color space
-            Scalar mLowerBound = new Scalar(0);
-            Scalar mUpperBound = new Scalar(0);
-            int threshold = 150;
-
-            Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
-            Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
-            Imgproc.Canny(mMask, mCanny, threshold, threshold*2, 3, true);
-//            Imgproc.dilate(mCanny, mDilatedMask, new Mat());
+//
+//            Imgproc.GaussianBlur(mRgba, mRgba, new Size(3, 3), 0);
+//
+//            Mat mPyrDownMat = new Mat();
+//            Imgproc.pyrDown(mRgba, mPyrDownMat);
+//            Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
+//
+//            Mat mHsvMat = new Mat();
+//            Mat mMask = new Mat();
+//            Mat mCanny = new Mat();
+//
+//            // Lower and Upper bounds for range checking in HSV color space
+//            Scalar mLowerBound = new Scalar(0);
+//            Scalar mUpperBound = new Scalar(0);
+//            int threshold = 150;
+//
+//            Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
+//            Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
+//            Imgproc.Canny(mMask, mCanny, threshold, threshold*2, 3, true);
 
             // draw the tracked keypoints
             for (Point p : previous2f.toList()) {
-                Imgproc.circle(mCanny, p, 5, new Scalar(0, 255, 0));
+                Imgproc.circle(mRgba, p, 5, new Scalar(0, 255, 0));
             }
 
             MatOfPoint2f next2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(matchingKeypoints.second);
@@ -131,7 +129,7 @@ public class OpenARFragmentActivity extends AbstractARActivity implements Camera
                 return mRgba;
             }
             previousKeyPoints = matchingKeypoints.second;
-            return mCanny;
+//            return mCanny;
         }
         previousFrameGray = mGray;
         return mRgba;
