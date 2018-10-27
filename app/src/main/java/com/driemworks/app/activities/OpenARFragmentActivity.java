@@ -14,8 +14,12 @@ import com.driemworks.ar.services.impl.FeatureDetectorServiceImpl;
 import com.driemworks.common.graphics.CubeRenderer;
 import com.driemworks.common.utils.ImageConversionUtils;
 
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.Core;
+import org.opencv.core.CvType;
+import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.android.CameraBridgeViewBase;
@@ -98,38 +102,18 @@ public class OpenARFragmentActivity extends AbstractARActivity implements Camera
             Pair<MatOfKeyPoint, MatOfKeyPoint> matchingKeypoints = featureDetectorService.trackKeyPoints(previousFrameGray, mGray, previousKeyPoints);
 //            featureData.setKeyPoint(featureDetectorService.trackKeyPoints(previousFrameGray, mGray, featureData.getKeyPoint()).second);
             MatOfPoint2f previous2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(matchingKeypoints.first);
-//
-//            Imgproc.GaussianBlur(mRgba, mRgba, new Size(3, 3), 0);
-//
-//            Mat mPyrDownMat = new Mat();
-//            Imgproc.pyrDown(mRgba, mPyrDownMat);
-//            Imgproc.pyrDown(mPyrDownMat, mPyrDownMat);
-//
-//            Mat mHsvMat = new Mat();
-//            Mat mMask = new Mat();
-//            Mat mCanny = new Mat();
-//
-//            // Lower and Upper bounds for range checking in HSV color space
-//            Scalar mLowerBound = new Scalar(0);
-//            Scalar mUpperBound = new Scalar(0);
-//            int threshold = 150;
-//
-//            Imgproc.cvtColor(mPyrDownMat, mHsvMat, Imgproc.COLOR_RGB2HSV_FULL);
-//            Core.inRange(mHsvMat, mLowerBound, mUpperBound, mMask);
-//            Imgproc.Canny(mMask, mCanny, threshold, threshold*2, 3, true);
 
-            // draw the tracked keypoints
-            for (Point p : previous2f.toList()) {
+            MatOfPoint2f next2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(matchingKeypoints.second);
+            for (Point p : next2f.toList()) {
                 Imgproc.circle(mRgba, p, 5, new Scalar(0, 255, 0));
             }
 
-            MatOfPoint2f next2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(matchingKeypoints.second);
             // if we haven't successfully tracked any keypoints, return the image
-            if (next2f.empty() || next2f.checkVector(2) < 0) {
-                return mRgba;
-            }
+//            if (next2f.empty() || next2f.checkVector(2) < 0) {
+//                return mRgba;
+//            }
+
             previousKeyPoints = matchingKeypoints.second;
-//            return mCanny;
         }
         previousFrameGray = mGray;
         return mRgba;

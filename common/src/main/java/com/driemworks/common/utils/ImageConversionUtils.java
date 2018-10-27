@@ -76,6 +76,12 @@ public class ImageConversionUtils {
         return pointMat;
     }
 
+    public static MatOfPoint convertMatOfPoint2fToMatOfPoint(MatOfPoint2f matOfPoint2f) {
+        MatOfPoint matOfPoint = new MatOfPoint();
+        matOfPoint.fromList(matOfPoint2f.toList());
+        return matOfPoint;
+    }
+
     /**
      * Create a MatOfPoint2f from a list of points
      * @param points the list of points

@@ -111,15 +111,10 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
         List<Mat> pyramids = new ArrayList<>();
         Video.buildOpticalFlowPyramid(previousFrameGray, pyramids, size, 3);
 
-        if (true) {
-            Video.calcOpticalFlowPyrLK(pyramids.get(0), currentFrameGray,
-                    previousKeyPoints2f, currentKeyPoints2f,
-                    status, err, size, MAX_LEVEL, termCriteria,
-                    Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
-        } else {
-            Mat flow = new Mat();
-            Video.calcOpticalFlowFarneback(previousKeyPoints2f, currentKeyPoints2f, flow, 2, 3, 21, 10, 2, 0,01);
-        }
+        Video.calcOpticalFlowPyrLK(pyramids.get(0), currentFrameGray,
+                previousKeyPoints2f, currentKeyPoints2f,
+                status, err, size, MAX_LEVEL, termCriteria,
+                Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
 
         Pair<LinkedList<Point>, LinkedList<Point>> matchedPoints = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), status.toArray());
         status.release();
@@ -129,6 +124,9 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
                 ImageConversionUtils.convertListOfPointsToMatOfKeypoint(matchedPoints.second, 1, 1));
     }
 
+    private double minX = -1;
+    private double minY = -1;
+
     /**
      * Filters out points which fail tracking, or which were tracked off screen
      * @param previousKeypoints The list of keypoints in the previous image
@@ -136,12 +134,16 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
      * @param statusArray The status array
      */
     private Pair<LinkedList<Point>, LinkedList<Point>> filterPoints(List<Point> previousKeypoints, List<Point> currentKeypoints, byte[] statusArray) {
+        assert previousKeypoints.equals(currentKeypoints);
         int indexCorrection = 0;
+        double averageDx = 0;
+        double averageDy = 0;
         // copy lists
         LinkedList<Point> currentCopy = new LinkedList<>(currentKeypoints);
         LinkedList<Point> previousCopy = new LinkedList<>(previousKeypoints);
         for (int i = 0; i < currentKeypoints.size(); i++) {
             Point pt = currentKeypoints.get(i - indexCorrection);
+            Point previousPoint = previousKeypoints.get(i - indexCorrection);
             if (statusArray[i] == 0 || (pt.x == 0 || pt.y == 0)) {
                 // removes points which are tracked off screen
                 if (pt.x == 0 || pt.y == 0) {
@@ -151,9 +153,30 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
                 currentCopy.remove(i - indexCorrection);
                 previousCopy.remove(i - indexCorrection);
                 indexCorrection++;
+            } else {
+                // correct keypoint in case of jitters
+                // if the difference in any direction between the current keypoint and the previous is below a threshold, we will assume
+                // that the real representation of the object has not moved
+                double dx = Math.abs(pt.x - previousPoint.x);
+                double dy = Math.abs(pt.y - previousPoint.y);
+
+                averageDx += dx;
+                averageDy += dy;
+
+                double threshold = 0.01;
+
+                if (dx < threshold && dy < threshold) {
+                    Log.d("FeatureDetector", "Removing keypoint at index " + i);
+                    // if points haven't moved sufficiently in any direction
+                    currentCopy.remove(i - indexCorrection);
+                    currentCopy.add(previousPoint);
+                }
             }
         }
 
+        averageDx = averageDx / currentCopy.size();
+        averageDy = averageDy / currentCopy.size();
+        Log.d("Averaged motion: ", "dx = " + averageDx + " dy = " + averageDy);
         return Pair.create(previousCopy, currentCopy);
     }
 

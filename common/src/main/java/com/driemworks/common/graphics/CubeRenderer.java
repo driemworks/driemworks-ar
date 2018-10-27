@@ -12,16 +12,15 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Class that implements the rendering of a cube with the current rotation of the device that is provided by an
  * OrientationProvider
- * 
+ *
  * @author Alexander Pacha
- * 
+ *
  */
 public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfaceView.Renderer {
     /**
      * The colour-cube that is drawn repeatedly
      */
     private Cube mCube;
-
 
     private Quaternion quaternion = new Quaternion();
 
@@ -32,15 +31,22 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
         mCube = new Cube();
     }
 
-    public CubeRenderer(OrientationProvider orientationProvider) {
-        setOrientationProvider(orientationProvider);
-        mCube = new Cube();
+    /**
+     * Sets the orientationProvider of this renderer. Use this method to change which sensor fusion should be currently
+     * used for rendering the cube. Simply exchange it with another orientationProvider and the cube will be rendered
+     * with another approach.
+     *
+     * @param orientationProvider The new orientation provider that delivers the current orientation of the device
+     */
+    public void setOrientationProvider(OrientationProvider orientationProvider) {
+        this.orientationProvider = orientationProvider;
     }
 
     /**
-     * {@inheritDoc}
+     * Perform the actual rendering of the cube for each frame
+     *
+     * @param gl The surface on which the cube should be rendered
      */
-    @Override
     public void onDrawFrame(GL10 gl) {
         // clear screen
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
@@ -49,25 +55,49 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glLoadIdentity();
 
-        if (orientationProvider != null) {
-            // All Orientation providers deliver Quaternion as well as rotation matrix.
-            // Use your favourite representation:
+        if (showCubeInsideOut) {
+            float dist = 3;
+            gl.glTranslatef(0, 0, -dist);
 
-            // Get the rotation from the current orientationProvider as rotation matrix
-//                gl.glMultMatrixf(orientationProvider.getRotationMatrix().getMatrix(), 0);
+            if (orientationProvider != null) {
+                // All Orientation providers deliver Quaternion as well as rotation matrix.
+                // Use your favourite representation:
 
-            // Get the rotation from the current orientationProvider as quaternion
-            orientationProvider.getQuaternion(quaternion);
-            gl.glRotatef((float) (2.0f * Math.acos(quaternion.getW()) * 180.0f / Math.PI), quaternion.getY(), quaternion.getX(), quaternion.getZ());
+                // Get the rotation from the current orientationProvider as rotation matrix
+                //gl.glMultMatrixf(orientationProvider.getRotationMatrix().getMatrix(), 0);
+
+                // Get the rotation from the current orientationProvider as quaternion
+                orientationProvider.getQuaternion(quaternion);
+                gl.glRotatef((float) (2.0f * Math.acos(quaternion.getW()) * 180.0f / Math.PI), quaternion.getX(), quaternion.getY(), quaternion.getZ());
+            }
+
+            // draw our object
+            gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
+            gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+
+            mCube.draw(gl);
+        } else {
+
+            if (orientationProvider != null) {
+                // All Orientation providers deliver Quaternion as well as rotation matrix.
+                // Use your favourite representation:
+
+                // Get the rotation from the current orientationProvider as rotation matrix
+                //gl.glMultMatrixf(orientationProvider.getRotationMatrix().getMatrix(), 0);
+
+                // Get the rotation from the current orientationProvider as quaternion
+                orientationProvider.getQuaternion(quaternion);
+                gl.glRotatef((float) (2.0f * Math.acos(quaternion.getW()) * 180.0f / Math.PI), quaternion.getX(), quaternion.getY(), quaternion.getZ());
+            }
+
+            float dist = 3;
+            drawTranslatedCube(gl, 0, 0, -dist);
+            drawTranslatedCube(gl, 0, 0, dist);
+            drawTranslatedCube(gl, 0, -dist, 0);
+            drawTranslatedCube(gl, 0, dist, 0);
+            drawTranslatedCube(gl, -dist, 0, 0);
+            drawTranslatedCube(gl, dist, 0, 0);
         }
-
-        float dist = 3;
-        drawTranslatedCube(gl, 0, 0, -dist);
-        drawTranslatedCube(gl, 0, 0, dist);
-        drawTranslatedCube(gl, 0, -dist, 0);
-        drawTranslatedCube(gl, 0, dist, 0);
-        drawTranslatedCube(gl, -dist, 0, 0);
-        drawTranslatedCube(gl, dist, 0, 0);
 
         // draw our object
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
@@ -78,7 +108,7 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 
     /**
      * Draws a translated cube
-     * 
+     *
      * @param gl the surface
      * @param translateX x-translation
      * @param translateY y-translation
@@ -95,10 +125,9 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
         mCube.draw(gl);
         gl.glPopMatrix();
     }
-
     /**
      * Update view-port with the new surface
-     * 
+     *
      * @param gl the surface
      * @param width new width
      * @param height new height
@@ -118,5 +147,10 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
         gl.glDisable(GL10.GL_DITHER);
         gl.glClearColor(0, 0, 0, 0);
     }
+
+    /**
+     * Flag indicating whether you want to view inside out, or outside in
+     */
+    private boolean showCubeInsideOut = true;
 
 }
