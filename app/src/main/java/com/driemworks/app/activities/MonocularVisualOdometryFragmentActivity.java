@@ -1,18 +1,17 @@
 package com.driemworks.app.activities;
 
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.WindowManager;
 
 import com.driemworks.app.R;
-import com.driemworks.app.activities.fragments.OpenCVFragment;
-import com.driemworks.app.activities.interfaces.OpenARActivityInterface;
+import com.driemworks.common.activities.AbstractARActivity;
+import com.driemworks.common.fragments.OpenCVFragment;
+import com.driemworks.common.interfaces.OpenARActivityInterface;
 import com.driemworks.ar.dto.CameraPoseDTO;
 import com.driemworks.ar.services.MonocularVisualOdometryService;
 import com.driemworks.common.utils.ImageConversionUtils;
-import com.driemworks.common.utils.OpenCvUtils;
 import com.driemworks.common.utils.TagUtils;
 
 import org.opencv.android.CameraBridgeViewBase;
@@ -29,9 +28,6 @@ import org.opencv.imgproc.Imgproc;
  */
 public class MonocularVisualOdometryFragmentActivity extends AbstractARActivity implements CameraBridgeViewBase.CvCameraViewListener2, OpenARActivityInterface {
 
-    /** The renderer */
-    private GLSurfaceView.Renderer renderer;
-
     /** The monocular visual odometry service */
     private MonocularVisualOdometryService monocularVisualOdometryService;
 
@@ -47,7 +43,6 @@ public class MonocularVisualOdometryFragmentActivity extends AbstractARActivity 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        OpenCvUtils.initOpenCV(true);
         // keep the screen on!
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.opencv_layout);
@@ -56,25 +51,8 @@ public class MonocularVisualOdometryFragmentActivity extends AbstractARActivity 
         // add opencv fragment
         transaction.add(new OpenCVFragment(), "OpenCVFragment");
         transaction.commit();
-
         monocularVisualOdometryService = new MonocularVisualOdometryService();
         cameraPoseDTO = new CameraPoseDTO();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public GLSurfaceView.Renderer getRenderer() {
-        return renderer;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setRenderer(GLSurfaceView.Renderer renderer) {
-        this.renderer = renderer;
     }
 
     /*
@@ -123,5 +101,10 @@ public class MonocularVisualOdometryFragmentActivity extends AbstractARActivity 
     @Override
     public int getOpenCVSurfaceViewId() {
         return R.id.opencv_surface_view;
+    }
+
+    @Override
+    public int getGLSurfaceViewId() {
+        return 0;
     }
 }

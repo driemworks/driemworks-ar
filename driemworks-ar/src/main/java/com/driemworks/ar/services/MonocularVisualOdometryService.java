@@ -77,17 +77,17 @@ public class MonocularVisualOdometryService {
                 || cameraPoseDTO.getFeatureData() == null
                 || (cameraPoseDTO.getFeatureData().getKeyPoint() != null && cameraPoseDTO.getFeatureData().getKeyPoint().toArray().length < 5)) {
             Log.d(TAG, "previous points are empty.");
-            currentData = featureTrackingService.extractFeatureData(currentFrame);
+//            currentData = featureTrackingService.extractFeatureData(currentFrame);
         } else {
             Log.d(TAG, "previous points are not empty");
             // track feature from the previous image into the current image
             MatOfKeyPoint previousPoints = cameraPoseDTO.getFeatureData().getKeyPoint();
             Pair<MatOfKeyPoint, MatOfKeyPoint> matchedTrackedPoints = featureTrackingService.trackKeyPoints(previousFrameGray, currentFrameGray, previousPoints);
             if (matchedTrackedPoints.second.empty()) {
-                Log.d(TAG, "tracked points are empty");
-                currentData = featureTrackingService.extractFeatureData(currentFrame);
+                Log.d(TAG, "No keypoints were tracked to new frame. Redetecting points.");
+//                currentData = featureTrackingService.extractFeatureData(currentFrame);
             } else {
-                // convert the lists of points to MatOfPoint2fs
+                // convert the lists of points to MatOfPoint2fs ... why?
                 MatOfPoint2f currentPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(matchedTrackedPoints.second);
                 MatOfPoint2f previousPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(matchedTrackedPoints.first);
 
@@ -96,7 +96,7 @@ public class MonocularVisualOdometryService {
             }
         }
 
-        cameraPoseDTO.setFeatureData(currentData);
+//        cameraPoseDTO.setFeatureData(currentData);
         Log.d(TAG,"END - monocularVisualOdometry in " + (System.currentTimeMillis() - start) + " ms");
         return cameraPoseDTO;
     }

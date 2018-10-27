@@ -31,7 +31,6 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     compile project(':libraries:opencv')
-    compile files('libs/jpct_ae.jar')
     compile project(':common')
     compile project(':driemworks-ar')
     compile 'com.android.support:appcompat-v7:25.3.1'

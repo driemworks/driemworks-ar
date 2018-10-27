@@ -18,7 +18,7 @@ public interface FeatureDetectorService {
      * @param frame The input image
      * @return {@link MatOfKeyPoint}
      */
-    FeatureData extractFeatureData(Mat frame);
+    MatOfKeyPoint extractFeatureData(Mat frame);
 
     /**
      * Track features extracted from the previous image into the next image

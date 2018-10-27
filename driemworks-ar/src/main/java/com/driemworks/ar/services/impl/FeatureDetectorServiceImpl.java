@@ -22,6 +22,7 @@ import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.video.Video;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -83,7 +84,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
      * {@inheritDoc}
      */
     @Override
-    public FeatureData extractFeatureData(Mat frame) {
+    public MatOfKeyPoint extractFeatureData(Mat frame) {
         Log.d(TAG, "START - extractFeatureData");
         MatOfKeyPoint mKeyPoints = new MatOfKeyPoint();
         detector.detect(frame, mKeyPoints);
@@ -91,8 +92,8 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
 //        descriptorExtractor.compute(frame, mKeyPoints, descriptors);
         Log.d(TAG, "END - extractFeatureData");
 
-        mKeyPoints = getBestPoints(mKeyPoints.toList(), 120);
-        return new FeatureData(mKeyPoints, null);
+        mKeyPoints = getBestPoints(mKeyPoints.toList(), 180);
+        return mKeyPoints;
     }
 
     /**
@@ -107,10 +108,18 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
         MatOfPoint2f previousKeyPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(previousKeyPoints);
         MatOfPoint2f currentKeyPoints2f = new MatOfPoint2f();
         // previous => current
-        Video.calcOpticalFlowPyrLK(previousFrameGray, currentFrameGray,
-                previousKeyPoints2f, currentKeyPoints2f,
-                status, err, size, MAX_LEVEL, termCriteria,
-                Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
+        List<Mat> pyramids = new ArrayList<>();
+        Video.buildOpticalFlowPyramid(previousFrameGray, pyramids, size, 3);
+
+        if (true) {
+            Video.calcOpticalFlowPyrLK(pyramids.get(0), currentFrameGray,
+                    previousKeyPoints2f, currentKeyPoints2f,
+                    status, err, size, MAX_LEVEL, termCriteria,
+                    Video.OPTFLOW_LK_GET_MIN_EIGENVALS, MIN_EIGEN_THRESHOLD);
+        } else {
+            Mat flow = new Mat();
+            Video.calcOpticalFlowFarneback(previousKeyPoints2f, currentKeyPoints2f, flow, 2, 3, 21, 10, 2, 0,01);
+        }
 
         Pair<LinkedList<Point>, LinkedList<Point>> matchedPoints = filterPoints(previousKeyPoints2f.toList(), currentKeyPoints2f.toList(), status.toArray());
         status.release();

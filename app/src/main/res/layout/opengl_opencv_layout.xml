@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <com.driemworks.app.views.OpenCVSurfaceView
+        <com.driemworks.common.views.OpenCVSurfaceView
             xmlns:opencv="http://schemas.android.com/apk/res-auto"
             android:id="@+id/opencv_surface_view"
             android:layout_width="fill_parent"

@@ -74,8 +74,8 @@ public class CameraPoseDTO {
      * @param rotation The 3 x 3 rotation matrix
      */
     public void update(Mat translation, Mat rotation) {
-        Log.d("rotation: ", "" + rotation);
-        Log.d("translation: ", "" + translation);
+        Log.d("rotation: ", "" + rotation.toString());
+        Log.d("translation: ", "" + translation.toString());
         Log.d("translation z: ", "" + translation.get(2, 0)[0]);
         this.direction = CvUtils.mult(this.direction, rotation);
 //        this.coordinate = CvUtils.add(this.coordinate, CvUtils.mult(this.direction, translation));
