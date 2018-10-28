@@ -1,4 +1,4 @@
-package com.driemworks.common.graphics;
+package graphics;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

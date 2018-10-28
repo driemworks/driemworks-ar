@@ -11,21 +11,15 @@ import com.driemworks.common.activities.AbstractARActivity;
 import com.driemworks.common.fragments.OpenCVFragment;
 import com.driemworks.common.fragments.OpenGLFragment;
 import com.driemworks.ar.services.impl.FeatureDetectorServiceImpl;
-import com.driemworks.common.graphics.CubeRenderer;
+import graphics.CubeRenderer;
 import com.driemworks.common.utils.ImageConversionUtils;
 
-import org.opencv.calib3d.Calib3d;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfKeyPoint;
-import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 /**
