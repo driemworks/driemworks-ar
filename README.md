@@ -1,6 +1,8 @@
-## Under Construction..
-# OpenAR
-OpenCV is an open source augmented reality platform powered by OpenCV and OpenGL. 
+# Driemworks
+Driemworks is an open source augmented reality platform powered by OpenCV and OpenGL. 
+
+Example (keypoint detection and tracking: see OpenARActivity.java)
+![OpenARActivity screenshot](https://github.com/driemworks/driemworks/blob/master/screenshot.png?raw=true)
 
 ### OpenCV
 OpenCV support is supplied by `OpenCVFragment`.
