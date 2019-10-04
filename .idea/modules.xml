@@ -2,13 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />
-      <module fileurl="file://$PROJECT_DIR$/driemworks-ar/driemworks-ar.iml" filepath="$PROJECT_DIR$/driemworks-ar/driemworks-ar.iml" />
-      <module fileurl="file://$PROJECT_DIR$/libraries/libraries.iml" filepath="$PROJECT_DIR$/libraries/libraries.iml" />
-      <module fileurl="file://$PROJECT_DIR$/openCVLibrary310/openCVLibrary310.iml" filepath="$PROJECT_DIR$/openCVLibrary310/openCVLibrary310.iml" />
-      <module fileurl="file://$PROJECT_DIR$/libraries/opencv/opencv.iml" filepath="$PROJECT_DIR$/libraries/opencv/opencv.iml" />
-      <module fileurl="file://$PROJECT_DIR$/the-dreadfort.iml" filepath="$PROJECT_DIR$/the-dreadfort.iml" />
+      <module fileurl="file://$PROJECT_DIR$/driemworks.iml" filepath="$PROJECT_DIR$/driemworks.iml" group="driemworks" />
+      <module fileurl="file://$PROJECT_DIR$/app/driemworks-app.iml" filepath="$PROJECT_DIR$/app/driemworks-app.iml" group="driemworks/app" />
+      <module fileurl="file://$PROJECT_DIR$/common/driemworks-common.iml" filepath="$PROJECT_DIR$/common/driemworks-common.iml" group="driemworks/common" />
+      <module fileurl="file://$PROJECT_DIR$/driemworks-ar/driemworks-driemworks-ar.iml" filepath="$PROJECT_DIR$/driemworks-ar/driemworks-driemworks-ar.iml" group="driemworks/driemworks-ar" />
+      <module fileurl="file://$PROJECT_DIR$/../OpenCV-3.4.1-android-sdk/sdk/opencv.iml" filepath="$PROJECT_DIR$/../OpenCV-3.4.1-android-sdk/sdk/opencv.iml" group="driemworks/opencv" />
     </modules>
   </component>
 </project>

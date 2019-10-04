@@ -1,2 +1,3 @@
-include ':app', ':common', ':driemworks-ar', ':openCVLibrary310'
-include ':libraries:opencv'
+include ':app', ':common', ':driemworks-ar'
+include ':opencv'
+project(':opencv').projectDir = new File('C:\\Users\\Pascal\\AndroidstudioProjects\\OpenCV-3.4.1-android-sdk\\sdk')

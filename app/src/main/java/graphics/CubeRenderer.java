@@ -10,6 +10,17 @@ import com.driemworks.common.sensor.representation.Quaternion;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import static android.opengl.GLES10.glEnableClientState;
+import static android.opengl.GLES10.glFrustumf;
+import static android.opengl.GLES10.glLoadIdentity;
+import static android.opengl.GLES10.glMatrixMode;
+import static android.opengl.GLES10.glPopMatrix;
+import static android.opengl.GLES10.glPushMatrix;
+import static android.opengl.GLES10.glTranslatef;
+import static android.opengl.GLES20.glClearColor;
+import static android.opengl.GLES20.glDisable;
+import static android.opengl.GLES20.glViewport;
+
 /**
  * Class that implements the rendering of a cube with the current rotation of the device that is provided by an
  * OrientationProvider
@@ -110,43 +121,43 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
     /**
      * Draws a translated cube
      *
-     * @param gl the surface
+     * @param unused the surface
      * @param translateX x-translation
      * @param translateY y-translation
      * @param translateZ z-translation
      */
-    private void drawTranslatedCube(GL10 gl, float translateX, float translateY, float translateZ) {
-        gl.glPushMatrix();
-        gl.glTranslatef(translateX, translateY, translateZ);
+    private void drawTranslatedCube(GL10 unused, float translateX, float translateY, float translateZ) {
+        glPushMatrix();
+        glTranslatef(translateX, translateY, translateZ);
 
         // draw our object
-        gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glEnableClientState(GL10.GL_COLOR_ARRAY);
+        glEnableClientState(GL10.GL_VERTEX_ARRAY);
+        glEnableClientState(GL10.GL_COLOR_ARRAY);
 
-        mCube.draw(gl);
-        gl.glPopMatrix();
+        mCube.draw(unused);
+        glPopMatrix();
     }
     /**
      * Update view-port with the new surface
      *
-     * @param gl the surface
+     * @param unused the surface
      * @param width new width
      * @param height new height
      */
-    public void onSurfaceChanged(GL10 gl, int width, int height) {
+    public void onSurfaceChanged(GL10 unused, int width, int height) {
         // set view-port
-        gl.glViewport(0, 0, width, height);
+        glViewport(0, 0, width, height);
         // set projection matrix
         float ratio = (float) width / height;
-        gl.glMatrixMode(GL10.GL_PROJECTION);
-        gl.glLoadIdentity();
-        gl.glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+        glMatrixMode(GL10.GL_PROJECTION);
+        glLoadIdentity();
+        glFrustumf(-ratio, ratio, -1, 1, 1, 10);
     }
 
     @Override
-    public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        gl.glDisable(GL10.GL_DITHER);
-        gl.glClearColor(0, 0, 0, 0);
+    public void onSurfaceCreated(GL10 unused, EGLConfig config) {
+        glDisable(GL10.GL_DITHER);
+        glClearColor(0, 0, 0, 0);
     }
 
     /**

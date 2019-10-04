@@ -63,7 +63,7 @@ public class SurfaceDetectionService {
      */
     public SurfaceDetectionService() {
         this.contourColorWhite = new Scalar(255, 255, 255, 255);
-        this.contourColor = new Scalar(222, 040, 255);
+        this.contourColor = new Scalar(222, 40, 255);
         this.mSpectrum = new Mat();
         this.spectrumRange = new Size(200, 64);
         colorBlobDetector = new ColorBlobDetector();

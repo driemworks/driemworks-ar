@@ -1,8 +1,7 @@
 package com.driemworks.common.activities;
 
-import android.opengl.GLSurfaceView;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
+import androidx.fragment.app.FragmentActivity;
 
 import com.driemworks.common.graphics.AbstractOrientationRenderer;
 import com.driemworks.common.utils.OpenCvUtils;

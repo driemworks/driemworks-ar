@@ -11,7 +11,7 @@ public class TagUtils {
      * @param obj The object for which the tag is being generated
      * @return "className: ", The formatted tag
      */
-    public static <T extends Object> String getTag(T obj) {
+    public static <T> String getTag(T obj) {
         String className = obj.getClass().getSimpleName();
         if (className.length() > 21) {
             className = className.substring(0, 21);

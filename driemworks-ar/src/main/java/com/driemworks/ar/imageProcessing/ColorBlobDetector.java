@@ -115,14 +115,12 @@ public class ColorBlobDetector {
      * @param contours
      */
     private void filterContours(List<MatOfPoint> contours, double maxArea) {
-        Iterator<MatOfPoint> each = contours.iterator();
-        while (each.hasNext()) {
-            MatOfPoint contour = each.next();
-            if (Imgproc.contourArea(contour) > mMinContourArea*maxArea) {
-                Core.multiply(contour, new Scalar(4, 4), contour);
-                mContours.add(contour);
-            }
-        }
+		for (MatOfPoint contour : contours) {
+			if (Imgproc.contourArea(contour) > mMinContourArea * maxArea) {
+				Core.multiply(contour, new Scalar(4, 4), contour);
+				mContours.add(contour);
+			}
+		}
     }
 
     /**
@@ -132,13 +130,11 @@ public class ColorBlobDetector {
      */
     private double findMaxContourArea(List<MatOfPoint> contours) {
         double maxArea = 0;
-        Iterator<MatOfPoint> each = contours.iterator();
-        while (each.hasNext()) {
-            MatOfPoint wrapper = each.next();
-            double area = Imgproc.contourArea(wrapper);
-            if (area > maxArea)
-                maxArea = area;
-        }
+		for (MatOfPoint wrapper : contours) {
+			double area = Imgproc.contourArea(wrapper);
+			if (area > maxArea)
+				maxArea = area;
+		}
 
         return maxArea;
     }
