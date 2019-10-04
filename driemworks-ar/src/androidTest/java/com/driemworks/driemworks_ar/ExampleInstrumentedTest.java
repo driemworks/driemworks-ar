@@ -1,8 +1,6 @@
 package com.driemworks.driemworks_ar;
 
-import android.content.Context;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.driemworks.ar.utils.CvUtils;
 import com.driemworks.common.utils.OpenCvUtils;

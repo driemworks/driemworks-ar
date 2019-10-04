@@ -1,7 +1,7 @@
 package com.driemworks.app.activities;
 
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
+import androidx.fragment.app.FragmentTransaction;
 import android.util.Log;
 import android.util.Pair;
 import android.view.WindowManager;
