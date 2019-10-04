@@ -42,7 +42,7 @@ public class OpenCvUtils {
      * @param color The color of the outline of the rect
      */
     public static void drawRotatedRect(RotatedRect rect, Mat image, Scalar color) {
-        Point points[] = new Point[4];
+        Point[] points = new Point[4];
         rect.points(points);
         for(int i=0; i<4; ++i){
             Imgproc.line(image, points[i], points[(i+1)%4], color);

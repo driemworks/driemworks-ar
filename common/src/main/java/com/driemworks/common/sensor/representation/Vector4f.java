@@ -6,7 +6,7 @@ package com.driemworks.common.sensor.representation;
 public class Vector4f {
 
     /** The points. */
-    protected float points[] = { 0, 0, 0, 0 };
+    protected float[] points = { 0, 0, 0, 0 };
 
     /**
      * Instantiates a new vector4f.

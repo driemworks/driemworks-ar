@@ -566,9 +566,7 @@ public class Matrix {
      * @param z translation factor z
      */
     public static void translateM(float[] tm, int tmOffset, float[] m, int mOffset, float x, float y, float z) {
-        for (int i = 0; i < 12; i++) {
-            tm[tmOffset + i] = m[mOffset + i];
-        }
+		System.arraycopy(m, mOffset + 0, tm, tmOffset + 0, 12);
         for (int i = 0; i < 4; i++) {
             int tmi = tmOffset + i;
             int mi = mOffset + i;
