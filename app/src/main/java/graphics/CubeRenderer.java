@@ -1,12 +1,16 @@
 package graphics;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
+import android.os.SystemClock;
 
 import com.driemworks.common.graphics.AbstractOrientationRenderer;
 import com.driemworks.common.sensor.orientationProvider.OrientationProvider;
 import com.driemworks.common.sensor.representation.Quaternion;
+
+import java.util.Arrays;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -40,15 +44,20 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 	/**
 	 * The colour-cube that is drawn repeatedly
 	 */
-	private Cube mCube;
+//	private Cube mCube;
+	private Cube2 mCube2;
 
 	private Quaternion quaternion = new Quaternion();
 
+	Context context;
 	/**
 	 * Initialises a new CubeRenderer
+	 * @param context
 	 */
-	public CubeRenderer() {
-		mCube = new Cube();
+	public CubeRenderer(Context context) {
+//		mCube = new Cube();
+//-----------------------------------
+		this.context = context;
 	}
 
 	/**
@@ -68,6 +77,12 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 		this.orientationProvider = orientationProvider;
 	}
 
+	// vPMatrix is an abbreviation for "Model View Projection Matrix"
+	private final float[] vPMatrix = new float[16];
+	private final float[] projectionMatrix = new float[16];
+	private final float[] viewMatrix = new float[16];
+	private float[] rotationMatrix = new float[16];
+	private float angle = 0f;
 	/**
 	 * Perform the actual rendering of the cube for each frame
 	 *
@@ -75,62 +90,90 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 	 */
 	@Override
 	public void onDrawFrame(GL10 gl10) {
-		// clear screen
-		glClear(GL_COLOR_BUFFER_BIT);
+//		// clear screen
+//		glClear(GL_COLOR_BUFFER_BIT);
+//
+//		// set-up modelview matrix
+//		glMatrixMode(GL_MODELVIEW);
+//		glLoadIdentity();
+//
+//		if (showCubeInsideOut) {
+//			float dist = 3;
+//			glTranslatef(0, 0, -dist);
+//
+//			if (orientationProvider != null) {
+//				// All Orientation providers deliver Quaternion as well as rotation matrix.
+//				// Use your favourite representation:
+//
+//				// Get the rotation from the current orientationProvider as rotation matrix
+//				//gl.glMultMatrixf(orientationProvider.getRotationMatrix().getMatrix(), 0);
+//
+//				// Get the rotation from the current orientationProvider as quaternion
+//				orientationProvider.getQuaternion(quaternion);
+//				glRotatef((float) (2.0f * Math.acos(quaternion.getW()) * 180.0f / Math.PI), quaternion.getX(), quaternion.getY(), quaternion.getZ());
+//			}
+//
+//			// draw our object
+//			glEnableClientState(GL_VERTEX_ARRAY);
+//			glEnableClientState(GL_COLOR_ARRAY);
+//
+//			mCube.draw(gl10);
+//		} else {
+//
+//			if (orientationProvider != null) {
+//				// All Orientation providers deliver Quaternion as well as rotation matrix.
+//				// Use your favourite representation:
+//
+//				// Get the rotation from the current orientationProvider as rotation matrix
+//				//gl.glMultMatrixf(orientationProvider.getRotationMatrix().getMatrix(), 0);
+//
+//				// Get the rotation from the current orientationProvider as quaternion
+//				orientationProvider.getQuaternion(quaternion);
+//				glRotatef((float) (2.0f * Math.acos(quaternion.getW()) * 180.0f / Math.PI), quaternion.getX(), quaternion.getY(), quaternion.getZ());
+//			}
+//
+//			float dist = 3;
+//			drawTranslatedCube(gl10, 0, 0, -dist);
+//			drawTranslatedCube(gl10, 0, 0, dist);
+//			drawTranslatedCube(gl10, 0, -dist, 0);
+//			drawTranslatedCube(gl10, 0, dist, 0);
+//			drawTranslatedCube(gl10, -dist, 0, 0);
+//			drawTranslatedCube(gl10, dist, 0, 0);
+//		}
+//
+//		// draw our object
+//		glEnableClientState(GL_VERTEX_ARRAY);
+//		glEnableClientState(GL_COLOR_ARRAY);
+//
+//		mCube.draw(gl10);
+//---------------------------------
+		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+		//Camera position
+		// Set the camera position (View matrix)
+		long time = SystemClock.uptimeMillis() % 4000L;
+		angle = ((float) (2*Math.PI)/ (float) 4000) * ((int) time);
+		Matrix.setLookAtM(viewMatrix, 0, (float) (3*Math.sin(angle)), 0, (float) (3.0f*Math.cos(angle)),     0 ,0, 0,     0f, 1.0f, 0.0f);
+// 		Without fake angle
+//		Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -4f, 0f, 0f, 0f, 0f, 1f, 0f);
+		// projection x view = modelView
+		Matrix.multiplyMM(vPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
 
-		// set-up modelview matrix
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		//Creating rotation matrix
+		Matrix.setRotateM(rotationMatrix, 0, angle, 0f, 0f, -1f);
+		//rotation x camera = modelView
+		float[] duplicateMatrix = Arrays.copyOf(vPMatrix, 16);
 
-		if (showCubeInsideOut) {
-			float dist = 3;
-			glTranslatef(0, 0, -dist);
+		//rotation x camera = modelView
+		Matrix.multiplyMM(vPMatrix, 0, duplicateMatrix, 0, rotationMatrix, 0);
+		Matrix.setRotateM(rotationMatrix, 0, angle, 0f, -1f, 0f);
+		duplicateMatrix = Arrays.copyOf(vPMatrix, 16);
+		Matrix.multiplyMM(vPMatrix, 0, duplicateMatrix, 0, rotationMatrix, 0);
+		Matrix.setRotateM(rotationMatrix, 0, angle, -1f, 0f, 0f);
+		duplicateMatrix = Arrays.copyOf(vPMatrix, 16);
+		Matrix.multiplyMM(vPMatrix, 0, duplicateMatrix, 0, rotationMatrix, 0);
 
-			if (orientationProvider != null) {
-				// All Orientation providers deliver Quaternion as well as rotation matrix.
-				// Use your favourite representation:
-
-				// Get the rotation from the current orientationProvider as rotation matrix
-				//gl.glMultMatrixf(orientationProvider.getRotationMatrix().getMatrix(), 0);
-
-				// Get the rotation from the current orientationProvider as quaternion
-				orientationProvider.getQuaternion(quaternion);
-				glRotatef((float) (2.0f * Math.acos(quaternion.getW()) * 180.0f / Math.PI), quaternion.getX(), quaternion.getY(), quaternion.getZ());
-			}
-
-			// draw our object
-			glEnableClientState(GL_VERTEX_ARRAY);
-			glEnableClientState(GL_COLOR_ARRAY);
-
-			mCube.draw(gl10);
-		} else {
-
-			if (orientationProvider != null) {
-				// All Orientation providers deliver Quaternion as well as rotation matrix.
-				// Use your favourite representation:
-
-				// Get the rotation from the current orientationProvider as rotation matrix
-				//gl.glMultMatrixf(orientationProvider.getRotationMatrix().getMatrix(), 0);
-
-				// Get the rotation from the current orientationProvider as quaternion
-				orientationProvider.getQuaternion(quaternion);
-				glRotatef((float) (2.0f * Math.acos(quaternion.getW()) * 180.0f / Math.PI), quaternion.getX(), quaternion.getY(), quaternion.getZ());
-			}
-
-			float dist = 3;
-			drawTranslatedCube(gl10, 0, 0, -dist);
-			drawTranslatedCube(gl10, 0, 0, dist);
-			drawTranslatedCube(gl10, 0, -dist, 0);
-			drawTranslatedCube(gl10, 0, dist, 0);
-			drawTranslatedCube(gl10, -dist, 0, 0);
-			drawTranslatedCube(gl10, dist, 0, 0);
-		}
-
-		// draw our object
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_COLOR_ARRAY);
-
-		mCube.draw(gl10);
+		// Draw shape
+		mCube2.draw(vPMatrix);
 	}
 
 	/**
@@ -149,7 +192,7 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_COLOR_ARRAY);
 
-		mCube.draw(gl10);
+//		mCube.draw(gl10);
 		glPopMatrix();
 	}
 
@@ -162,19 +205,27 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 	 */
 	@Override
 	public void onSurfaceChanged(GL10 unused, int width, int height) {
-		// set view-port
-		glViewport(0, 0, width, height);
-		// set projection matrix
+//		// set view-port
+//		glViewport(0, 0, width, height);
+//		// set projection matrix
+//		float ratio = (float) width / height;
+//		glMatrixMode(GL_PROJECTION);
+//		glLoadIdentity();
+//		glFrustumf(-ratio, ratio, -1, 1, 1, 10);
+//----------------------
+		GLES20.glViewport(0, 0, width, height);
 		float ratio = (float) width / height;
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glFrustumf(-ratio, ratio, -1, 1, 3, 7);
+		// this projection matrix is applied to object coordinates
+		// in the onDrawFrame() method
+		Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
 	}
 
 	@Override
 	public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 		glDisable(GL_DITHER);
 		glClearColor(0, 0, 0, 0);
+		mCube2 = new Cube2(context);
+
 	}
 }
 

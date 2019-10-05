@@ -51,7 +51,7 @@ public class OpenGLFragment extends Fragment {
 			int id = activity.getGlSurfaceViewId();
 			glSurfaceView = new GLSurfaceViewBuilder(activity, activity.getGlSurfaceViewId())
 					.setEGLConfigChooser(8, 8, 8, 8, 16, 0)
-					.setEGLContextClientVersion(1)
+					.setEGLContextClientVersion(2)
 					.setRenderer(renderer)
 					.setFormat(PixelFormat.TRANSLUCENT)
 					.setRenderMode(GLSurfaceView.RENDERMODE_CONTINUOUSLY)

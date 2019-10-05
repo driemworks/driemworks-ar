@@ -1,5 +1,6 @@
 package graphics;
 
+import android.opengl.GLES20;
 import android.opengl.GLU;
 
 import java.nio.ByteBuffer;
@@ -84,4 +85,5 @@ public class Cube {
         // When using GL_MODELVIEW, you must set the camera view
         GLU.gluLookAt(gl10, 0, 0, -5, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
     }
+
 }

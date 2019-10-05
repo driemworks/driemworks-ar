@@ -13,8 +13,6 @@ import javax.microedition.khronos.egl.EGLDisplay;
 
 import static android.content.ContentValues.TAG;
 import static android.content.Context.DEVICE_POLICY_SERVICE;
-import static javax.microedition.khronos.egl.EGL10.EGL_NONE;
-import static javax.microedition.khronos.egl.EGL10.EGL_NO_CONTEXT;
 
 /**
  * @author Tony
@@ -52,7 +50,6 @@ public class GLSurfaceViewBuilder {
 	public GLSurfaceViewBuilder setEGLConfigChooser(int redSize, int greenSize, int blueSize, int alphaSize,
 													int depthSize, int stencilSize) {
 		// use custom EGLConfigureChooser
-//        customEGLConfigChooser chooser = new customEGLConfigChooser(this.mGLContextAttrs);
 		customEGLConfigChooser chooser = new customEGLConfigChooser(redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize);
 		glSurfaceView.setEGLConfigChooser(chooser);
 
@@ -106,8 +103,7 @@ public class GLSurfaceViewBuilder {
 		return this;
 	}
 
-
-	private class customEGLConfigChooser implements GLSurfaceView.EGLConfigChooser {
+	private static class customEGLConfigChooser implements GLSurfaceView.EGLConfigChooser {
 		private int[] mConfigAttributes;
 		private final int EGL_OPENGL_ES2_BIT = 0x04;
 		private final int EGL_OPENGL_ES3_BIT = 0x40;
