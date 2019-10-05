@@ -1,5 +1,9 @@
 package com.driemworks.app.activities;
 
+import android.app.ActivityManager;
+import android.content.Context;
+import android.content.pm.ConfigurationInfo;
+import android.opengl.EGLContext;
 import android.os.Bundle;
 import androidx.fragment.app.FragmentTransaction;
 import android.util.Log;
@@ -23,6 +27,10 @@ import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
+
+import javax.microedition.khronos.egl.EGL10;
+
+import static android.opengl.EGL14.EGL_CONTEXT_CLIENT_VERSION;
 
 /**
  * The OpenAR Fragment Activity is an example of how to combine opencv and opengl in an activity
@@ -53,7 +61,7 @@ public class OpenARFragmentActivity extends AbstractARActivity implements Camera
         // keep the screen on!
 //        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        // todo
+       // todo
         setRenderer(new CubeRenderer());
         setContentView(R.layout.opengl_opencv_layout);
         setGlSurfaceViewId(R.id.opengl_surface_view);

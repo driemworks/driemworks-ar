@@ -3,7 +3,6 @@ package com.driemworks.ar.services.impl;
 import android.util.Log;
 import android.util.Pair;
 
-import com.driemworks.ar.dto.FeatureData;
 import com.driemworks.ar.services.FeatureDetectorService;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.common.utils.TagUtils;
@@ -17,14 +16,12 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
-import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.DescriptorMatcher;
+import org.opencv.features2d.FastFeatureDetector;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.video.Video;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,7 +40,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
     /**
      * The detector
      */
-    private FeatureDetector detector;
+    private FastFeatureDetector fastFeatureDetector;
 
     /**
      * The term criteria
@@ -75,7 +72,8 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
      * Constructor for the FeatureDetectorServiceImpl with default params (FAST/ORB/HAMMING)
      */
     public FeatureDetectorServiceImpl() {
-        detector = FeatureDetector.create(FeatureDetector.FAST);
+//        fastFeatureDetector = FeatureDetector.create(FeatureDetector.FAST);
+        fastFeatureDetector = FastFeatureDetector.create();
         size = new Size(21, 21);
         termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, MAX_COUNT, EPISILON);
     }
@@ -87,7 +85,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
     public MatOfKeyPoint extractFeatureData(Mat frame) {
         Log.d(TAG, "START - extractFeatureData");
         MatOfKeyPoint mKeyPoints = new MatOfKeyPoint();
-        detector.detect(frame, mKeyPoints);
+        fastFeatureDetector.detect(frame, mKeyPoints);
 //        Mat descriptors = new Mat();
 //        descriptorExtractor.compute(frame, mKeyPoints, descriptors);
         Log.d(TAG, "END - extractFeatureData");

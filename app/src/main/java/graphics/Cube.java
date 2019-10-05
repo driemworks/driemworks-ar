@@ -1,5 +1,7 @@
 package graphics;
 
+import android.opengl.GLU;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -68,15 +70,18 @@ public class Cube {
 
     /**
      * Draws this cube of the given GL-Surface
-     * 
-     * @param unused The GL-Surface this cube should be drawn upon.
+     *
+     * @param gl10
      */
-    public void draw(GL10 unused) {
+    public void draw(GL10 gl10) {
         glEnable(GL_CULL_FACE);
         glFrontFace(GL_CW);
         glShadeModel(GL_SMOOTH);
         glVertexPointer(3, GL_FLOAT, 0, mVertexBuffer);
         glColorPointer(4, GL_FLOAT, 0, mColorBuffer);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, mIndexBuffer);
+
+        // When using GL_MODELVIEW, you must set the camera view
+        GLU.gluLookAt(gl10, 0, 0, -5, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
     }
 }
