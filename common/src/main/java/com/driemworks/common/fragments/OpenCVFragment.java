@@ -3,6 +3,8 @@ package com.driemworks.common.fragments;
 import android.Manifest;
 import android.content.Context;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
@@ -20,7 +22,6 @@ import org.opencv.android.OpenCVLoader;
  * @author Tony Riemer
  */
 public class OpenCVFragment extends Fragment {
-
 
     /** load the opencv lib */
     static {
@@ -40,7 +41,7 @@ public class OpenCVFragment extends Fragment {
      * {@inheritDoc}
      */
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         if (context instanceof AbstractARActivity) {
             AbstractARActivity activity = (AbstractARActivity) context;

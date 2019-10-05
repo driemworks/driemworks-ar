@@ -13,6 +13,7 @@ import com.driemworks.common.fragments.OpenGLFragment;
 import com.driemworks.ar.services.impl.FeatureDetectorServiceImpl;
 import graphics.CubeRenderer;
 import com.driemworks.common.utils.ImageConversionUtils;
+import com.driemworks.common.utils.TagUtils;
 
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.MatOfPoint2f;
@@ -28,6 +29,10 @@ import org.opencv.imgproc.Imgproc;
  * @author Tony Riemer
  */
 public class OpenARFragmentActivity extends AbstractARActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
+    /**
+     * The tag used for logging
+     */
+    private final String TAG = TagUtils.getTag(this);
 
     /** The feature detector service */
     private FeatureDetectorServiceImpl featureDetectorService;
@@ -66,7 +71,7 @@ public class OpenARFragmentActivity extends AbstractARActivity implements Camera
      */
     @Override
     public void onCameraViewStarted(int width, int height) {
-        Log.i("OpenCvFragActiv: ", "called onCameraViewStarted.");
+        Log.i(TAG, "called onCameraViewStarted.");
     }
 
     /**
@@ -86,8 +91,8 @@ public class OpenARFragmentActivity extends AbstractARActivity implements Camera
         Mat mGray = inputFrame.gray();
 
         if (previousKeyPoints != null) {
-            Log.d("previousKeyPoints", "are empty? " + previousKeyPoints.empty());
-            Log.d("previousKeyPoints", "are empty? " + previousKeyPoints.empty());
+            Log.d(TAG, "previousKeyPoints "+ "are empty? " + previousKeyPoints.empty());
+            Log.d(TAG, "previousKeyPoints "+ "are empty? " + previousKeyPoints.empty());
         }
 
         if (previousKeyPoints == null || previousKeyPoints.toList().size() < 5) {

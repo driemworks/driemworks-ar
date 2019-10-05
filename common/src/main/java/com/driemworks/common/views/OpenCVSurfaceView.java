@@ -5,6 +5,8 @@ import android.hardware.Camera;
 import android.hardware.Camera.Size;
 import android.util.AttributeSet;
 
+import com.driemworks.common.utils.TagUtils;
+
 import org.opencv.android.JavaCameraView;
 
 import java.util.List;
@@ -15,8 +17,10 @@ import java.util.List;
  * @author Tony
  */
 public class OpenCVSurfaceView extends JavaCameraView {
-
-    private static final String TAG = "OpenCustomSufaceView";
+    /**
+     * The tag used for logging
+     */
+    private final String TAG = TagUtils.getTag(this);
     
     public OpenCVSurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
