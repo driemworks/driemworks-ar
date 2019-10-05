@@ -35,9 +35,7 @@ public class OpenCVSurfaceView extends JavaCameraView {
     }
 
     public String getEffect() {
-
         return mCamera.getParameters().getColorEffect();
-
     }
 
     public void setEffect(String effect) {

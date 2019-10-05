@@ -175,7 +175,7 @@ public class ImprovedOrientationSensorProvider extends OrientationProvider {
                 }
                 break;
             case Sensor.TYPE_GYROSCOPE:
-                Log.e(TAG, Sensor.STRING_TYPE_GYROSCOPE);
+//                Log.e(TAG, Sensor.STRING_TYPE_GYROSCOPE);
                 // Process Gyroscope and perform fusion
 
                 // This timestep's delta rotation to be multiplied by the current rotation

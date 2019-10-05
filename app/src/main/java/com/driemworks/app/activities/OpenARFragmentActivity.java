@@ -4,6 +4,7 @@ import android.os.Bundle;
 import androidx.fragment.app.FragmentTransaction;
 import android.util.Log;
 import android.util.Pair;
+import android.view.View;
 import android.view.WindowManager;
 
 import com.driemworks.app.R;
@@ -50,12 +51,14 @@ public class OpenARFragmentActivity extends AbstractARActivity implements Camera
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // keep the screen on!
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         // todo
         setRenderer(new CubeRenderer());
         setContentView(R.layout.opengl_opencv_layout);
         setGlSurfaceViewId(R.id.opengl_surface_view);
         setOpenCVSurfaceViewId(R.id.opencv_surface_view);
+
         // attach the fragments
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         // add opengl fragment

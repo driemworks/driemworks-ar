@@ -166,7 +166,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
                 double threshold = 0.01;
 
                 if (dx < threshold && dy < threshold) {
-                    Log.d("FeatureDetector", "Removing keypoint at index " + i);
+                    Log.d(TAG, "Removing keypoint at index " + i);
                     // if points haven't moved sufficiently in any direction
                     currentCopy.remove(i - indexCorrection);
                     currentCopy.add(previousPoint);
@@ -176,7 +176,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
 
         averageDx = averageDx / currentCopy.size();
         averageDy = averageDy / currentCopy.size();
-        Log.d("Averaged motion: ", "dx = " + averageDx + " dy = " + averageDy);
+        Log.d(TAG, "Averaged motion: "+ "dx = " + averageDx + " dy = " + averageDy);
         return Pair.create(previousCopy, currentCopy);
     }
 
