@@ -33,7 +33,7 @@ public abstract class OrientationProvider implements SensorEventListener {
     /**
      * The list of sensors used by this provider
      */
-    protected List<Sensor> sensorList = new ArrayList<Sensor>();
+    protected List<Sensor> sensorList = new ArrayList<>();
 
     /**
      * The matrix that holds the current rotation

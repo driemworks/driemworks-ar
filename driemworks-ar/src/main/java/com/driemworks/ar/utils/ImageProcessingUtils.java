@@ -99,7 +99,7 @@ public class ImageProcessingUtils {
      * @return The list of defect points
      */
     public static List<Point> getDefectPoints(List<MatOfPoint> contours, MatOfInt4 convexDefect, int boundPos, double iThreshold, double a) {
-        List<Point> listPoDefect = new LinkedList<Point>();
+        List<Point> listPoDefect = new LinkedList<>();
         for (int j = 0; j < convexDefect.toList().size(); j += 4) {
             Point farPoint = contours.get(boundPos).toList().get(convexDefect.toList().get(j+2));
             Integer depth = convexDefect.toList().get(j+3);

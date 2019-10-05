@@ -188,12 +188,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
      * @return The best numKeyPoints points
      */
     private MatOfKeyPoint getBestPoints(List<KeyPoint> notBestKeyPoints, int numKeyPoints) {
-        Collections.sort(notBestKeyPoints, new Comparator<KeyPoint>() {
-            @Override
-            public int compare(KeyPoint kp1, KeyPoint kp2) {
-                return (int) (kp2.response - kp1.response);
-            }
-        });
+        Collections.sort(notBestKeyPoints, (kp1, kp2) -> (int) (kp2.response - kp1.response));
 
         MatOfKeyPoint bestPoints = new MatOfKeyPoint();
         List<KeyPoint> bestKeyPoints;

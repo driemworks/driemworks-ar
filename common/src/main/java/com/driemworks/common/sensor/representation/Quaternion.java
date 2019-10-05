@@ -1,5 +1,7 @@
 package com.driemworks.common.sensor.representation;
 
+import androidx.annotation.NonNull;
+
 /**
  * The Quaternion class. A Quaternion is a four-dimensional vector that is used to represent rotations of a rigid body
  * in the 3D space. It is very similar to a rotation vector; it contains an angle, encoded into the w component
@@ -268,6 +270,7 @@ public class Quaternion extends Vector4f {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "{X: " + getX() + ", Y:" + getY() + ", Z:" + getZ() + ", W:" + getW() + "}";
     }

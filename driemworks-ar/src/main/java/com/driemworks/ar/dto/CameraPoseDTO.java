@@ -2,6 +2,8 @@ package com.driemworks.ar.dto;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.driemworks.ar.services.MonocularVisualOdometryService;
 import com.driemworks.ar.utils.CvUtils;
 
@@ -117,6 +119,7 @@ public class CameraPoseDTO {
      * {@inheritDoc}
      */
     @Override
+    @NonNull
     public String toString() {
         return "CameraPoseDTO: \n" + "current coordinate: \n"
                 + CvUtils.printMat(coordinate) + "\ncurrent direction: \n" + CvUtils.printMat(direction);

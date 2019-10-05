@@ -1,5 +1,7 @@
 package com.driemworks.common.sensor.representation;
 
+import androidx.annotation.NonNull;
+
 /**
  * 3-dimensional vector with conventient getters and setters. Additionally this class is serializable and
  */
@@ -254,6 +256,7 @@ public class Vector3f {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "X:" + points[0] + " Y:" + points[1] + " Z:" + points[2];
     }

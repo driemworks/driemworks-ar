@@ -5,6 +5,8 @@ import android.graphics.PixelFormat;
 import android.hardware.SensorManager;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -37,7 +39,7 @@ public class OpenGLFragment extends Fragment {
      * {@inheritDoc}
      */
     @Override
-    public void onAttach(Context context){
+    public void onAttach(@NonNull Context context){
         super.onAttach(context);
         if (context instanceof AbstractARActivity) {
             AbstractARActivity activity = (AbstractARActivity) context;
@@ -58,7 +60,7 @@ public class OpenGLFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 //        glSurfaceView.setOnLongClickListener(new View.OnLongClickListener() {
 //            @Override
 //            public boolean onLongClick(View v) {

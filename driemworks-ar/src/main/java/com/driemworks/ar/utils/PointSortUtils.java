@@ -17,13 +17,10 @@ public class PointSortUtils {
      * @return the sorted raw point data
      */
     public static List<Point> sortByMaxX(List<Point> rawPointData) {
-        Collections.sort(rawPointData, new Comparator<Point>() {
-            @Override
-            public int compare(Point o1, Point o2) {
-                if (o1.x < o2.x) return 1;
-                else if (o1.x > o2.x) return -1;
-                return 0;
-            }
+        Collections.sort(rawPointData, (o1, o2) -> {
+            if (o1.x < o2.x) return 1;
+            else if (o1.x > o2.x) return -1;
+            return 0;
         });
         return rawPointData;
     }
@@ -34,13 +31,10 @@ public class PointSortUtils {
      * @return the sorted raw point data
      */
     public static List<Point> sortByMinX(List<Point> rawPointData) {
-        Collections.sort(rawPointData, new Comparator<Point>() {
-            @Override
-            public int compare(Point o1, Point o2) {
-                if (o1.x < o2.x) return -1;
-                else if (o1.x > o2.x) return 1;
-                return 0;
-            }
+        Collections.sort(rawPointData, (o1, o2) -> {
+            if (o1.x < o2.x) return -1;
+            else if (o1.x > o2.x) return 1;
+            return 0;
         });
         return rawPointData;
     }
@@ -51,13 +45,10 @@ public class PointSortUtils {
      * @return
      */
     public static List<Point> sortByMaxY(List<Point> rawPointData) {
-        Collections.sort(rawPointData, new Comparator<Point>() {
-            @Override
-            public int compare(Point o1, Point o2) {
-                if (o1.y < o2.y) return 1;
-                else if (o1.y > o2.y) return -1;
-                return 0;
-            }
+        Collections.sort(rawPointData, (o1, o2) -> {
+            if (o1.y < o2.y) return 1;
+            else if (o1.y > o2.y) return -1;
+            return 0;
         });
         return rawPointData;
     }
@@ -68,13 +59,10 @@ public class PointSortUtils {
      * @return
      */
     public static List<Point> sortByMinY(List<Point> rawPointData) {
-        Collections.sort(rawPointData, new Comparator<Point>() {
-            @Override
-            public int compare(Point o1, Point o2) {
-                if (o1.y < o2.y) return -1;
-                else if (o1.y > o2.y) return 1;
-                return 0;
-            }
+        Collections.sort(rawPointData, (o1, o2) -> {
+            if (o1.y < o2.y) return -1;
+            else if (o1.y > o2.y) return 1;
+            return 0;
         });
         return rawPointData;
     }

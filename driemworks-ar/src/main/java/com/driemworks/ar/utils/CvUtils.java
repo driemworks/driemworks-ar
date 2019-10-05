@@ -2,6 +2,8 @@ package com.driemworks.ar.utils;
 
 import android.util.Log;
 
+import com.driemworks.common.utils.TagUtils;
+
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -11,6 +13,10 @@ import org.opencv.core.Mat;
  * @author Tony
  */
 public class CvUtils {
+    /**
+     * The tag used for logging
+     */
+    private static final String TAG = TagUtils.getTag(CvUtils.class);
 
     /**
      *
@@ -47,18 +53,18 @@ public class CvUtils {
      * @return The string
      */
     public static String printMat(Mat mat) {
-        String out = "";
+        StringBuilder out = new StringBuilder();
         if (!mat.empty()) {
             for (int i = 0; i < mat.size().height; i++) {
-                out += "[ ";
+                out.append("[ ");
                 for (int j = 0; j < mat.size().width; j++) {
-                    Log.d("size of array: ", "" + mat.get(i, j).length);
-                    out += mat.get(i, j)[0] + " ";
+                    Log.d(TAG, "size of array: "+ "" + mat.get(i, j).length);
+                    out.append(mat.get(i, j)[0]).append(" ");
                 }
-                out += "]\n";
+                out.append("]\n");
             }
         }
-        return out;
+        return out.toString();
     }
 
 }

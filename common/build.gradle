@@ -42,7 +42,7 @@ android {
 
 dependencies {
     api fileTree(include: ['*.jar'], dir: 'libs')
-//    implementation project(':libraries:opencv')
+
     api project(path: ':opencv')
     api 'org.apache.commons:commons-lang3:3.9'
     api 'androidx.appcompat:appcompat:1.1.0'
