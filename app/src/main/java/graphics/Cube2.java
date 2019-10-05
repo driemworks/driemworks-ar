@@ -64,10 +64,9 @@ public class Cube2 {
 					tempNormals.add(Float.valueOf(tokens[3])); //nz
 				} else if (line.startsWith("vt")) {
 					String[] tokens = line.split("[ ]+");
-					uv.add(Float.valueOf(tokens[1])); //nx
-					uv.add(Float.valueOf(tokens[2])); //ny
+					uv.add(Float.valueOf(tokens[1]));
+					uv.add(Float.valueOf(tokens[2]));
 				} else if (line.startsWith("f")) {
-
                     /*
                     vertexIndices.add(Short.valueOf(tokens[1].split("/")[0])); //first point of a face
                     vertexIndices.add(Short.valueOf(tokens[2].split("/")[0])); //second point

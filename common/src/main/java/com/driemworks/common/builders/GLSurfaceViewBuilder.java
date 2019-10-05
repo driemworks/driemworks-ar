@@ -117,7 +117,7 @@ public class GLSurfaceViewBuilder {
 		}
 
 		public customEGLConfigChooser(int redSize, int greenSize, int blueSize, int alphaSize, int depthSize, int stencilSize) {
-		mConfigAttributes = new int[]{redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize, 1};
+		mConfigAttributes = new int[]{redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize, 0};
 		}
 
 		@Override

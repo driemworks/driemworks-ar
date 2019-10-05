@@ -15,23 +15,14 @@ import java.util.Arrays;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import static android.opengl.GLES10.glClear;
 import static android.opengl.GLES10.glClearColor;
 import static android.opengl.GLES10.glDisable;
 import static android.opengl.GLES10.glEnableClientState;
-import static android.opengl.GLES10.glFrustumf;
-import static android.opengl.GLES10.glLoadIdentity;
-import static android.opengl.GLES10.glMatrixMode;
 import static android.opengl.GLES10.glPopMatrix;
 import static android.opengl.GLES10.glPushMatrix;
-import static android.opengl.GLES10.glRotatef;
 import static android.opengl.GLES10.glTranslatef;
-import static android.opengl.GLES10.glViewport;
 import static javax.microedition.khronos.opengles.GL10.GL_COLOR_ARRAY;
-import static javax.microedition.khronos.opengles.GL10.GL_COLOR_BUFFER_BIT;
 import static javax.microedition.khronos.opengles.GL10.GL_DITHER;
-import static javax.microedition.khronos.opengles.GL10.GL_MODELVIEW;
-import static javax.microedition.khronos.opengles.GL10.GL_PROJECTION;
 import static javax.microedition.khronos.opengles.GL10.GL_VERTEX_ARRAY;
 
 /**
@@ -50,8 +41,10 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 	private Quaternion quaternion = new Quaternion();
 
 	Context context;
+
 	/**
 	 * Initialises a new CubeRenderer
+	 *
 	 * @param context
 	 */
 	public CubeRenderer(Context context) {
@@ -83,6 +76,7 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 	private final float[] viewMatrix = new float[16];
 	private float[] rotationMatrix = new float[16];
 	private float angle = 0f;
+
 	/**
 	 * Perform the actual rendering of the cube for each frame
 	 *
@@ -151,8 +145,8 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 		//Camera position
 		// Set the camera position (View matrix)
 		long time = SystemClock.uptimeMillis() % 4000L;
-		angle = ((float) (2*Math.PI)/ (float) 4000) * ((int) time);
-		Matrix.setLookAtM(viewMatrix, 0, (float) (3*Math.sin(angle)), 0, (float) (3.0f*Math.cos(angle)),     0 ,0, 0,     0f, 1.0f, 0.0f);
+		angle = ((float) (2 * Math.PI) / (float) 4000) * ((int) time);
+		Matrix.setLookAtM(viewMatrix, 0, (float) (3 * Math.sin(angle)), 0, (float) (3.0f * Math.cos(angle)), 0, 0, 0, 0f, 1.0f, 0.0f);
 // 		Without fake angle
 //		Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, -4f, 0f, 0f, 0f, 0f, 1f, 0f);
 		// projection x view = modelView
@@ -225,7 +219,6 @@ public class CubeRenderer extends AbstractOrientationRenderer implements GLSurfa
 		glDisable(GL_DITHER);
 		glClearColor(0, 0, 0, 0);
 		mCube2 = new Cube2(context);
-
 	}
 }
 
