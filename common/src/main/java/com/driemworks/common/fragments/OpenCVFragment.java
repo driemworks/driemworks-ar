@@ -55,11 +55,10 @@ public class OpenCVFragment extends Fragment {
                 baseLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(
                         activity, openCVSurfaceView);
                 // init opencv loader
-                OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, activity, baseLoaderCallback);
+                OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, activity, baseLoaderCallback);
                 // require CAMERA
                 ActivityCompat.requestPermissions(activity,
-                        new String[]{Manifest.permission.CAMERA},
-                        1);
+                        new String[]{Manifest.permission.CAMERA}, 1);
             } catch (ClassCastException e) {
                 throw new ClassCastException(activity.toString() + " must implement CvCameraViewListener2");
             }
