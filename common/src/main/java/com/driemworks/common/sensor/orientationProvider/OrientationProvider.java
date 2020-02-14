@@ -33,7 +33,7 @@ public abstract class OrientationProvider implements SensorEventListener {
     /**
      * The list of sensors used by this provider
      */
-    protected List<Sensor> sensorList = new ArrayList<Sensor>();
+    protected List<Sensor> sensorList = new ArrayList<>();
 
     /**
      * The matrix that holds the current rotation
@@ -75,8 +75,7 @@ public abstract class OrientationProvider implements SensorEventListener {
         for (Sensor sensor : sensorList) {
             // enable our sensors when the activity is resumed, ask for
             // 20 ms updates (Sensor_delay_game)
-            sensorManager.registerListener(this, sensor,
-                    SensorManager.SENSOR_DELAY_GAME);
+            sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
         }
     }
 

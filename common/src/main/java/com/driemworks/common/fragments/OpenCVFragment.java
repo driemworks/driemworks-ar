@@ -3,6 +3,8 @@ package com.driemworks.common.fragments;
 import android.Manifest;
 import android.content.Context;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 
@@ -20,7 +22,6 @@ import org.opencv.android.OpenCVLoader;
  * @author Tony Riemer
  */
 public class OpenCVFragment extends Fragment {
-
 
     /** load the opencv lib */
     static {
@@ -40,7 +41,7 @@ public class OpenCVFragment extends Fragment {
      * {@inheritDoc}
      */
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         if (context instanceof AbstractARActivity) {
             AbstractARActivity activity = (AbstractARActivity) context;
@@ -55,11 +56,10 @@ public class OpenCVFragment extends Fragment {
                 baseLoaderCallback = BaseLoaderCallbackFactory.getBaseLoaderCallback(
                         activity, openCVSurfaceView);
                 // init opencv loader
-                OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, activity, baseLoaderCallback);
+                OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_4_0, activity, baseLoaderCallback);
                 // require CAMERA
                 ActivityCompat.requestPermissions(activity,
-                        new String[]{Manifest.permission.CAMERA},
-                        1);
+                        new String[]{Manifest.permission.CAMERA}, 1);
             } catch (ClassCastException e) {
                 throw new ClassCastException(activity.toString() + " must implement CvCameraViewListener2");
             }

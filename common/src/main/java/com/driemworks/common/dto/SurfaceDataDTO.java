@@ -41,7 +41,7 @@ public class SurfaceDataDTO {
         this.boundRect = boundRect;
         this.alpha = alpha;
         this.convexDefect = convexDefect;
-        this. hull = hull;
+        this.hull = hull;
         this.hullPoints = hullPoints;
         this.defectPoints = defectPoints;
         this.mDefectPoints = mDefectPoints;

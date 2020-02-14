@@ -26,6 +26,7 @@ public class OpenCVSurfaceViewBuilder {
      */
     public OpenCVSurfaceViewBuilder(Activity activity, int id) {
         openCVSurfaceView = (OpenCVSurfaceView) activity.findViewById(id);
+        hideSystemUI();
     }
 
     public OpenCVSurfaceViewBuilder(Activity activity, int id, View.OnTouchListener onTouchListener) {
@@ -33,6 +34,19 @@ public class OpenCVSurfaceViewBuilder {
         if (onTouchListener != null) {
             setOnTouchListener(onTouchListener);
         }
+        hideSystemUI();
+    }
+    /**
+     * Helper function used to hide the system bars.
+     */
+    public void hideSystemUI() {
+        // Set the IMMERSIVE flag. Set the content to appear under the system bars so that the content doesn't resize when the system bars hide and show.
+        openCVSurfaceView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+//                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION // hide nav bar
+                | View.SYSTEM_UI_FLAG_FULLSCREEN // hide status bar
+                | View.SYSTEM_UI_FLAG_IMMERSIVE);
     }
 
     /**

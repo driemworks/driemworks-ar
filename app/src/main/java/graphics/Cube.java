@@ -1,14 +1,23 @@
 package graphics;
 
+import android.opengl.GLES20;
+import android.opengl.GLU;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import javax.microedition.khronos.opengles.GL10;
 
+import static android.opengl.GLES10.GL_SMOOTH;
 import static android.opengl.GLES10.glColorPointer;
 import static android.opengl.GLES10.glShadeModel;
 import static android.opengl.GLES10.glVertexPointer;
+import static android.opengl.GLES20.GL_CULL_FACE;
+import static android.opengl.GLES20.GL_CW;
+import static android.opengl.GLES20.GL_FLOAT;
+import static android.opengl.GLES20.GL_TRIANGLES;
+import static android.opengl.GLES20.GL_UNSIGNED_BYTE;
 import static android.opengl.GLES20.glDrawElements;
 import static android.opengl.GLES20.glEnable;
 import static android.opengl.GLES20.glFrontFace;
@@ -62,15 +71,19 @@ public class Cube {
 
     /**
      * Draws this cube of the given GL-Surface
-     * 
-     * @param unused The GL-Surface this cube should be drawn upon.
+     *
+     * @param gl10
      */
-    public void draw(GL10 unused) {
-        glEnable(GL10.GL_CULL_FACE);
-        glFrontFace(GL10.GL_CW);
-        glShadeModel(GL10.GL_SMOOTH);
-        glVertexPointer(3, GL10.GL_FLOAT, 0, mVertexBuffer);
-        glColorPointer(4, GL10.GL_FLOAT, 0, mColorBuffer);
-        glDrawElements(GL10.GL_TRIANGLES, 36, GL10.GL_UNSIGNED_BYTE, mIndexBuffer);
+    public void draw(GL10 gl10) {
+        glEnable(GL_CULL_FACE);
+        glFrontFace(GL_CW);
+        glShadeModel(GL_SMOOTH);
+        glVertexPointer(3, GL_FLOAT, 0, mVertexBuffer);
+        glColorPointer(4, GL_FLOAT, 0, mColorBuffer);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, mIndexBuffer);
+
+        // When using GL_MODELVIEW, you must set the camera view
+        GLU.gluLookAt(gl10, 0, 0, -5, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
     }
+
 }

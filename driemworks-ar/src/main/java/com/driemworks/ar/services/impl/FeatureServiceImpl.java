@@ -13,6 +13,7 @@ import org.opencv.core.MatOfKeyPoint;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.ORB;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.LinkedList;
@@ -24,13 +25,14 @@ import java.util.List;
 public class FeatureServiceImpl implements FeatureService<MatOfDMatch> {
 
     /** The feature detector */
-    private FeatureDetector detector;
+    FeatureDetector detector;
 
     /** The descriptor extractor */
-    private DescriptorExtractor extractor;
+    DescriptorExtractor extractor;
 
     /** The descriptor matcher */
-    private DescriptorMatcher matcher;
+//    private DescriptorMatcher matcher;
+    DescriptorMatcher matcher; // = DescriptorMatcher.create(DescriptorMatcher.FLANNBASED);
 
     /** The multiplier used to find good matches */
     private static final float MULTIPLIER = 4.25f;

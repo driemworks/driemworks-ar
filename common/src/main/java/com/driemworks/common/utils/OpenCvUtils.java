@@ -17,6 +17,10 @@ import org.opencv.imgproc.Imgproc;
  * @author Tony
  */
 public class OpenCvUtils {
+    /**
+     * The tag used for logging
+     */
+    private static final String TAG = TagUtils.getTag(OpenCvUtils.class);
 
     /**
      * Private constructor
@@ -55,9 +59,9 @@ public class OpenCvUtils {
      */
     public static void initOpenCV(boolean initCuda)  {
         if (!OpenCVLoader.initDebug(initCuda)) {
-            Log.e("OpvenCVLoader", "OvenCVLoader successful: false");
+            Log.e(TAG, "OvenCVLoader successful: false");
         } else {
-            Log.d("OpenCVLoader", "OpenCVLoader successful");
+            Log.d(TAG, "OpenCVLoader successful");
         }
     }
 }

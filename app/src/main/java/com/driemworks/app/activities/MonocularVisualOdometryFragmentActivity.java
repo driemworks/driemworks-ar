@@ -27,6 +27,10 @@ import org.opencv.imgproc.Imgproc;
  * @author Tony Riemer
  */
 public class MonocularVisualOdometryFragmentActivity extends AbstractARActivity implements CameraBridgeViewBase.CvCameraViewListener2, OpenARActivityInterface {
+    /**
+     * The tag used for logging
+     */
+    private final String TAG = TagUtils.getTag(this);
 
     /** The monocular visual odometry service */
     private MonocularVisualOdometryService monocularVisualOdometryService;
@@ -63,7 +67,7 @@ public class MonocularVisualOdometryFragmentActivity extends AbstractARActivity 
      */
     @Override
     public void onCameraViewStarted(int width, int height) {
-        Log.i("OpenCvFragActiv: ", "called onCameraViewStarted.");
+        Log.i(TAG, "called onCameraViewStarted.");
     }
 
     /**
@@ -71,7 +75,7 @@ public class MonocularVisualOdometryFragmentActivity extends AbstractARActivity 
      */
     @Override
     public void onCameraViewStopped() {
-        Log.i("OpenCvFragActiv: ", "called onCameraViewStopped.");
+        Log.i(TAG, "called onCameraViewStopped.");
     }
 
     /**
@@ -83,7 +87,7 @@ public class MonocularVisualOdometryFragmentActivity extends AbstractARActivity 
         Mat mGray = inputFrame.gray();
 
         cameraPoseDTO = monocularVisualOdometryService.calculateCameraPose(cameraPoseDTO, mRgba, previousFrameGray, mGray);
-        Log.d(TagUtils.getTag(this.getClass()), "translation: " + 10 * cameraPoseDTO.getX() + ", " + 10 * cameraPoseDTO.getY() + ", " + 10 * cameraPoseDTO.getZ());
+        Log.d(TAG, "translation: " + 10 * cameraPoseDTO.getX() + ", " + 10 * cameraPoseDTO.getY() + ", " + 10 * cameraPoseDTO.getZ());
         MatOfPoint2f keyPoints2f = ImageConversionUtils.convertMatOfKeyPointsTo2f(cameraPoseDTO.getFeatureData().getKeyPoint());
 
         // draw the tracked keypoints

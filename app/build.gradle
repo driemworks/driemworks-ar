@@ -9,6 +9,7 @@ android {
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
+        signingConfig signingConfigs.debug
     }
     buildTypes {
         release {
@@ -30,12 +31,12 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-//    implementation project(':libraries:opencv')
+//    implementation 'org.apmem.tools:layouts:1.10@aar'
+
     implementation project(path: ':opencv')
     implementation project(':common')
     implementation project(':driemworks-ar')
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'org.apmem.tools:layouts:1.10@aar'
 }

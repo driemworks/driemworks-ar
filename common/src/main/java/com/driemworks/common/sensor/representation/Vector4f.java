@@ -1,5 +1,7 @@
 package com.driemworks.common.sensor.representation;
 
+import androidx.annotation.NonNull;
+
 /**
  * Representation of a four-dimensional float-vector
  */
@@ -283,6 +285,7 @@ public class Vector4f {
     }
 
     @Override
+    @NonNull
     public String toString() {
         return "X:" + points[0] + " Y:" + points[1] + " Z:" + points[2] + " W:" + points[3];
     }

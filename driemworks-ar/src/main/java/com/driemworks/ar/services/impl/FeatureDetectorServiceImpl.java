@@ -3,7 +3,6 @@ package com.driemworks.ar.services.impl;
 import android.util.Log;
 import android.util.Pair;
 
-import com.driemworks.ar.dto.FeatureData;
 import com.driemworks.ar.services.FeatureDetectorService;
 import com.driemworks.common.utils.ImageConversionUtils;
 import com.driemworks.common.utils.TagUtils;
@@ -17,14 +16,12 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Size;
 import org.opencv.core.TermCriteria;
-import org.opencv.features2d.DescriptorExtractor;
-import org.opencv.features2d.DescriptorMatcher;
+import org.opencv.features2d.FastFeatureDetector;
 import org.opencv.features2d.FeatureDetector;
 import org.opencv.video.Video;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -43,7 +40,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
     /**
      * The detector
      */
-    private FeatureDetector detector;
+    private FastFeatureDetector fastFeatureDetector;
 
     /**
      * The term criteria
@@ -75,7 +72,8 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
      * Constructor for the FeatureDetectorServiceImpl with default params (FAST/ORB/HAMMING)
      */
     public FeatureDetectorServiceImpl() {
-        detector = FeatureDetector.create(FeatureDetector.FAST);
+//        fastFeatureDetector = FeatureDetector.create(FeatureDetector.FAST);
+        fastFeatureDetector = FastFeatureDetector.create();
         size = new Size(21, 21);
         termCriteria = new TermCriteria(TermCriteria.EPS | TermCriteria.MAX_ITER, MAX_COUNT, EPISILON);
     }
@@ -87,7 +85,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
     public MatOfKeyPoint extractFeatureData(Mat frame) {
         Log.d(TAG, "START - extractFeatureData");
         MatOfKeyPoint mKeyPoints = new MatOfKeyPoint();
-        detector.detect(frame, mKeyPoints);
+        fastFeatureDetector.detect(frame, mKeyPoints);
 //        Mat descriptors = new Mat();
 //        descriptorExtractor.compute(frame, mKeyPoints, descriptors);
         Log.d(TAG, "END - extractFeatureData");
@@ -166,7 +164,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
                 double threshold = 0.01;
 
                 if (dx < threshold && dy < threshold) {
-                    Log.d("FeatureDetector", "Removing keypoint at index " + i);
+                    Log.d(TAG, "Removing keypoint at index " + i);
                     // if points haven't moved sufficiently in any direction
                     currentCopy.remove(i - indexCorrection);
                     currentCopy.add(previousPoint);
@@ -176,7 +174,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
 
         averageDx = averageDx / currentCopy.size();
         averageDy = averageDy / currentCopy.size();
-        Log.d("Averaged motion: ", "dx = " + averageDx + " dy = " + averageDy);
+        Log.d(TAG, "Averaged motion: "+ "dx = " + averageDx + " dy = " + averageDy);
         return Pair.create(previousCopy, currentCopy);
     }
 
@@ -188,12 +186,7 @@ public class FeatureDetectorServiceImpl implements FeatureDetectorService {
      * @return The best numKeyPoints points
      */
     private MatOfKeyPoint getBestPoints(List<KeyPoint> notBestKeyPoints, int numKeyPoints) {
-        Collections.sort(notBestKeyPoints, new Comparator<KeyPoint>() {
-            @Override
-            public int compare(KeyPoint kp1, KeyPoint kp2) {
-                return (int) (kp2.response - kp1.response);
-            }
-        });
+        Collections.sort(notBestKeyPoints, (kp1, kp2) -> (int) (kp2.response - kp1.response));
 
         MatOfKeyPoint bestPoints = new MatOfKeyPoint();
         List<KeyPoint> bestKeyPoints;
